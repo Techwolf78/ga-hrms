@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/brand/Montserrat-BlackItalic.ttf') format('truetype');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

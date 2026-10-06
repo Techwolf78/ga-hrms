@@ -30,6 +30,7 @@ import {
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../lib/authContext";
 import { useHrms } from "../../lib/hrmsContext";
+import { GaHrmsLogo } from "../ui/GaHrmsLogo";
 
 interface NavItem {
   label: string;
@@ -149,24 +150,15 @@ export function Sidebar({
       {/* Brand Header */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-gray-900 shrink-0 bg-gray-950">
         <div className="flex items-center gap-3 overflow-hidden">
-          {/* Logo Icon */}
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-950 shrink-0 font-black text-sm tracking-tight shadow-sm">
-            GA
-          </div>
-
-          {!collapsed && (
-            <div className="truncate">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-white text-base tracking-tight leading-none">
-                  GA-HRMS
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium tracking-wide uppercase mt-0.5">
-                Enterprise Cloud
-              </p>
-            </div>
-          )}
+          <NavLink to="/dashboard" className="flex items-center group">
+            <GaHrmsLogo
+              size={collapsed ? "sm" : "md"}
+              variant="dark"
+              iconOnly={collapsed}
+              showSubtitle={!collapsed}
+              subtitleText="Enterprise Cloud"
+            />
+          </NavLink>
         </div>
 
         {/* Desktop Collapse Toggle */}

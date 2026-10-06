@@ -19,6 +19,7 @@ import {
 import { useAuth, DEMO_USERS } from "../../lib/authContext";
 import { UserRole } from "../../types/hrms";
 import { formatINR } from "../../lib/utils";
+import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -144,13 +145,8 @@ export function LandingPage() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/70 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-gray-950 flex items-center justify-center text-white font-black text-sm tracking-tight shadow-2xs group-hover:bg-black transition-colors">
-              GA
-            </div>
-            <span className="text-base font-bold tracking-tight text-gray-950 group-hover:text-black transition-colors">
-              GA-HRMS
-            </span>
+          <Link to="/" className="flex items-center group">
+            <GaHrmsLogo size="md" variant="light" />
           </Link>
 
           {/* Nav Links: Sentence-case, generous breathing room */}
@@ -946,14 +942,9 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2 space-y-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-gray-950 flex items-center justify-center text-white font-black text-sm">
-                  GA
-                </div>
-                <span className="font-extrabold text-gray-950 text-base tracking-tight">
-                  GA-HRMS Enterprise OS
-                </span>
-              </div>
+              <Link to="/" className="inline-flex items-center group">
+                <GaHrmsLogo size="md" variant="light" showSubtitle subtitleText="Enterprise OS" />
+              </Link>
               <p className="text-gray-500 text-xs max-w-sm leading-relaxed">
                 The modern standard for enterprise workforce management, biometric attendance,
                 and Indian statutory payroll automation.

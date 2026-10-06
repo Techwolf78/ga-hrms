@@ -27,7 +27,7 @@ export const initialCompany: Company = {
   cin: "U72900PN2022PTC215689",
   gstin: "27AABCG1234F1Z8",
   pan: "AABCG1234F",
-  logo: "/logo.png",
+  logo: "/brand/gryphon360-emblem-silver.png",
   website: "https://ga-hrms.enterprise.io",
   phone: "+91 (020) 6745-9000",
   email: "people-ops@ga-hrms.io",

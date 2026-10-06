@@ -17,6 +17,7 @@ import { useHrms } from "../../lib/hrmsContext";
 import { UserRole } from "../../types/hrms";
 import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import { GaHrmsLogo } from "../ui/GaHrmsLogo";
 
 export interface TopbarProps {
   onOpenMobileSidebar: () => void;
@@ -98,6 +99,10 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        <div className="md:hidden shrink-0">
+          <GaHrmsLogo size="xs" variant="light" />
+        </div>
 
         {/* Global Search Input Button */}
         <button

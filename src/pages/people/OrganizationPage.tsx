@@ -12,6 +12,7 @@ import {
 import { useHrms } from "../../lib/hrmsContext";
 import { Avatar } from "../../components/ui/Avatar";
 import { Badge } from "../../components/ui/Badge";
+import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
 
 export function OrganizationPage() {
   const { company, branches, departments, employees } = useHrms();
@@ -35,8 +36,8 @@ export function OrganizationPage() {
       <div className="bg-gray-950 text-white p-6 sm:p-8 rounded-card border border-gray-800 shadow-elevated">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/10 text-white border border-white/20 flex items-center justify-center font-bold text-2xl shadow-sm">
-              GA
+            <div className="w-14 h-14 rounded-2xl bg-white/5 text-white border border-white/10 flex items-center justify-center p-2.5 shadow-sm">
+              <GaHrmsLogo size="md" variant="dark" iconOnly />
             </div>
             <div>
               <div className="flex items-center gap-2">

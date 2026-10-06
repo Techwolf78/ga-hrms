@@ -15,6 +15,7 @@ import {
 import { useAuth, DEMO_USERS } from "../../lib/authContext";
 import { UserRole } from "../../types/hrms";
 import { Input } from "../../components/ui/Input";
+import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
 
 export function LoginPage() {
   const [email, setEmail] = useState("ajay.pawar@ga-hrms.io");
@@ -57,13 +58,8 @@ export function LoginPage() {
 
         {/* Top: Logo & Back Link */}
         <div className="relative z-10 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-950 font-black text-sm tracking-tight shadow-sm">
-              GA
-            </div>
-            <span className="text-base font-bold tracking-tight text-white group-hover:text-gray-200 transition-colors">
-              GA-HRMS
-            </span>
+          <Link to="/" className="flex items-center group">
+            <GaHrmsLogo size="md" variant="dark" />
           </Link>
 
           <Link
@@ -122,6 +118,9 @@ export function LoginPage() {
         <div className="w-full max-w-md space-y-7 bg-white p-8 sm:p-10 rounded-2xl border border-gray-200/90 shadow-sm">
           {/* Header */}
           <div className="space-y-1.5 text-left">
+            <div className="lg:hidden pb-3">
+              <GaHrmsLogo size="md" variant="light" />
+            </div>
             <h3 className="text-2xl font-black text-gray-950 tracking-tight">
               Sign in to your workplace
             </h3>

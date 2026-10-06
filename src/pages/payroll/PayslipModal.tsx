@@ -4,6 +4,7 @@ import { useHrms } from "../../lib/hrmsContext";
 import { PayrollRecord } from "../../types/hrms";
 import { Button } from "../../components/ui/Button";
 import { formatINR, formatDate } from "../../lib/utils";
+import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
 
 export interface PayslipModalProps {
   isOpen: boolean;
@@ -72,8 +73,8 @@ export function PayslipModal({ isOpen, onClose, payrollRecord }: PayslipModalPro
           {/* Company Branding & Header */}
           <div className="border-b-2 border-gray-950 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gray-950 flex items-center justify-center text-white font-extrabold text-xl shadow-xs">
-                GA
+              <div className="w-12 h-12 rounded-xl bg-gray-950 flex items-center justify-center p-2 shadow-xs">
+                <GaHrmsLogo size="md" variant="dark" iconOnly />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-950 uppercase tracking-tight">
