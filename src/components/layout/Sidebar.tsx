@@ -148,29 +148,38 @@ export function Sidebar({
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gray-950 text-gray-400 border-r border-gray-900 select-none">
       {/* Brand Header */}
-      <div className="h-14 px-3 flex items-center justify-between border-b border-gray-900 shrink-0 bg-gray-950">
-        <div className="flex items-center gap-2.5 overflow-hidden">
-          <NavLink to="/dashboard" className="flex items-center group">
-            <GaHrmsLogo
-              size={collapsed ? "xs" : "sm"}
-              variant="dark"
-              iconOnly={collapsed}
-            />
-          </NavLink>
-        </div>
+      <div
+        className={cn(
+          "h-14 flex items-center border-b border-gray-900 shrink-0 bg-gray-950 transition-all",
+          collapsed ? "justify-center px-1" : "justify-between px-3"
+        )}
+      >
+        {collapsed ? (
+          <button
+            onClick={onToggleCollapse}
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-900 transition-colors"
+            title="Expand Sidebar"
+          >
+            <PanelLeftOpen className="w-4 h-4" />
+          </button>
+        ) : (
+          <>
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <NavLink to="/dashboard" className="flex items-center group">
+                <GaHrmsLogo size="sm" variant="dark" iconOnly={false} />
+              </NavLink>
+            </div>
 
-        {/* Desktop Collapse Toggle */}
-        <button
-          onClick={onToggleCollapse}
-          className="hidden md:flex p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-900 transition-colors"
-          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="w-3.5 h-3.5" />
-          ) : (
-            <PanelLeftClose className="w-3.5 h-3.5" />
-          )}
-        </button>
+            {/* Desktop Collapse Toggle */}
+            <button
+              onClick={onToggleCollapse}
+              className="hidden md:flex p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-900 transition-colors"
+              title="Collapse Sidebar"
+            >
+              <PanelLeftClose className="w-3.5 h-3.5" />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Company Selector Widget */}
