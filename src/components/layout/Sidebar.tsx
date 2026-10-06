@@ -155,8 +155,6 @@ export function Sidebar({
               size={collapsed ? "sm" : "md"}
               variant="dark"
               iconOnly={collapsed}
-              showSubtitle={!collapsed}
-              subtitleText="Enterprise Cloud"
             />
           </NavLink>
         </div>

@@ -5,8 +5,6 @@ export interface GaHrmsLogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   variant?: "dark" | "light" | "auto";
   iconOnly?: boolean;
-  showSubtitle?: boolean;
-  subtitleText?: string;
   emblemType?: "silver" | "white" | "gradient" | "square" | "auto";
 }
 
@@ -15,8 +13,6 @@ export const GaHrmsLogo: React.FC<GaHrmsLogoProps> = ({
   size = "md",
   variant = "auto",
   iconOnly = false,
-  showSubtitle = false,
-  subtitleText = "Enterprise OS",
   emblemType = "auto",
 }) => {
   const sizeMap = {
@@ -157,25 +153,15 @@ export const GaHrmsLogo: React.FC<GaHrmsLogoProps> = ({
 
       {/* 🏛️ Pure Monochrome Bold Italic Wordmark: GA HRMS */}
       {!iconOnly && (
-        <div className="flex flex-col justify-center leading-none">
-          <div className="font-heading font-black italic uppercase leading-none flex items-baseline tracking-[-0.045em]">
-            <span className={`${sizeMap.gaText} ${gaColor} transition-colors`}>
-              GA
-            </span>
-            <span
-              className={`${sizeMap.hrmsText} ${hrmsColor} transition-colors ml-1`}
-            >
-              HRMS
-            </span>
-          </div>
-
-          {showSubtitle && (
-            <span
-              className={`${sizeMap.subText} uppercase font-semibold tracking-wider text-gray-400 mt-1`}
-            >
-              {subtitleText}
-            </span>
-          )}
+        <div className="font-heading font-black italic uppercase leading-none flex items-baseline tracking-[-0.045em]">
+          <span className={`${sizeMap.gaText} ${gaColor} transition-colors`}>
+            GA
+          </span>
+          <span
+            className={`${sizeMap.hrmsText} ${hrmsColor} transition-colors ml-1`}
+          >
+            HRMS
+          </span>
         </div>
       )}
     </div>

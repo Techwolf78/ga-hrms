@@ -943,7 +943,7 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2 space-y-3">
               <Link to="/" className="inline-flex items-center group">
-                <GaHrmsLogo size="md" variant="light" showSubtitle subtitleText="Enterprise OS" />
+                <GaHrmsLogo size="md" variant="light" />
               </Link>
               <p className="text-gray-500 text-xs max-w-sm leading-relaxed">
                 The modern standard for enterprise workforce management, biometric attendance,
