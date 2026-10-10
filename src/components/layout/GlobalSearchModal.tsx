@@ -13,6 +13,7 @@ import {
   Clock,
   X,
   WalletCards,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "../../lib/authContext";
 import { useHrms } from "../../lib/hrmsContext";
@@ -99,6 +100,37 @@ export function GlobalSearchModal({
             d.category.toLowerCase().includes(cleanQuery),
         )
         .slice(0, 3)
+    : [];
+
+  const adminModules = isSuperOrHr
+    ? [
+        {
+          title: "Recruitment & ATS",
+          path: "/recruitment",
+          subtitle: "Hiring pipelines, candidate stages & job postings",
+          keywords: "recruitment ats candidates jobs hiring interview talent requisition",
+        },
+        {
+          title: "Asset & IT Management",
+          path: "/assets",
+          subtitle: "Hardware inventory, laptop allocations & warranties",
+          keywords: "assets it laptops computers hardware inventory serial devices macbook",
+        },
+        {
+          title: "Performance & OKRs",
+          path: "/performance",
+          subtitle: "Quarterly OKRs, key results & 360 appraisal evaluations",
+          keywords: "performance okrs goals appraisal pms kpi reviews ratings",
+        },
+      ]
+    : [];
+
+  const matchedModules = cleanQuery
+    ? adminModules.filter(
+        (m) =>
+          m.title.toLowerCase().includes(cleanQuery) ||
+          m.keywords.toLowerCase().includes(cleanQuery)
+      )
     : [];
 
   const handleSelect = (path: string) => {
@@ -222,6 +254,29 @@ export function GlobalSearchModal({
           {/* Search Results */}
           {cleanQuery && (
             <>
+              {matchedModules.length > 0 && (
+                <div>
+                  <p className="px-3 text-xs font-semibold uppercase tracking-wider text-text-muted mb-1.5 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5" /> Modules & Apps ({matchedModules.length})
+                  </p>
+                  <div className="space-y-1">
+                    {matchedModules.map((mod) => (
+                      <button
+                        key={mod.path}
+                        onClick={() => handleSelect(mod.path)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-button text-sm text-left hover:bg-gray-100 hover:text-gray-950 transition-colors"
+                      >
+                        <div>
+                          <div className="font-semibold text-text-primary">{mod.title}</div>
+                          <div className="text-xs text-text-muted">{mod.subtitle}</div>
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {matchedEmployees.length > 0 && (
                 <div>
                   <p className="px-3 text-xs font-semibold uppercase tracking-wider text-text-muted mb-1.5 flex items-center gap-1.5">
@@ -334,7 +389,8 @@ export function GlobalSearchModal({
                 </div>
               )}
 
-              {matchedEmployees.length === 0 &&
+              {matchedModules.length === 0 &&
+                matchedEmployees.length === 0 &&
                 matchedDepartments.length === 0 &&
                 matchedLeaves.length === 0 &&
                 matchedDocs.length === 0 && (

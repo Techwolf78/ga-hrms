@@ -18,6 +18,11 @@ import {
   initialNotifications,
   initialAuditLogs,
   initialSettings,
+  initialJobs,
+  initialCandidates,
+  initialAssets,
+  initialGoals,
+  initialAppraisals,
 } from "./seedData";
 import { CurrentUser } from "../types/hrms";
 
@@ -55,7 +60,19 @@ export function initializeHrmsStorage(forceReset = false) {
     storage.set(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
     storage.set(STORAGE_KEYS.AUDIT_LOGS, initialAuditLogs);
     storage.set(STORAGE_KEYS.SETTINGS, initialSettings);
+    storage.set(STORAGE_KEYS.JOBS, initialJobs);
+    storage.set(STORAGE_KEYS.CANDIDATES, initialCandidates);
+    storage.set(STORAGE_KEYS.ASSETS, initialAssets);
+    storage.set(STORAGE_KEYS.GOALS, initialGoals);
+    storage.set(STORAGE_KEYS.APPRAISALS, initialAppraisals);
     storage.set(STORAGE_KEYS.INITIALIZED, true);
     console.log("✅ GA-HRMS LocalStorage successfully initialized with enterprise demo dataset.");
+  } else {
+    // Migration guard: ensure new modules exist if user already had previous storage
+    if (!storage.get(STORAGE_KEYS.JOBS, null)) storage.set(STORAGE_KEYS.JOBS, initialJobs);
+    if (!storage.get(STORAGE_KEYS.CANDIDATES, null)) storage.set(STORAGE_KEYS.CANDIDATES, initialCandidates);
+    if (!storage.get(STORAGE_KEYS.ASSETS, null)) storage.set(STORAGE_KEYS.ASSETS, initialAssets);
+    if (!storage.get(STORAGE_KEYS.GOALS, null)) storage.set(STORAGE_KEYS.GOALS, initialGoals);
+    if (!storage.get(STORAGE_KEYS.APPRAISALS, null)) storage.set(STORAGE_KEYS.APPRAISALS, initialAppraisals);
   }
 }

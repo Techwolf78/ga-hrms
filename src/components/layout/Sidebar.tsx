@@ -26,6 +26,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ChevronDown,
+  Laptop,
+  Target,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../lib/authContext";
@@ -141,6 +143,14 @@ export function Sidebar({
           badge: unreadNotifsCount > 0 ? unreadNotifsCount : undefined,
         },
         { label: "Audit Logs", path: "/admin/audit-logs", icon: ScrollText, roles: ["SUPER_ADMIN", "HR_ADMIN"] },
+      ],
+    },
+    {
+      group: "More Modules",
+      items: [
+        { label: "Recruitment & ATS", path: "/recruitment", icon: Briefcase, roles: ["SUPER_ADMIN", "HR_ADMIN"] },
+        { label: "Asset & IT", path: "/assets", icon: Laptop, roles: ["SUPER_ADMIN", "HR_ADMIN"] },
+        { label: "Performance & OKRs", path: "/performance", icon: Target, roles: ["SUPER_ADMIN", "HR_ADMIN"] },
       ],
     },
   ];

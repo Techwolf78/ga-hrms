@@ -18,6 +18,11 @@ import {
   NotificationItem,
   AuditLog,
   CompanySettings,
+  JobPosting,
+  Candidate,
+  CompanyAsset,
+  PerformanceGoal,
+  AppraisalReview,
 } from "../types/hrms";
 import { storage, STORAGE_KEYS } from "./storage";
 import { useAuth } from "./authContext";
@@ -44,6 +49,11 @@ interface HrmsContextType {
   notifications: NotificationItem[];
   auditLogs: AuditLog[];
   settings: CompanySettings;
+  jobs: JobPosting[];
+  candidates: Candidate[];
+  assets: CompanyAsset[];
+  performanceGoals: PerformanceGoal[];
+  appraisalReviews: AppraisalReview[];
 
   // Actions
   addEmployee: (employee: Omit<Employee, "id">) => Employee;
@@ -74,6 +84,18 @@ interface HrmsContextType {
   markAllNotificationsRead: () => void;
   uploadDocument: (doc: Omit<EmployeeDocument, "id" | "uploadDate">) => void;
   resetAllData: () => void;
+
+  // New modules actions
+  addJob: (job: Omit<JobPosting, "id" | "postedDate" | "applicantsCount">) => JobPosting;
+  updateJobStatus: (id: string, status: JobPosting["status"]) => void;
+  addCandidate: (candidate: Omit<Candidate, "id" | "appliedDate">) => Candidate;
+  updateCandidateStage: (id: string, stage: Candidate["stage"]) => void;
+  addAsset: (asset: Omit<CompanyAsset, "id">) => CompanyAsset;
+  allocateAsset: (assetId: string, employeeId: string, employeeName: string) => void;
+  returnAsset: (assetId: string) => void;
+  addGoal: (goal: Omit<PerformanceGoal, "id">) => PerformanceGoal;
+  updateGoalProgress: (id: string, progress: number) => void;
+  submitAppraisalReview: (reviewId: string, managerRating: number, feedback: string) => void;
 }
 
 const HrmsContext = createContext<HrmsContextType | undefined>(undefined);
@@ -107,6 +129,11 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => storage.get(STORAGE_KEYS.AUDIT_LOGS, []));
   const [settings, setSettings] = useState<CompanySettings>(() => storage.get(STORAGE_KEYS.SETTINGS, {} as CompanySettings));
+  const [jobs, setJobs] = useState<JobPosting[]>(() => storage.get(STORAGE_KEYS.JOBS, []));
+  const [candidates, setCandidates] = useState<Candidate[]>(() => storage.get(STORAGE_KEYS.CANDIDATES, []));
+  const [assets, setAssets] = useState<CompanyAsset[]>(() => storage.get(STORAGE_KEYS.ASSETS, []));
+  const [performanceGoals, setPerformanceGoals] = useState<PerformanceGoal[]>(() => storage.get(STORAGE_KEYS.GOALS, []));
+  const [appraisalReviews, setAppraisalReviews] = useState<AppraisalReview[]>(() => storage.get(STORAGE_KEYS.APPRAISALS, []));
 
   // Subscribe to storage changes
   useEffect(() => {
@@ -130,6 +157,11 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         case STORAGE_KEYS.NOTIFICATIONS: setNotifications(value); break;
         case STORAGE_KEYS.AUDIT_LOGS: setAuditLogs(value); break;
         case STORAGE_KEYS.SETTINGS: setSettings(value); break;
+        case STORAGE_KEYS.JOBS: setJobs(value); break;
+        case STORAGE_KEYS.CANDIDATES: setCandidates(value); break;
+        case STORAGE_KEYS.ASSETS: setAssets(value); break;
+        case STORAGE_KEYS.GOALS: setPerformanceGoals(value); break;
+        case STORAGE_KEYS.APPRAISALS: setAppraisalReviews(value); break;
         case "*":
           // Storage cleared
           window.location.reload();
@@ -626,6 +658,156 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success(`Document "${newDoc.title}" uploaded.`);
   }, [documents, toast]);
 
+  // --- RECRUITMENT & ATS ACTIONS ---
+  const addJob = useCallback((jobData: Omit<JobPosting, "id" | "postedDate" | "applicantsCount">): JobPosting => {
+    const newJob: JobPosting = {
+      ...jobData,
+      id: `job-${Date.now()}`,
+      postedDate: new Date().toISOString().split("T")[0],
+      applicantsCount: 0,
+    };
+    const updated = [newJob, ...jobs];
+    storage.set(STORAGE_KEYS.JOBS, updated);
+    setJobs(updated);
+    toast.success(`Job requisition "${newJob.title}" created.`);
+    recordAuditLog(`Job Requisition Created: ${newJob.title}`, "SYSTEM", `Openings: ${newJob.openingsCount}`, user || undefined);
+    return newJob;
+  }, [jobs, user, toast]);
+
+  const updateJobStatus = useCallback((id: string, status: JobPosting["status"]) => {
+    const updated = jobs.map((j) => (j.id === id ? { ...j, status } : j));
+    storage.set(STORAGE_KEYS.JOBS, updated);
+    setJobs(updated);
+    toast.info(`Job status updated to ${status}.`);
+  }, [jobs, toast]);
+
+  const addCandidate = useCallback((candidateData: Omit<Candidate, "id" | "appliedDate">): Candidate => {
+    const newCandidate: Candidate = {
+      ...candidateData,
+      id: `cand-${Date.now()}`,
+      appliedDate: new Date().toISOString().split("T")[0],
+    };
+    const updated = [newCandidate, ...candidates];
+    storage.set(STORAGE_KEYS.CANDIDATES, updated);
+    setCandidates(updated);
+    // increment job applicants count
+    const updatedJobs = jobs.map((j) => (j.id === newCandidate.jobId ? { ...j, applicantsCount: j.applicantsCount + 1 } : j));
+    storage.set(STORAGE_KEYS.JOBS, updatedJobs);
+    setJobs(updatedJobs);
+    toast.success(`Candidate "${newCandidate.fullName}" added to pipeline.`);
+    return newCandidate;
+  }, [candidates, jobs, toast]);
+
+  const updateCandidateStage = useCallback((id: string, stage: Candidate["stage"]) => {
+    const cand = candidates.find((c) => c.id === id);
+    const updated = candidates.map((c) => (c.id === id ? { ...c, stage } : c));
+    storage.set(STORAGE_KEYS.CANDIDATES, updated);
+    setCandidates(updated);
+    toast.success(`Candidate ${cand?.fullName || ""} moved to stage: ${stage}.`);
+    recordAuditLog(`Candidate Stage Updated`, "EMPLOYEE", `${cand?.fullName} -> ${stage}`, user || undefined);
+  }, [candidates, user, toast]);
+
+  // --- ASSET MANAGEMENT ACTIONS ---
+  const addAsset = useCallback((assetData: Omit<CompanyAsset, "id">): CompanyAsset => {
+    const newAsset: CompanyAsset = {
+      ...assetData,
+      id: `ast-${Date.now()}`,
+    };
+    const updated = [newAsset, ...assets];
+    storage.set(STORAGE_KEYS.ASSETS, updated);
+    setAssets(updated);
+    toast.success(`Asset "${newAsset.name}" [${newAsset.assetTag}] registered.`);
+    recordAuditLog(`Asset Registered: ${newAsset.assetTag}`, "SETTINGS", newAsset.name, user || undefined);
+    return newAsset;
+  }, [assets, user, toast]);
+
+  const allocateAsset = useCallback((assetId: string, employeeId: string, employeeName: string) => {
+    const emp = employees.find((e) => e.id === employeeId);
+    const updated = assets.map((a) => {
+      if (a.id === assetId) {
+        return {
+          ...a,
+          status: "ALLOCATED" as const,
+          assignedToEmployeeId: employeeId,
+          assignedToEmployeeName: employeeName,
+          assignedDate: new Date().toISOString().split("T")[0],
+          department: emp ? departments.find((d) => d.id === emp.departmentId)?.name : a.department,
+        };
+      }
+      return a;
+    });
+    storage.set(STORAGE_KEYS.ASSETS, updated);
+    setAssets(updated);
+    toast.success(`Asset allocated to ${employeeName}.`);
+    recordAuditLog(`Asset Allocated`, "EMPLOYEE", `Asset ID ${assetId} assigned to ${employeeName}`, user || undefined);
+  }, [assets, employees, departments, user, toast]);
+
+  const returnAsset = useCallback((assetId: string) => {
+    const targetAsset = assets.find((a) => a.id === assetId);
+    const updated = assets.map((a) => {
+      if (a.id === assetId) {
+        return {
+          ...a,
+          status: "AVAILABLE" as const,
+          assignedToEmployeeId: undefined,
+          assignedToEmployeeName: undefined,
+          assignedDate: undefined,
+        };
+      }
+      return a;
+    });
+    storage.set(STORAGE_KEYS.ASSETS, updated);
+    setAssets(updated);
+    toast.info(`Asset ${targetAsset?.assetTag || ""} checked back into available stock.`);
+    recordAuditLog(`Asset Returned`, "SYSTEM", `Asset ${targetAsset?.assetTag} returned to IT Stock`, user || undefined);
+  }, [assets, user, toast]);
+
+  // --- PERFORMANCE & OKRs ACTIONS ---
+  const addGoal = useCallback((goalData: Omit<PerformanceGoal, "id">): PerformanceGoal => {
+    const newGoal: PerformanceGoal = {
+      ...goalData,
+      id: `goal-${Date.now()}`,
+    };
+    const updated = [newGoal, ...performanceGoals];
+    storage.set(STORAGE_KEYS.GOALS, updated);
+    setPerformanceGoals(updated);
+    toast.success(`Objective / OKR "${newGoal.title}" created.`);
+    return newGoal;
+  }, [performanceGoals, toast]);
+
+  const updateGoalProgress = useCallback((id: string, progress: number) => {
+    const safeProgress = Math.min(100, Math.max(0, progress));
+    const updated = performanceGoals.map((g) => {
+      if (g.id === id) {
+        const status = safeProgress === 100 ? ("COMPLETED" as const) : safeProgress > 0 ? ("IN_PROGRESS" as const) : ("NOT_STARTED" as const);
+        return { ...g, progressPercent: safeProgress, status };
+      }
+      return g;
+    });
+    storage.set(STORAGE_KEYS.GOALS, updated);
+    setPerformanceGoals(updated);
+    toast.info(`Goal progress updated to ${safeProgress}%.`);
+  }, [performanceGoals, toast]);
+
+  const submitAppraisalReview = useCallback((reviewId: string, managerRating: number, feedback: string) => {
+    const updated = appraisalReviews.map((r) => {
+      if (r.id === reviewId) {
+        return {
+          ...r,
+          managerRating,
+          feedback,
+          status: "COMPLETED" as const,
+          submittedDate: new Date().toISOString().split("T")[0],
+        };
+      }
+      return r;
+    });
+    storage.set(STORAGE_KEYS.APPRAISALS, updated);
+    setAppraisalReviews(updated);
+    toast.success("Manager appraisal review successfully submitted.");
+    recordAuditLog(`Appraisal Review Submitted`, "EMPLOYEE", `Review ID: ${reviewId}, Rating: ${managerRating}★`, user || undefined);
+  }, [appraisalReviews, user, toast]);
+
   // --- RESET DEMO DATA ---
   const resetAllData = useCallback(() => {
     storage.clear();
@@ -653,6 +835,11 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notifications,
         auditLogs,
         settings,
+        jobs,
+        candidates,
+        assets,
+        performanceGoals,
+        appraisalReviews,
         addEmployee,
         updateEmployee,
         deleteEmployee,
@@ -675,6 +862,16 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         markAllNotificationsRead,
         uploadDocument,
         resetAllData,
+        addJob,
+        updateJobStatus,
+        addCandidate,
+        updateCandidateStage,
+        addAsset,
+        allocateAsset,
+        returnAsset,
+        addGoal,
+        updateGoalProgress,
+        submitAppraisalReview,
       }}
     >
       {children}

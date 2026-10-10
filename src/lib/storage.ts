@@ -25,6 +25,11 @@ export const STORAGE_KEYS = {
   NOTIFICATIONS: 'hrms_notifications',
   AUDIT_LOGS: 'hrms_audit_logs',
   SETTINGS: 'hrms_settings',
+  JOBS: 'hrms_jobs',
+  CANDIDATES: 'hrms_candidates',
+  ASSETS: 'hrms_assets',
+  GOALS: 'hrms_goals',
+  APPRAISALS: 'hrms_appraisals',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];

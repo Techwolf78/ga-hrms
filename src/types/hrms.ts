@@ -298,3 +298,118 @@ export interface CompanySettings {
   theme: 'light' | 'dark' | 'system';
   compactMode: boolean;
 }
+
+// ----------------------------------------------------
+// RECRUITMENT & ATS MODULE TYPES
+// ----------------------------------------------------
+export type JobStatus = 'OPEN' | 'DRAFT' | 'ON_HOLD' | 'CLOSED';
+export type JobType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'REMOTE' | 'HYBRID';
+export type CandidateStage = 'SOURCED' | 'SCREENING' | 'INTERVIEW' | 'OFFER' | 'HIRED' | 'REJECTED';
+
+export interface JobPosting {
+  id: string;
+  title: string;
+  departmentId: string;
+  departmentName: string;
+  location: string;
+  type: JobType;
+  experience: string;
+  salaryRange: string;
+  openingsCount: number;
+  applicantsCount: number;
+  status: JobStatus;
+  postedDate: string;
+  closingDate?: string;
+  description: string;
+  requirements: string[];
+}
+
+export interface Candidate {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  currentCompany?: string;
+  currentDesignation?: string;
+  experienceYears: number;
+  expectedCtc: number;
+  stage: CandidateStage;
+  rating: number; // 1 to 5
+  appliedDate: string;
+  resumeUrl?: string;
+  notes?: string;
+}
+
+// ----------------------------------------------------
+// ASSET & IT MANAGEMENT MODULE TYPES
+// ----------------------------------------------------
+export type AssetCategory = 'LAPTOP' | 'MONITOR' | 'MOBILE' | 'ACCESSORY' | 'LICENSE';
+export type AssetStatus = 'ALLOCATED' | 'AVAILABLE' | 'MAINTENANCE' | 'RETIRED';
+export type AssetCondition = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'NEEDS_REPAIR';
+
+export interface CompanyAsset {
+  id: string;
+  assetTag: string; // e.g. AST-LT-001
+  name: string;
+  category: AssetCategory;
+  model: string;
+  serialNumber: string;
+  purchaseDate: string;
+  warrantyExpiry: string;
+  purchaseCost: number;
+  status: AssetStatus;
+  condition: AssetCondition;
+  assignedToEmployeeId?: string;
+  assignedToEmployeeName?: string;
+  assignedDate?: string;
+  department?: string;
+  notes?: string;
+}
+
+// ----------------------------------------------------
+// PERFORMANCE & OKRs MODULE TYPES
+// ----------------------------------------------------
+export type GoalPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type GoalStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'BEHIND' | 'COMPLETED';
+
+export interface KeyResult {
+  id: string;
+  title: string;
+  target: number;
+  current: number;
+  unit: string;
+}
+
+export interface PerformanceGoal {
+  id: string;
+  title: string;
+  quarter: string; // e.g. Q3 2026
+  departmentId: string;
+  departmentName: string;
+  ownerEmployeeId: string;
+  ownerName: string;
+  ownerAvatar?: string;
+  priority: GoalPriority;
+  status: GoalStatus;
+  progressPercent: number; // 0 - 100
+  dueDate: string;
+  keyResults: KeyResult[];
+}
+
+export interface AppraisalReview {
+  id: string;
+  cycle: string; // e.g. Annual Review 2026
+  employeeId: string;
+  employeeName: string;
+  employeeDesignation: string;
+  department: string;
+  reviewerId: string;
+  reviewerName: string;
+  selfRating: number; // 1 to 5
+  managerRating: number; // 1 to 5
+  status: 'PENDING_SELF' | 'PENDING_MANAGER' | 'COMPLETED';
+  feedback?: string;
+  submittedDate?: string;
+}

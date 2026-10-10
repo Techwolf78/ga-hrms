@@ -33,6 +33,9 @@ import { UsersRolesPage } from "./pages/admin/UsersRolesPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
 import { NotificationsPage } from "./pages/admin/NotificationsPage";
 import { AuditLogsPage } from "./pages/admin/AuditLogsPage";
+import { RecruitmentPage } from "./pages/recruitment/RecruitmentPage";
+import { AssetsPage } from "./pages/assets/AssetsPage";
+import { PerformancePage } from "./pages/performance/PerformancePage";
 
 import { UserRole } from "./types/hrms";
 
@@ -242,6 +245,32 @@ function MainAppContent() {
             element={
               <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
                 <AuditLogsPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Extended Enterprise Modules */}
+          <Route
+            path="/recruitment"
+            element={
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+                <RecruitmentPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/assets"
+            element={
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+                <AssetsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/performance"
+            element={
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+                <PerformancePage />
               </RoleRoute>
             }
           />
