@@ -9,8 +9,9 @@ export interface ModalProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
   className?: string;
+  bodyClassName?: string;
 }
 
 export function Modal({
@@ -22,6 +23,7 @@ export function Modal({
   footer,
   size = "md",
   className,
+  bodyClassName,
 }: ModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,6 +49,9 @@ export function Modal({
     lg: "max-w-2xl",
     xl: "max-w-4xl",
     "2xl": "max-w-5xl",
+    "3xl": "max-w-6xl",
+    "4xl": "max-w-7xl",
+    full: "max-w-[96vw] w-[96vw]",
   };
 
   return (
@@ -60,14 +65,14 @@ export function Modal({
       {/* Modal Dialog */}
       <div
         className={cn(
-          "relative w-full bg-white rounded-card shadow-elevated border border-surface-border overflow-hidden z-10 animate-scale-in my-8",
+          "relative w-full bg-white rounded-card shadow-elevated border border-surface-border overflow-hidden z-10 animate-scale-in my-8 flex flex-col max-h-[92vh]",
           sizeClasses[size],
           className,
         )}
       >
         {/* Header */}
         {(title || description) && (
-          <div className="px-6 py-4 border-b border-surface-border flex items-start justify-between bg-surface-subtle/50">
+          <div className="px-6 py-4 border-b border-surface-border flex items-start justify-between bg-surface-subtle/50 shrink-0">
             <div>
               {typeof title === "string" ? (
                 <h3 className="text-lg font-semibold text-text-primary tracking-tight">
@@ -92,13 +97,13 @@ export function Modal({
         )}
 
         {/* Content */}
-        <div className="p-6 max-h-[calc(85vh-130px)] overflow-y-auto">
+        <div className={cn("p-6 overflow-y-auto flex-1 min-h-0", bodyClassName)}>
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-surface-border bg-gray-50 flex items-center justify-end gap-3 rounded-b-card">
+          <div className="px-6 py-4 border-t border-surface-border bg-gray-50 flex items-center justify-end gap-3 rounded-b-card shrink-0">
             {footer}
           </div>
         )}

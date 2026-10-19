@@ -24,14 +24,14 @@ import {
   initialGoals,
   initialAppraisals,
 } from "./seedData";
-import { CurrentUser } from "../types/hrms";
+import { CurrentUser, Employee } from "../types/hrms";
 
 export const DEFAULT_USER: CurrentUser = {
   id: "EMP-1001",
   name: "Ajay Pawar",
   email: "ajay.pawar@ga-hrms.io",
   role: "SUPER_ADMIN",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+  avatar: "/avatars/superman.jpg",
   employeeId: "EMP-1001",
   designation: "Vice President of Engineering",
   department: "Engineering & Cloud Platforms",
@@ -80,5 +80,30 @@ export function initializeHrmsStorage(forceReset = false) {
     checkAndSeed(STORAGE_KEYS.ASSETS, initialAssets);
     checkAndSeed(STORAGE_KEYS.GOALS, initialGoals);
     checkAndSeed(STORAGE_KEYS.APPRAISALS, initialAppraisals);
+
+    // Sync Ajay Pawar avatar to Superman in existing localStorage
+    const currentEmployees = storage.get<Employee[]>(STORAGE_KEYS.EMPLOYEES, []);
+    if (Array.isArray(currentEmployees) && currentEmployees.length > 0) {
+      let updated = false;
+      const syncedEmployees = currentEmployees.map((emp) => {
+        if (emp.id === "EMP-1001" || emp.email === "ajay.pawar@ga-hrms.io") {
+          if (emp.avatar !== "/avatars/superman.jpg") {
+            updated = true;
+            return { ...emp, avatar: "/avatars/superman.jpg" };
+          }
+        }
+        return emp;
+      });
+      if (updated) {
+        storage.set(STORAGE_KEYS.EMPLOYEES, syncedEmployees);
+      }
+    }
+
+    const currentUser = storage.get<CurrentUser | null>(STORAGE_KEYS.USER, null);
+    if (currentUser && (currentUser.id === "EMP-1001" || currentUser.email === "ajay.pawar@ga-hrms.io")) {
+      if (currentUser.avatar !== "/avatars/superman.jpg") {
+        storage.set(STORAGE_KEYS.USER, { ...currentUser, avatar: "/avatars/superman.jpg" });
+      }
+    }
   }
 }

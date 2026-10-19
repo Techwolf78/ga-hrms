@@ -10,7 +10,6 @@ import {
   Trash2,
   Clock,
   CalendarCheck2,
-  Receipt,
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -18,22 +17,39 @@ import {
   UserX,
   Building2,
   X,
+  Calculator,
+  Mail,
+  Send,
+  FileCheck,
+  FileWarning,
+  Sparkles,
 } from "lucide-react";
 import { useHrms } from "../../lib/hrmsContext";
+import { useToast } from "../../lib/toastContext";
 import { Employee, EmploymentStatus } from "../../types/hrms";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Avatar } from "../../components/ui/Avatar";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { formatDate, exportToCsv } from "../../lib/utils";
+import { CtcCalculatorModal } from "./CtcCalculatorModal";
 
 export interface EmployeesPageProps {
   onOpenAddEmployee?: () => void;
 }
 
+type AccountTab = "ALL" | "DOCUMENT_PENDING" | "SEND_CREDENTIALS";
+
 export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
-  const { employees, departments, designations, branches, deleteEmployee } = useHrms();
+  const { employees, departments, designations, branches, deleteEmployee, documents } = useHrms();
+  const { success, info } = useToast();
   const navigate = useNavigate();
+
+  // Employee Account Tabs
+  const [activeTab, setActiveTab] = useState<AccountTab>("ALL");
+
+  // CTC Calculator Modal
+  const [isCtcCalculatorOpen, setIsCtcCalculatorOpen] = useState(false);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,6 +64,31 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
   // Delete modal state
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
+  // Helper to check employee document completion status
+  const getEmployeeDocStatus = (emp: Employee) => {
+    const empDocs = documents.filter((d) => d.employeeId === emp.id);
+    const hasOnboardingData = emp.familyDetails || emp.educationDetails?.length || emp.workExperienceDetails?.length;
+    
+    // If has full onboarding or >= 3 uploaded docs, consider verified, else pending
+    const isPending = empDocs.length < 2 && !hasOnboardingData && emp.status === "PROBATION";
+    return {
+      isPending,
+      count: empDocs.length + (hasOnboardingData ? 8 : 1),
+      totalRequired: 14,
+    };
+  };
+
+  // Tab Counts
+  const tabCounts = useMemo(() => {
+    const docPending = employees.filter((e) => getEmployeeDocStatus(e).isPending).length;
+    const sendCreds = employees.filter((e) => e.status === "ACTIVE" || e.status === "PROBATION").length;
+    return {
+      all: employees.length,
+      docPending,
+      sendCreds,
+    };
+  }, [employees, documents]);
+
   // Quick Stats
   const stats = useMemo(() => {
     const total = employees.length;
@@ -61,6 +102,15 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
   // Filtered employees
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
+      // Tab filter
+      const docStatus = getEmployeeDocStatus(emp);
+      if (activeTab === "DOCUMENT_PENDING" && !docStatus.isPending) {
+        return false;
+      }
+      if (activeTab === "SEND_CREDENTIALS" && emp.status !== "ACTIVE" && emp.status !== "PROBATION") {
+        return false;
+      }
+
       const matchesSearch =
         searchQuery === "" ||
         `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,7 +123,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
 
       return matchesSearch && matchesDept && matchesBranch && matchesStatus;
     });
-  }, [employees, searchQuery, selectedDept, selectedBranch, selectedStatus]);
+  }, [employees, activeTab, searchQuery, selectedDept, selectedBranch, selectedStatus, documents]);
 
   // Paginated records
   const totalPages = Math.ceil(filteredEmployees.length / pageSize) || 1;
@@ -86,14 +136,60 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
     searchQuery !== "" ||
     selectedDept !== "ALL" ||
     selectedBranch !== "ALL" ||
-    selectedStatus !== "ALL";
+    selectedStatus !== "ALL" ||
+    activeTab !== "ALL";
 
   const clearFilters = () => {
+    setActiveTab("ALL");
     setSearchQuery("");
     setSelectedDept("ALL");
     setSelectedBranch("ALL");
     setSelectedStatus("ALL");
     setCurrentPage(1);
+  };
+
+  // Export Document Pending Report (from Screenshot 12)
+  const handleExportPendingDocReport = () => {
+    const pendingList = employees.filter((e) => getEmployeeDocStatus(e).isPending);
+    const headers = [
+      "Employee ID",
+      "Full Name",
+      "Email",
+      "Department",
+      "Designation",
+      "Joining Date",
+      "Pending Documents Count",
+      "Status",
+    ];
+
+    const rows = pendingList.map((e) => {
+      const dept = departments.find((d) => d.id === e.departmentId)?.name || e.departmentId;
+      const desig = designations.find((d) => d.id === e.designationId)?.title || e.designationId;
+      const docStat = getEmployeeDocStatus(e);
+      return [
+        e.employeeCode,
+        `${e.firstName} ${e.lastName}`,
+        e.email,
+        dept,
+        desig,
+        e.joiningDate,
+        `${docStat.totalRequired - docStat.count} documents pending`,
+        e.status,
+      ];
+    });
+
+    exportToCsv("GA_HRMS_Document_Pending_Report", headers, rows);
+    success(`Exported Document Pending report with ${rows.length} records.`);
+  };
+
+  // Send Mail to All (Screenshot 12)
+  const handleSendMailToAll = () => {
+    success(`Portal onboarding credentials & welcome guide successfully dispatched to ${tabCounts.sendCreds} active employees.`);
+  };
+
+  // Individual Send Credentials
+  const handleSendSingleCredentials = (emp: Employee) => {
+    info(`Onboarding access & login credentials emailed to ${emp.firstName} ${emp.lastName} (${emp.email}).`);
   };
 
   // Export to CSV
@@ -131,6 +227,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
     });
 
     exportToCsv("GA_HRMS_Employees_Export", headers, rows);
+    success(`Exported ${rows.length} employee records to CSV.`);
   };
 
   const getStatusBadge = (status: EmploymentStatus) => {
@@ -148,47 +245,135 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
-            Employee Directory
+            Employee Directory & Accounts
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Manage your {employees.length} organization members, profiles, statutory identities, and compensation records.
+          <p className="text-sm text-gray-500 mt-1">
+            Manage your organization members, statutory profiles, onboarding compliance, and credentials.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
-            onClick={handleExportCSV}
+            onClick={handleExportPendingDocReport}
             variant="outline"
-            size="md"
+            size="sm"
             leftIcon={<Download className="w-4 h-4 text-gray-500" />}
           >
-            Export CSV
+            Pending Docs Report
           </Button>
 
           <Button
-            onClick={() => alert("Simulated: Bulk import XLSX/CSV modal.")}
+            onClick={handleSendMailToAll}
             variant="outline"
-            size="md"
-            leftIcon={<Upload className="w-4 h-4 text-gray-500" />}
+            size="sm"
+            leftIcon={<Mail className="w-4 h-4 text-gray-500" />}
           >
-            Import
+            Send Credentials
+          </Button>
+
+          <Button
+            onClick={() => setIsCtcCalculatorOpen(true)}
+            variant="outline"
+            size="sm"
+            leftIcon={<Calculator className="w-4 h-4 text-gray-500" />}
+          >
+            CTC Calculator
+          </Button>
+
+          <Button
+            onClick={handleExportCSV}
+            variant="outline"
+            size="sm"
+            leftIcon={<Download className="w-4 h-4 text-gray-500" />}
+          >
+            Export
           </Button>
 
           {onOpenAddEmployee && (
             <Button
               onClick={onOpenAddEmployee}
               variant="primary"
-              size="md"
+              size="sm"
               leftIcon={<Plus className="w-4 h-4" />}
             >
-              Add Employee
+              Onboard Employee
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Clean Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => {
+            setActiveTab("ALL");
+            setCurrentPage(1);
+          }}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === "ALL"
+              ? "bg-gray-950 text-white shadow-xs"
+              : "bg-white text-gray-600 border border-gray-200 hover:text-gray-950 hover:bg-gray-50"
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>All Accounts</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              activeTab === "ALL" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {tabCounts.all}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("DOCUMENT_PENDING");
+            setCurrentPage(1);
+          }}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === "DOCUMENT_PENDING"
+              ? "bg-gray-950 text-white shadow-xs"
+              : "bg-white text-gray-600 border border-gray-200 hover:text-gray-950 hover:bg-gray-50"
+          }`}
+        >
+          <FileWarning className="w-4 h-4 text-amber-500" />
+          <span>Document Pending</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              activeTab === "DOCUMENT_PENDING" ? "bg-white/20 text-white" : "bg-amber-50 text-amber-800 border border-amber-200"
+            }`}
+          >
+            {tabCounts.docPending}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("SEND_CREDENTIALS");
+            setCurrentPage(1);
+          }}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === "SEND_CREDENTIALS"
+              ? "bg-gray-950 text-white shadow-xs"
+              : "bg-white text-gray-600 border border-gray-200 hover:text-gray-950 hover:bg-gray-50"
+          }`}
+        >
+          <Send className="w-4 h-4 text-indigo-500" />
+          <span>Send Credentials</span>
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              activeTab === "SEND_CREDENTIALS" ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
+            }`}
+          >
+            {tabCounts.sendCreds}
+          </span>
+        </button>
       </div>
 
       {/* Minimalist Executive KPI Ribbon */}
@@ -340,7 +525,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                 <th className="py-3.5 px-4">ID</th>
                 <th className="py-3.5 px-4">Department</th>
                 <th className="py-3.5 px-4">Designation</th>
-                <th className="py-3.5 px-4">Branch</th>
+                <th className="py-3.5 px-4">Onboarding Docs</th>
                 <th className="py-3.5 px-4">Joining Date</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -357,7 +542,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                 paginatedEmployees.map((emp) => {
                   const dept = departments.find((d) => d.id === emp.departmentId);
                   const desig = designations.find((d) => d.id === emp.designationId);
-                  const branch = branches.find((b) => b.id === emp.branchId);
+                  const docStat = getEmployeeDocStatus(emp);
 
                   return (
                     <tr
@@ -374,8 +559,11 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                             size="sm"
                           />
                           <div>
-                            <div className="font-semibold text-gray-950 group-hover:text-black transition-colors">
-                              {emp.firstName} {emp.lastName}
+                            <div className="font-semibold text-gray-950 group-hover:text-black transition-colors flex items-center gap-1.5">
+                              <span>{emp.firstName} {emp.lastName}</span>
+                              {emp.familyDetails && (
+                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Full Onboarding Profile Completed" />
+                              )}
                             </div>
                             <div className="text-xs text-gray-500">{emp.email}</div>
                           </div>
@@ -399,9 +587,17 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                         {desig?.title || "Staff Member"}
                       </td>
 
-                      {/* Branch */}
-                      <td className="py-3 px-4 text-gray-600 text-xs">
-                        {branch?.city || "Pune"}
+                      {/* Onboarding Documents Status */}
+                      <td className="py-3 px-4">
+                        {docStat.isPending ? (
+                          <Badge variant="warning" size="sm" dot>
+                            Docs Pending ({docStat.count}/{docStat.totalRequired})
+                          </Badge>
+                        ) : (
+                          <Badge variant="success" size="sm" dot>
+                            Verified ({Math.min(docStat.count, docStat.totalRequired)}/{docStat.totalRequired})
+                          </Badge>
+                        )}
                       </td>
 
                       {/* Joining Date */}
@@ -421,10 +617,19 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                           <button
                             onClick={() => navigate(`/people/employees/${emp.id}`)}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-gray-950 hover:bg-gray-100 transition-colors"
-                            title="View Profile"
+                            title="View Profile & Onboarding Data"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          
+                          <button
+                            onClick={() => handleSendSingleCredentials(emp)}
+                            className="p-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors"
+                            title="Send Portal Credentials"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+
                           <button
                             onClick={() => navigate(`/time/attendance?emp=${emp.id}`)}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
@@ -516,6 +721,13 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
         description="Deleting this employee will remove them from active HR rosters, attendance, and payroll processing. This action cannot be undone."
         confirmText="Delete Employee"
         variant="danger"
+      />
+
+      {/* Standalone CTC Calculator Modal */}
+      <CtcCalculatorModal
+        isOpen={isCtcCalculatorOpen}
+        onClose={() => setIsCtcCalculatorOpen(false)}
+        initialGross={27000}
       />
     </div>
   );

@@ -283,7 +283,7 @@ export function Sidebar({
         <div className="flex items-center gap-2.5">
           <div className="relative">
             <img
-              src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
+              src={user?.avatar || "/avatars/superman.jpg"}
               alt={user?.name || "User"}
               className="w-8 h-8 rounded-full object-cover border border-gray-800"
             />

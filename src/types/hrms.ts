@@ -96,6 +96,93 @@ export interface Employee {
   // Compensation summary
   monthlyCtc: number;
   annualCtc: number;
+  performanceBonusAmount?: number;
+  performanceBonusFrequency?: "MONTHLY" | "QUARTERLY" | "HALF_YEARLY" | "YEARLY";
+
+  // Extended Onboarding & Profile details (from Onboarding Wizard)
+  middleName?: string;
+  personalEmail?: string;
+  alternatePhone?: string;
+  bloodGroup?: string;
+  maritalStatus?: string;
+  nationality?: string;
+  presentAddress?: string;
+  permanentAddress?: string;
+  presentCity?: string;
+  permanentCity?: string;
+  presentState?: string;
+  permanentState?: string;
+  presentPincode?: string;
+  permanentPincode?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
+  workMode?: 'ON_SITE' | 'HYBRID' | 'REMOTE';
+  probationMonths?: number;
+  noticePeriodDays?: number;
+  secondaryManagerId?: string;
+  buddyId?: string;
+  nomineeName?: string;
+  nomineeRelationship?: string;
+  branchName?: string;
+  familyDetails?: FamilyDetails;
+  educationDetails?: EducationDetail[];
+  workExperienceDetails?: WorkExperienceDetail[];
+  socialDetails?: SocialDetails;
+  firstReference?: ReferenceDetail;
+  secondReference?: ReferenceDetail;
+  policiesAccepted?: boolean;
+  offerLetterAccepted?: boolean;
+  onboardingCompleted?: boolean;
+}
+
+export interface FamilyDetails {
+  fathersName?: string;
+  mothersName?: string;
+  fathersDob?: string;
+  mothersDob?: string;
+  fathersAge?: number;
+  mothersAge?: number;
+  spouseName?: string;
+  spouseDob?: string;
+  firstChildName?: string;
+  firstChildDob?: string;
+  secondChildName?: string;
+  secondChildDob?: string;
+}
+
+export interface EducationDetail {
+  id: string;
+  educationClass: string;
+  schoolUniversity: string;
+  boardStudyField: string;
+  year: string;
+  grade?: string;
+}
+
+export interface WorkExperienceDetail {
+  id: string;
+  experienceLevel?: string;
+  organisationName: string;
+  from: string;
+  to: string;
+  designation: string;
+  reasonOfLeaving?: string;
+}
+
+export interface SocialDetails {
+  linkedin?: string;
+  instagram?: string;
+  facebook?: string;
+  twitter?: string;
+  portfolio?: string;
+}
+
+export interface ReferenceDetail {
+  name: string;
+  contactNo: string;
+  email: string;
+  designation?: string;
 }
 
 export type AttendanceStatus = 'PRESENT' | 'LATE' | 'HALF_DAY' | 'ABSENT' | 'LEAVE' | 'HOLIDAY' | 'WEEK_OFF';

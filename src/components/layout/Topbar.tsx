@@ -293,7 +293,7 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
             className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-gray-900/10 transition-all"
           >
             <img
-              src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
+              src={user?.avatar || "/avatars/superman.jpg"}
               alt=""
               className="w-8 h-8 rounded-full object-cover border border-gray-200"
             />

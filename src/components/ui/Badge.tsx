@@ -30,23 +30,23 @@ export function Badge({
 
   const variantStyles = {
     default: "bg-gray-100 text-gray-700 border border-gray-200",
-    success: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    warning: "bg-amber-50 text-amber-700 border border-amber-200",
-    danger: "bg-rose-50 text-rose-700 border border-rose-200",
-    purple: "bg-indigo-50 text-indigo-700 border border-indigo-200/60",
-    cyan: "bg-cyan-50 text-cyan-800 border border-cyan-200",
-    neutral: "bg-slate-100 text-slate-600 border border-slate-200",
+    success: "bg-gray-50 text-gray-900 border border-gray-300 font-medium",
+    warning: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
+    danger: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
+    purple: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
+    cyan: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
+    neutral: "bg-gray-100 text-gray-600 border border-gray-200",
     outline: "bg-transparent text-gray-700 border border-gray-300",
   };
 
   const dotColors = {
     default: "bg-gray-400",
-    success: "bg-emerald-500",
-    warning: "bg-amber-500",
-    danger: "bg-rose-500",
-    purple: "bg-indigo-500",
-    cyan: "bg-cyan-500",
-    neutral: "bg-slate-400",
+    success: "bg-gray-950",
+    warning: "bg-gray-600",
+    danger: "bg-gray-700",
+    purple: "bg-gray-600",
+    cyan: "bg-gray-600",
+    neutral: "bg-gray-400",
     outline: "bg-gray-400",
   };
 
@@ -60,7 +60,7 @@ export function Badge({
       )}
       {...props}
     >
-      {dot && <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", dotColors[variant])} />}
+      {dot && <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", dotColors[variant])} />}
       {children}
     </span>
   );

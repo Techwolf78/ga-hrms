@@ -363,31 +363,163 @@ export function EmployeeProfilePage() {
 
           {/* TAB 2: PERSONAL */}
           <TabContent value="personal">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-xs">
+            <div className="space-y-6">
+              {/* Basic Bio Grid */}
               <div>
-                <span className="text-text-muted">First Name</span>
-                <p className="text-sm font-semibold text-text-primary mt-1">{employee.firstName}</p>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+                  Basic Personal Dossier
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                  <div>
+                    <span className="text-text-muted">Full Name</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">
+                      {employee.firstName} {employee.middleName ? `${employee.middleName} ` : ""}{employee.lastName}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Gender</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">{employee.gender}</p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Date of Birth</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">{formatDate(employee.dob)}</p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Blood Group</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">{employee.bloodGroup || "O+"}</p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Marital Status</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">{employee.maritalStatus || "Single"}</p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Personal Email</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">{employee.personalEmail || employee.email}</p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Contact Phone</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">{employee.phone}</p>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Emergency Contact</span>
+                    <p className="text-sm font-semibold text-text-primary mt-1">
+                      {employee.emergencyContactName ? `${employee.emergencyContactName} (${employee.emergencyContactRelation || "Family"})` : employee.phone}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="text-text-muted">Last Name</span>
-                <p className="text-sm font-semibold text-text-primary mt-1">{employee.lastName}</p>
+
+              {/* Residential Addresses */}
+              <div className="pt-4 border-t border-surface-border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+                  Residential Addresses
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="font-bold text-gray-900 block mb-1">Present Residential Address</span>
+                    <p className="text-gray-700">{employee.presentAddress || "Flat 402, Green Meadows, Baner Road"}</p>
+                    <p className="text-gray-500 text-[11px] mt-0.5">
+                      {employee.presentCity || "Pune"}, {employee.presentState || "Maharashtra"} - {employee.presentPincode || "411045"}
+                    </p>
+                  </div>
+                  <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="font-bold text-gray-900 block mb-1">Permanent Hometown Address</span>
+                    <p className="text-gray-700">{employee.permanentAddress || employee.presentAddress || "Flat 402, Green Meadows, Baner Road"}</p>
+                    <p className="text-gray-500 text-[11px] mt-0.5">
+                      {employee.permanentCity || employee.presentCity || "Pune"}, {employee.permanentState || employee.presentState || "Maharashtra"} - {employee.permanentPincode || employee.presentPincode || "411045"}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="text-text-muted">Gender</span>
-                <p className="text-sm font-semibold text-text-primary mt-1">{employee.gender}</p>
+
+              {/* Family & Dependents */}
+              <div className="pt-4 border-t border-surface-border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+                  Family & Nominee Records
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span className="text-text-muted">Father's Name & Age:</span>
+                    <p className="font-semibold text-text-primary mt-1">
+                      {employee.familyDetails?.fathersName || "Suresh Patil"} {employee.familyDetails?.fathersAge ? `(${employee.familyDetails.fathersAge} yrs)` : ""}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span className="text-text-muted">Mother's Name & Age:</span>
+                    <p className="font-semibold text-text-primary mt-1">
+                      {employee.familyDetails?.mothersName || "Sunita Patil"} {employee.familyDetails?.mothersAge ? `(${employee.familyDetails.mothersAge} yrs)` : ""}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span className="text-text-muted">Bank Payout Nominee:</span>
+                    <p className="font-semibold text-text-primary mt-1">
+                      {employee.nomineeName || employee.familyDetails?.mothersName || "Sunita Patil"} ({employee.nomineeRelationship || "Mother"})
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="text-text-muted">Date of Birth</span>
-                <p className="text-sm font-semibold text-text-primary mt-1">{formatDate(employee.dob)}</p>
-              </div>
-              <div>
-                <span className="text-text-muted">Personal Email</span>
-                <p className="text-sm font-semibold text-text-primary mt-1">{employee.email}</p>
-              </div>
-              <div>
-                <span className="text-text-muted">Contact Phone</span>
-                <p className="text-sm font-semibold text-text-primary mt-1">{employee.phone}</p>
-              </div>
+
+              {/* Education Qualifications */}
+              {employee.educationDetails && employee.educationDetails.length > 0 && (
+                <div className="pt-4 border-t border-surface-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+                    Educational Qualifications
+                  </h4>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 font-semibold">
+                        <tr>
+                          <th className="py-2 px-3">Qualification</th>
+                          <th className="py-2 px-3">Institute / University</th>
+                          <th className="py-2 px-3">Specialization</th>
+                          <th className="py-2 px-3">Year</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {employee.educationDetails.map((edu) => (
+                          <tr key={edu.id}>
+                            <td className="py-2 px-3 font-semibold text-gray-900">{edu.educationClass}</td>
+                            <td className="py-2 px-3 text-gray-700">{edu.schoolUniversity}</td>
+                            <td className="py-2 px-3 text-gray-600">{edu.boardStudyField}</td>
+                            <td className="py-2 px-3 text-gray-600">{edu.year}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Prior Work Experience */}
+              {employee.workExperienceDetails && employee.workExperienceDetails.length > 0 && (
+                <div className="pt-4 border-t border-surface-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+                    Prior Work Experience History
+                  </h4>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 font-semibold">
+                        <tr>
+                          <th className="py-2 px-3">Organisation</th>
+                          <th className="py-2 px-3">Designation</th>
+                          <th className="py-2 px-3">Duration</th>
+                          <th className="py-2 px-3">Reason for Leaving</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {employee.workExperienceDetails.map((exp) => (
+                          <tr key={exp.id}>
+                            <td className="py-2 px-3 font-semibold text-gray-900">{exp.organisationName}</td>
+                            <td className="py-2 px-3 text-gray-700">{exp.designation}</td>
+                            <td className="py-2 px-3 text-gray-600">{exp.from} to {exp.to}</td>
+                            <td className="py-2 px-3 text-gray-600">{exp.reasonOfLeaving}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </TabContent>
 
