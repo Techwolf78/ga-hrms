@@ -10,9 +10,14 @@ import { cn } from "../../lib/utils";
 export interface AppShellProps {
   onOpenAddEmployee?: () => void;
   onOpenApplyLeave?: () => void;
+  onOpenAttendanceCorrection?: () => void;
 }
 
-export function AppShell({ onOpenAddEmployee, onOpenApplyLeave }: AppShellProps) {
+export function AppShell({
+  onOpenAddEmployee,
+  onOpenApplyLeave,
+  onOpenAttendanceCorrection,
+}: AppShellProps) {
   const { settings } = useHrms();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -71,6 +76,7 @@ export function AppShell({ onOpenAddEmployee, onOpenApplyLeave }: AppShellProps)
         onClose={() => setSearchModalOpen(false)}
         onOpenAddEmployee={onOpenAddEmployee}
         onOpenApplyLeave={onOpenApplyLeave}
+        onOpenAttendanceCorrection={onOpenAttendanceCorrection}
       />
     </div>
   );

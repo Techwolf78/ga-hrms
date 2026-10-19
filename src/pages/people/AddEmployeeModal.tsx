@@ -78,7 +78,7 @@ interface DocumentItem {
 }
 
 export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
-  const { departments, designations, branches, employees, shifts, addEmployee, uploadDocument } = useHrms();
+  const { departments, designations, branches, employees, shifts, addEmployee, uploadBatchDocuments } = useHrms();
   
   // Wizard navigation
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -556,17 +556,19 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
       onboardingCompleted: true,
     });
 
-    // Upload verified documents to Document repository
+    // Upload verified documents to Document repository in batch (silent to prevent toast flooding)
     const uploadedDocs = documentItems.filter((d) => d.status === "VERIFIED" || d.status === "UPLOADED");
-    uploadedDocs.forEach((doc) => {
-      uploadDocument({
-        employeeId: newEmp.id,
-        title: doc.title,
-        category: doc.category,
-        fileSize: "1.2 MB",
-        fileType: "PDF",
-      });
-    });
+    if (uploadedDocs.length > 0) {
+      uploadBatchDocuments(
+        uploadedDocs.map((doc) => ({
+          employeeId: newEmp.id,
+          title: doc.title,
+          category: doc.category,
+          fileSize: "1.2 MB",
+          fileType: "PDF",
+        }))
+      );
+    }
 
     onClose();
   };
@@ -580,50 +582,49 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
         onClose={onClose}
         size={isFullscreen ? "full" : "3xl"}
         bodyClassName="p-0 overflow-hidden flex flex-col"
-        className="transition-all duration-300"
+        containerClassName="p-2 sm:p-3"
+        className="h-[94vh] max-h-[96vh] my-0.5 sm:my-1 transition-all duration-300"
       >
         <div className="flex flex-col flex-1 min-h-0">
-          {/* Top Wizard Navigation Bar */}
-          <div className="bg-white text-gray-950 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-900 shrink-0">
-                <FileCheck2 className="w-4 h-4" />
+          {/* Top Wizard Navigation Bar (Compact Single-line) */}
+          <div className="bg-white text-gray-950 px-4 py-2 flex items-center justify-between gap-3 border-b border-gray-200 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center text-gray-900 shrink-0">
+                <FileCheck2 className="w-3.5 h-3.5" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base sm:text-lg font-bold tracking-tight text-gray-950">
-                    Employee Onboarding Wizard
-                  </h3>
-                  <Badge variant="neutral" size="sm">
-                    10-Step Workflow
-                  </Badge>
-                </div>
-                <p className="text-xs text-gray-500">
-                  Comprehensive candidate dossier, statutory compliance & digital onboarding verification
-                </p>
+              <div className="flex items-center gap-2 min-w-0">
+                <h3 className="text-sm font-bold tracking-tight text-gray-950 whitespace-nowrap">
+                  Employee Onboarding Wizard
+                </h3>
+                <span className="text-[10px] font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200 shrink-0">
+                  10 Steps
+                </span>
+                <span className="text-[11px] text-gray-400 font-normal hidden md:inline truncate">
+                  • Comprehensive candidate dossier, statutory compliance & digital onboarding verification
+                </span>
               </div>
             </div>
 
             {/* Quick Actions & Utilities */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               {/* Demo Presets */}
-              <div className="hidden lg:flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg p-1 text-xs">
-                <span className="text-gray-500 px-1.5 font-medium flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-gray-700" /> Presets:
+              <div className="hidden lg:flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-md p-0.5 text-xs">
+                <span className="text-gray-400 px-1 text-[10px] font-medium flex items-center gap-0.5">
+                  <Sparkles className="w-3 h-3 text-gray-600" /> Presets:
                 </span>
                 <button
                   type="button"
                   onClick={() => loadPreset("tech")}
-                  className="px-2 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors font-medium"
+                  className="px-1.5 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors text-[11px] font-medium"
                 >
-                  Sr. Engineer
+                  Sr. Eng
                 </button>
                 <button
                   type="button"
                   onClick={() => loadPreset("design")}
-                  className="px-2 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors font-medium"
+                  className="px-1.5 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors text-[11px] font-medium"
                 >
-                  Product Lead
+                  Lead
                 </button>
               </div>
 
@@ -631,47 +632,37 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
               <button
                 type="button"
                 onClick={() => setIsCtcCalculatorOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-xs font-semibold shadow-2xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-xs font-semibold shadow-2xs transition-colors"
               >
-                <Calculator className="w-3.5 h-3.5 text-gray-600" />
-                <span>CTC Calculator</span>
+                <Calculator className="w-3 h-3 text-gray-600" />
+                <span>CTC Calc</span>
               </button>
 
               {/* Fullscreen Toggle */}
               <button
                 type="button"
                 onClick={() => setIsFullscreen(!isFullscreen)}
-                className="text-gray-400 hover:text-gray-950 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-400 hover:text-gray-950 p-1 rounded-md hover:bg-gray-100 transition-colors"
                 title={isFullscreen ? "Exit Fullscreen" : "Expand Fullscreen"}
               >
-                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
               </button>
 
               {/* Close */}
               <button
                 type="button"
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-950 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-400 hover:text-gray-950 p-1 rounded-md hover:bg-gray-100 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Stepper Progress Ribbon */}
-          <div className="bg-gray-50/70 border-b border-gray-200 px-6 py-2.5">
-            <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-2">
-              <span className="flex items-center gap-2">
-                <span className="font-semibold text-gray-950">
-                  Step {currentStep} of {steps.length}:
-                </span>
-                <span className="text-gray-700">{steps[currentStep - 1]?.title}</span>
-              </span>
-              <span className="text-xs font-bold text-gray-950">{progressPercent}% Completed</span>
-            </div>
-
-            {/* Stepper Progress Bar */}
-            <div className="w-full bg-gray-200/80 h-1 rounded-full overflow-hidden mb-2.5">
+          {/* Stepper Progress Ribbon (Compact Single Rail) */}
+          <div className="bg-gray-50/80 border-b border-gray-200 px-4 py-1.5 shrink-0">
+            {/* Top mini progress line */}
+            <div className="w-full bg-gray-200 h-0.5 rounded-full overflow-hidden mb-1.5">
               <div
                 className="bg-gray-950 h-full transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
@@ -679,7 +670,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             </div>
 
             {/* Step buttons rail */}
-            <div className="flex items-center justify-between overflow-x-auto pb-0.5 gap-1.5 scrollbar-none">
+            <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none pb-0.5">
               {steps.map((s) => {
                 const isCompleted = currentStep > s.num;
                 const isCurrent = currentStep === s.num;
@@ -689,16 +680,16 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     key={s.num}
                     type="button"
                     onClick={() => setCurrentStep(s.num)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all shrink-0 ${
                       isCurrent
-                        ? "bg-gray-950 text-white shadow-xs"
+                        ? "bg-gray-950 text-white shadow-2xs"
                         : isCompleted
-                        ? "bg-gray-100 text-gray-900 border border-gray-300 font-semibold"
-                        : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                        ? "bg-gray-100 text-gray-900 border border-gray-300"
+                        : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold ${
                         isCurrent
                           ? "bg-white/20 text-white"
                           : isCompleted
@@ -716,24 +707,24 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
           </div>
 
           {/* Stepper Content Area */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto bg-white min-h-0">
             {/* ========================================================================= */}
             {/* STEP 1: ACCEPT OFFER LETTER */}
             {/* ========================================================================= */}
             {currentStep === 1 && (
-              <div className="max-w-3xl mx-auto space-y-6 animate-fade-in py-2">
-                <div className="text-center space-y-1">
-                  <h3 className="text-xl font-bold text-gray-950 tracking-tight">
+              <div className="max-w-3xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="text-center space-y-0.5">
+                  <h3 className="text-base font-bold text-gray-950 tracking-tight">
                     Candidate Offer Letter Acceptance
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     The formal employment offer has been dispatched. Please record the candidate's acknowledgment.
                   </p>
                 </div>
 
                 {/* Offer Summary Card with Compensation & Performance Bonus */}
-                <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-xs space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+                <div className="bg-white rounded-lg p-3.5 border border-gray-200 shadow-2xs space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                     <div>
                       <span className="text-gray-500 font-medium">Designation:</span>
                       <p className="font-bold text-gray-950 text-sm mt-0.5">
@@ -757,8 +748,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                   </div>
 
                   {/* Compensation Summary Ribbon */}
-                  <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/70 p-3.5 rounded-lg border border-gray-200/80">
-                    <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <div className="pt-2.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-gray-50/70 p-3 rounded-lg border border-gray-200/80">
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
                       <div>
                         <span className="text-gray-500 block">Monthly Fixed Gross:</span>
                         <span className="font-bold text-gray-950 text-sm">{formatINR(monthlyCtc)}</span>
@@ -795,7 +786,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setIsCtcCalculatorOpen(true)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-gray-950 bg-white hover:bg-gray-100 rounded-lg border border-gray-300 shadow-2xs transition-colors shrink-0"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-gray-950 bg-white hover:bg-gray-100 rounded-md border border-gray-300 shadow-2xs transition-colors shrink-0"
                     >
                       <Calculator className="w-3.5 h-3.5 text-gray-600" />
                       <span>CTC Calculator</span>
@@ -803,8 +794,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                   </div>
                 </div>
 
-                <div className="p-5 bg-gray-50 rounded-xl border border-gray-200 space-y-4 text-xs text-gray-700">
-                  <div className="space-y-1">
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2.5 text-xs text-gray-700">
+                  <div className="space-y-0.5">
                     <h5 className="font-semibold text-gray-900">
                       1. What occurs upon candidate <span className="text-gray-950 font-bold">Acceptance</span>?
                     </h5>
@@ -813,7 +804,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     </p>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-3 space-y-1">
+                  <div className="border-t border-gray-200 pt-2 space-y-0.5">
                     <h5 className="font-semibold text-gray-900">
                       2. What occurs upon candidate <span className="text-gray-950 font-bold">Decline</span>?
                     </h5>
@@ -824,17 +815,17 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-center gap-3 pt-2">
+                <div className="flex items-center justify-center gap-2.5 pt-1">
                   <Button
                     type="button"
                     variant="outline"
-                    size="md"
+                    size="sm"
                     onClick={() => {
                       setOfferDeclined(true);
                       setOfferAccepted(false);
                       alert("Candidate offer marked as declined.");
                     }}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-100 h-8 text-xs"
                   >
                     Decline Offer
                   </Button>
@@ -842,21 +833,22 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                   <Button
                     type="button"
                     variant="primary"
-                    size="md"
+                    size="sm"
                     onClick={() => {
                       setOfferAccepted(true);
                       setOfferDeclined(false);
                       setCurrentStep(2);
                     }}
-                    leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                    leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                    className="h-8 text-xs"
                   >
                     Accept Offer & Proceed
                   </Button>
                 </div>
 
                 {offerAccepted && (
-                  <div className="flex items-center justify-center gap-2 text-xs font-semibold text-gray-900 pt-1">
-                    <CheckCircle2 className="w-4 h-4 text-gray-950" />
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-900 pt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-gray-950" />
                     Offer confirmed accepted. Proceed to candidate dossier.
                   </div>
                 )}
@@ -867,8 +859,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 2: PERSONAL DETAILS (Screenshot 2) */}
             {/* ========================================================================= */}
             {currentStep === 2 && (
-              <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3 flex items-center justify-between">
+              <div className="max-w-5xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                   <div>
                     <h4 className="text-base font-bold text-gray-950">Personal Details & Identification</h4>
                     <p className="text-xs text-gray-500">
@@ -878,7 +870,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                   <Badge variant="neutral" size="sm">Mandatory Step</Badge>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <Input
                     label="First Name *"
                     value={firstName}
@@ -991,11 +983,11 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Indian Statutory Numbers */}
-                <div className="pt-4 border-t border-gray-200">
-                  <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
+                <div className="pt-2.5 border-t border-gray-200">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                     Statutory & Compliance Identification
                   </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <Input
                       label="PAN No. *"
                       value={pan}
@@ -1026,7 +1018,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Addresses */}
-                <div className="pt-4 border-t border-gray-200 space-y-4">
+                <div className="pt-2.5 border-t border-gray-200 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500">
                       Residential Address Details
@@ -1042,9 +1034,9 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Present Address */}
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
                       <span className="text-xs font-bold text-gray-900 block">Present Address</span>
                       <Input
                         label="Street / House No. *"
@@ -1075,7 +1067,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     </div>
 
                     {/* Permanent Address */}
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
                       <span className="text-xs font-bold text-gray-900 block">Permanent Address</span>
                       <Input
                         label="Street / House No. *"
@@ -1117,15 +1109,15 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 3: FAMILY DETAILS (Screenshot 3) */}
             {/* ========================================================================= */}
             {currentStep === 3 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2">
                   <h4 className="text-base font-bold text-gray-950">Family Details & Dependent Records</h4>
                   <p className="text-xs text-gray-500">
                     Required for group medical insurance policy, gratuity nomination, and emergency protocols
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     label="Father’s Name *"
                     value={fathersName}
@@ -1167,8 +1159,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     placeholder="e.g. 55"
                   />
 
-                  <div className="sm:col-span-2 pt-3 border-t border-gray-100">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-3">
+                  <div className="sm:col-span-2 pt-2.5 border-t border-gray-100">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1.5">
                       Spouse & Children (If Applicable)
                     </span>
                   </div>
@@ -1219,8 +1211,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 4: EDUCATION DETAILS (Screenshot 4) */}
             {/* ========================================================================= */}
             {currentStep === 4 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3 flex items-center justify-between">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                   <div>
                     <h4 className="text-base font-bold text-gray-950">Education Qualifications</h4>
                     <p className="text-xs text-gray-500">
@@ -1231,36 +1223,36 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Table of added educations */}
-                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
+                <div className="border border-gray-200 rounded-lg overflow-hidden shadow-2xs">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold">
-                        <th className="py-2.5 px-3">Education Class</th>
-                        <th className="py-2.5 px-3">School / University</th>
-                        <th className="py-2.5 px-3">Board / Study Field</th>
-                        <th className="py-2.5 px-3">Year</th>
-                        <th className="py-2.5 px-3">Grade / Score</th>
-                        <th className="py-2.5 px-3 text-center w-12">Action</th>
+                        <th className="py-1.5 px-3">Education Class</th>
+                        <th className="py-1.5 px-3">School / University</th>
+                        <th className="py-1.5 px-3">Board / Study Field</th>
+                        <th className="py-1.5 px-3">Year</th>
+                        <th className="py-1.5 px-3">Grade / Score</th>
+                        <th className="py-1.5 px-3 text-center w-12">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {educationList.map((edu) => (
                         <tr key={edu.id} className="hover:bg-gray-50/50">
-                          <td className="py-2.5 px-3 font-bold text-gray-900">{edu.educationClass}</td>
-                          <td className="py-2.5 px-3 font-medium text-gray-800">{edu.schoolUniversity}</td>
-                          <td className="py-2.5 px-3 text-gray-600">{edu.boardStudyField}</td>
-                          <td className="py-2.5 px-3 font-semibold text-gray-700">{edu.year}</td>
-                          <td className="py-2.5 px-3">
+                          <td className="py-1.5 px-3 font-bold text-gray-900">{edu.educationClass}</td>
+                          <td className="py-1.5 px-3 font-medium text-gray-800">{edu.schoolUniversity}</td>
+                          <td className="py-1.5 px-3 text-gray-600">{edu.boardStudyField}</td>
+                          <td className="py-1.5 px-3 font-semibold text-gray-700">{edu.year}</td>
+                          <td className="py-1.5 px-3">
                             <Badge variant="success" size="sm">{edu.grade || "Passed"}</Badge>
                           </td>
-                          <td className="py-2.5 px-3 text-center">
+                          <td className="py-1.5 px-3 text-center">
                             <button
                               type="button"
                               onClick={() => handleRemoveEducation(edu.id)}
                               className="text-gray-400 hover:text-gray-700 p-1 transition-colors"
                               title="Delete"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </td>
                         </tr>
@@ -1270,11 +1262,11 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Add Education Box matching Screenshot 4 */}
-                <div className="p-5 bg-gray-50 rounded-xl border border-gray-200 space-y-4">
-                  <h5 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-gray-950" /> Add New Education Record
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2.5">
+                  <h5 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5 text-gray-950" /> Add New Education Record
                   </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Select
                       label="Education Class *"
                       value={newEduClass}
@@ -1317,7 +1309,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                       variant="primary"
                       size="sm"
                       onClick={handleAddEducation}
-                      leftIcon={<Plus className="w-4 h-4" />}
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                      className="h-8 text-xs"
                     >
                       + Add Education
                     </Button>
@@ -1330,8 +1323,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 5: BANK DETAILS (Screenshot 5) */}
             {/* ========================================================================= */}
             {currentStep === 5 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3 flex items-center justify-between">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                   <div>
                     <h4 className="text-base font-bold text-gray-950">Salary Disbursement Bank & Nominee</h4>
                     <p className="text-xs text-gray-500">
@@ -1341,7 +1334,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                   <Badge variant="neutral" size="sm">Direct Deposit</Badge>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     label="IFSC Code *"
                     value={ifscCode}
@@ -1396,8 +1389,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     required
                   />
 
-                  <div className="sm:col-span-2 pt-3 border-t border-gray-100">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-3">
+                  <div className="sm:col-span-2 pt-2.5 border-t border-gray-100">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1.5">
                       Nominee Information
                     </span>
                   </div>
@@ -1431,15 +1424,15 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 6: SOCIAL DETAILS (Screenshot 6) */}
             {/* ========================================================================= */}
             {currentStep === 6 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2">
                   <h4 className="text-base font-bold text-gray-950">Social & Professional Handles</h4>
                   <p className="text-xs text-gray-500">
                     LinkedIn and developer portfolio handles for internal company directory
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     label="Linkedin ID / Profile URL"
                     value={linkedinId}
@@ -1484,17 +1477,17 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 7: REFERENCE DETAILS (Screenshot 7) */}
             {/* ========================================================================= */}
             {currentStep === 7 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2">
                   <h4 className="text-base font-bold text-gray-950">Reference Details (Background Check)</h4>
                   <p className="text-xs text-gray-500">
                     Two professional or academic references for verification
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* First Reference */}
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
                     <span className="text-xs font-bold text-gray-950 uppercase tracking-wider block">
                       FIRST REFERENCE
                     </span>
@@ -1523,7 +1516,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                   </div>
 
                   {/* Second Reference */}
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
                     <span className="text-xs font-bold text-gray-950 uppercase tracking-wider block">
                       SECOND REFERENCE
                     </span>
@@ -1558,8 +1551,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 8: WORK EXPERIENCE DETAILS (Screenshot 8) */}
             {/* ========================================================================= */}
             {currentStep === 8 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3 flex items-center justify-between">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                   <div>
                     <h4 className="text-base font-bold text-gray-950">Prior Work Experience History</h4>
                     <p className="text-xs text-gray-500">
@@ -1570,27 +1563,27 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Table of past experiences */}
-                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
+                <div className="border border-gray-200 rounded-lg overflow-hidden shadow-2xs">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold">
-                        <th className="py-2.5 px-3">Organisation Name</th>
-                        <th className="py-2.5 px-3">Designation</th>
-                        <th className="py-2.5 px-3">Duration</th>
-                        <th className="py-2.5 px-3">Reason of Leaving</th>
-                        <th className="py-2.5 px-3 text-center w-12">Action</th>
+                        <th className="py-1.5 px-3">Organisation Name</th>
+                        <th className="py-1.5 px-3">Designation</th>
+                        <th className="py-1.5 px-3">Duration</th>
+                        <th className="py-1.5 px-3">Reason of Leaving</th>
+                        <th className="py-1.5 px-3 text-center w-12">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {workExpList.map((exp) => (
                         <tr key={exp.id} className="hover:bg-gray-50/50">
-                          <td className="py-2.5 px-3 font-bold text-gray-900">{exp.organisationName}</td>
-                          <td className="py-2.5 px-3 font-semibold text-gray-800">{exp.designation}</td>
-                          <td className="py-2.5 px-3 text-gray-600">
+                          <td className="py-1.5 px-3 font-bold text-gray-900">{exp.organisationName}</td>
+                          <td className="py-1.5 px-3 font-semibold text-gray-800">{exp.designation}</td>
+                          <td className="py-1.5 px-3 text-gray-600">
                             {exp.from} to {exp.to}
                           </td>
-                          <td className="py-2.5 px-3 text-gray-600">{exp.reasonOfLeaving}</td>
-                          <td className="py-2.5 px-3 text-center">
+                          <td className="py-1.5 px-3 text-gray-600">{exp.reasonOfLeaving}</td>
+                          <td className="py-1.5 px-3 text-center">
                             <button
                               type="button"
                               onClick={() => handleRemoveExperience(exp.id)}
@@ -1606,9 +1599,9 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* Add Work Experience Box matching Screenshot 8 */}
-                <div className="p-5 bg-gray-50 rounded-xl border border-gray-200 space-y-4">
-                  <h5 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-gray-950" /> Add Past Employment Record
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2.5">
+                  <h5 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5 text-gray-950" /> Add Past Employment Record
                   </h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select
@@ -1667,7 +1660,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                       variant="primary"
                       size="sm"
                       onClick={handleAddExperience}
-                      leftIcon={<Plus className="w-4 h-4" />}
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                      className="h-8 text-xs"
                     >
                       + Add Work Experience
                     </Button>
@@ -1680,8 +1674,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 9: UPLOAD DOCUMENTS (Screenshot 9) */}
             {/* ========================================================================= */}
             {currentStep === 9 && (
-              <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3 flex items-center justify-between">
+              <div className="max-w-5xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                   <div>
                     <h4 className="text-base font-bold text-gray-950">Document Upload & Verification Matrix</h4>
                     <p className="text-xs text-gray-500">
@@ -1700,11 +1694,11 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 </div>
 
                 {/* 14 Documents Matrix matching Screenshot 9 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {documentItems.map((doc) => (
                     <div
                       key={doc.id}
-                      className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-200 flex flex-col justify-between gap-2"
+                      className="p-2.5 bg-gray-50/70 rounded-lg border border-gray-200 flex flex-col justify-between gap-1.5"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-gray-900">
@@ -1719,14 +1713,14 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 px-3 py-1.5 bg-white border border-gray-300 rounded text-xs text-gray-600 truncate">
+                        <div className="flex-1 px-2.5 py-1 bg-white border border-gray-300 rounded text-xs text-gray-600 truncate">
                           {doc.fileName ? doc.fileName : "No file chosen"}
                         </div>
 
                         <button
                           type="button"
                           onClick={() => handleSimulateUpload(doc.id)}
-                          className="px-3 py-1.5 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors shrink-0"
+                          className="px-2.5 py-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors shrink-0"
                           title="Upload file"
                         >
                           <Upload className="w-3.5 h-3.5" />
@@ -1742,8 +1736,8 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             {/* STEP 10: COMPANY POLICIES & ACTIVATION (Screenshot 10) */}
             {/* ========================================================================= */}
             {currentStep === 10 && (
-              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                <div className="border-b border-gray-200 pb-3 text-center space-y-1">
+              <div className="max-w-4xl mx-auto space-y-3.5 animate-fade-in">
+                <div className="border-b border-gray-200 pb-2 text-center space-y-0.5">
                   <h4 className="text-lg font-bold text-gray-950">Company Policies</h4>
                   <p className="text-xs text-gray-500">
                     Kindly read all the policies by clicking respective ones
@@ -1757,13 +1751,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "ip" ? "" : "ip")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Intellectual Property Right</span>
                       {openPolicyAccordion === "ip" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "ip" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-3 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
                         <p className="leading-relaxed">
                           If during the period of your employment with us you achieve any invention, process improvement, operational improvement, or another process/method likely to result in the more efficient operation of any of the activities of the company, the company shall be entitled to use, utilize and exploit such improvement and you shall assign all rights thereof to the company for the purpose of seeking any patent rights or for any other purpose. The company shall have the sole ownership rights of all the intellectual property rights that you may create during the tenure of association with the company including but not limited to the creative concept that you may develop during your association with the company.
                         </p>
@@ -1780,13 +1774,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "salary" ? "" : "salary")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Salary Policy</span>
                       {openPolicyAccordion === "salary" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "salary" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-1.5 border-t border-gray-100">
                         <p>
                           Salaries are credited on the last working day of each calendar month. Statutory deductions including Employee Provident Fund (EPF), ESIC, Professional Tax, and TDS under the Indian Income Tax Act will be deducted as applicable by law.
                         </p>
@@ -1799,13 +1793,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "personal" ? "" : "personal")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Personal Particulars</span>
                       {openPolicyAccordion === "personal" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "personal" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-1.5 border-t border-gray-100">
                         <p>
                           Employees are obligated to inform HR within 7 business days of any alteration to residential address, bank account, marital status, or dependent nominee declarations.
                         </p>
@@ -1818,13 +1812,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "confidentiality" ? "" : "confidentiality")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Information Confidentiality</span>
                       {openPolicyAccordion === "confidentiality" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "confidentiality" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-1.5 border-t border-gray-100">
                         <p>
                           Proprietary source code, customer records, pricing methodologies, and confidential corporate data must not be disclosed or disseminated to any external unauthorized third party.
                         </p>
@@ -1837,13 +1831,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "assets" ? "" : "assets")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Company's Assets/ Email</span>
                       {openPolicyAccordion === "assets" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "assets" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-1.5 border-t border-gray-100">
                         <p>
                           Corporate email, workstations, laptops, and credentials are provided exclusively for official duties. Assets must be surrendered in good working order upon separation.
                         </p>
@@ -1856,13 +1850,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "training" ? "" : "training")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Training Policy</span>
                       {openPolicyAccordion === "training" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "training" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-1.5 border-t border-gray-100">
                         <p>
                           New hires undergo a 30-day orientation, security training, and mentoring period. Completion of mandatory POSH and data security modules is required within 14 days of joining.
                         </p>
@@ -1875,13 +1869,13 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                     <button
                       type="button"
                       onClick={() => setOpenPolicyAccordion(openPolicyAccordion === "workplace" ? "" : "workplace")}
-                      className="w-full px-4 py-3 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                      className="w-full px-3.5 py-2 bg-gray-50 text-left font-bold text-xs text-gray-900 flex items-center justify-between hover:bg-gray-100 transition-colors"
                     >
                       <span>Workplace Policy</span>
                       {openPolicyAccordion === "workplace" ? "▲" : "▼"}
                     </button>
                     {openPolicyAccordion === "workplace" && (
-                      <div className="p-4 bg-white text-xs text-gray-800 space-y-2 border-t border-gray-100">
+                      <div className="p-3 bg-white text-xs text-gray-800 space-y-1.5 border-t border-gray-100">
                         <p>
                           Our organization maintains a zero-tolerance policy against workplace harassment, discrimination, or abusive conduct, fully compliant with the POSH Act, 2013.
                         </p>
@@ -2011,37 +2005,48 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
             )}
           </div>
 
-          {/* Stepper Navigation Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          {/* Stepper Navigation Footer (Compact Single Bar) */}
+          <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between shrink-0">
             <Button
               variant="outline"
-              size="md"
+              size="sm"
               onClick={() => {
                 if (currentStep > 1) setCurrentStep(currentStep - 1);
                 else onClose();
               }}
-              leftIcon={<ChevronLeft className="w-4 h-4" />}
+              leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
+              className="h-8 text-xs px-3"
             >
               {currentStep === 1 ? "Cancel" : "Previous Step"}
             </Button>
 
-            <div className="flex items-center gap-3">
+            {/* Inlined Step Progress Indicator */}
+            <div className="text-xs text-gray-500 font-medium hidden sm:flex items-center gap-1.5">
+              <span className="font-semibold text-gray-900">Step {currentStep} of {steps.length}:</span>
+              <span className="text-gray-700">{steps[currentStep - 1]?.title}</span>
+              <span className="text-[10px] bg-gray-200 text-gray-700 font-semibold px-1.5 py-0.5 rounded-full">
+                {progressPercent}%
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
               {currentStep < steps.length ? (
                 <Button
                   variant="primary"
-                  size="md"
+                  size="sm"
                   onClick={() => setCurrentStep(currentStep + 1)}
-                  rightIcon={<ChevronRight className="w-4 h-4" />}
+                  rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
+                  className="h-8 text-xs px-3.5"
                 >
                   Continue to {steps[currentStep]?.short}
                 </Button>
               ) : (
                 <Button
                   variant="primary"
-                  size="md"
+                  size="sm"
                   onClick={handleFinish}
-                  leftIcon={<CheckCircle2 className="w-4 h-4" />}
-                  className="px-6"
+                  leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                  className="h-8 text-xs px-4"
                 >
                   Submit & Activate Employee
                 </Button>

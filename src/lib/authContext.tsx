@@ -15,14 +15,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const DEMO_USERS: Record<UserRole, CurrentUser> = {
   SUPER_ADMIN: {
-    id: "EMP-1001",
-    name: "Ajay Pawar",
-    email: "ajay.pawar@ga-hrms.io",
+    id: "usr-admin-01",
+    name: "System Admin",
+    email: "admin@ga-hrms.io",
     role: "SUPER_ADMIN",
-    avatar: "/avatars/superman.jpg",
-    employeeId: "EMP-1001",
-    designation: "VP of Engineering & Super Admin",
-    department: "Engineering & Cloud Platforms",
+    avatar: "",
+    designation: "System Administrator",
+    department: "System Administration",
   },
   HR_ADMIN: {
     id: "EMP-1002",

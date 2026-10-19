@@ -12,6 +12,7 @@ export interface ModalProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
   className?: string;
   bodyClassName?: string;
+  containerClassName?: string;
 }
 
 export function Modal({
@@ -24,6 +25,7 @@ export function Modal({
   size = "md",
   className,
   bodyClassName,
+  containerClassName,
 }: ModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,7 +57,7 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className={cn("fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto", containerClassName)}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"

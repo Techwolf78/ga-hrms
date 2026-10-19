@@ -335,7 +335,7 @@ export interface EmployeeDocument {
   id: string;
   employeeId: string;
   title: string;
-  category: 'IDENTITY' | 'ACADEMIC' | 'EXPERIENCE' | 'PAYROLL' | 'COMPANY_POLICY';
+  category: 'IDENTITY' | 'ACADEMIC' | 'EXPERIENCE' | 'PAYROLL' | 'COMPANY_POLICY' | 'OTHER';
   fileSize: string;
   uploadDate: string;
   fileType: string;

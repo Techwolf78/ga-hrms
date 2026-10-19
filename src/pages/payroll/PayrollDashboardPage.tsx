@@ -100,22 +100,23 @@ export function PayrollDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight whitespace-nowrap">
             Payroll & Statutory Control Center
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">
             Automated Indian statutory payroll computation, PF/ESIC returns, and direct bank batch disbursement.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto scrollbar-none shrink-0 py-0.5">
           <Button
             onClick={() => navigate("/payroll/salary-structures")}
             variant="outline"
-            size="md"
-            leftIcon={<Coins className="w-4 h-4 text-gray-500" />}
+            size="sm"
+            className="h-8 text-xs whitespace-nowrap px-2.5 sm:px-3 shrink-0"
+            leftIcon={<Coins className="w-3.5 h-3.5 text-gray-500" />}
           >
             Salary Slabs
           </Button>
@@ -123,8 +124,9 @@ export function PayrollDashboardPage() {
           <Button
             onClick={() => navigate("/payroll/payslips")}
             variant="outline"
-            size="md"
-            leftIcon={<FileSpreadsheet className="w-4 h-4 text-gray-500" />}
+            size="sm"
+            className="h-8 text-xs whitespace-nowrap px-2.5 sm:px-3 shrink-0"
+            leftIcon={<FileSpreadsheet className="w-3.5 h-3.5 text-gray-500" />}
           >
             All Payslips
           </Button>
@@ -132,8 +134,9 @@ export function PayrollDashboardPage() {
           <Button
             onClick={() => navigate("/payroll/runs")}
             variant="primary"
-            size="md"
-            leftIcon={<Receipt className="w-4 h-4" />}
+            size="sm"
+            className="h-8 text-xs font-semibold whitespace-nowrap px-3 sm:px-3.5 shadow-xs shrink-0"
+            leftIcon={<Receipt className="w-3.5 h-3.5" />}
           >
             Execute Pay Run
           </Button>

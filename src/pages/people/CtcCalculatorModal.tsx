@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   X,
   Plus,
@@ -118,8 +118,44 @@ export function CtcCalculatorModal({
   onApply,
 }: CtcCalculatorModalProps) {
   const [monthlyGross, setMonthlyGross] = useState<number>(initialGross || 40000);
+  const [grossInputStr, setGrossInputStr] = useState<string>(() => String(initialGross || 40000));
   const [isPfChecked, setIsPfChecked] = useState<boolean>(true);
   const [isEsiChecked, setIsEsiChecked] = useState<boolean>((initialGross || 40000) / 2 <= 21000);
+
+  // Sync state whenever modal opens or props change
+  useEffect(() => {
+    if (isOpen) {
+      const gross = initialGross ?? 40000;
+      setMonthlyGross(gross);
+      setGrossInputStr(gross > 0 ? String(gross) : "");
+      setBonusAmount(initialBonusAmount || 0);
+      setBonusFrequency(initialBonusFrequency || "YEARLY");
+      setIncludeBonus(initialIncludeBonus || (Boolean(initialBonusAmount) && initialBonusAmount > 0));
+      setIsPfChecked(true);
+      setIsEsiChecked(gross / 2 <= 21000);
+    }
+  }, [isOpen, initialGross, initialBonusAmount, initialBonusFrequency, initialIncludeBonus]);
+
+  // Handle Gross input change: clean non-digits and eliminate annoying leading zeros (e.g. 025000 -> 25000)
+  const handleGrossChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const digitsOnly = raw.replace(/\D/g, "");
+    const cleaned = digitsOnly.replace(/^0+(?=\d)/, "");
+    setGrossInputStr(cleaned);
+    const num = cleaned === "" ? 0 : Number(cleaned);
+    setMonthlyGross(num);
+  };
+
+  const handleGrossBlur = () => {
+    if (!grossInputStr || Number(grossInputStr) === 0) {
+      if (grossInputStr === "") {
+        setGrossInputStr("0");
+        setMonthlyGross(0);
+      }
+    } else {
+      setGrossInputStr(String(monthlyGross));
+    }
+  };
 
   // Performance Bonus state (Monthly, Quarterly, Half Yearly, Yearly) - OFF by default
   const [includeBonus, setIncludeBonus] = useState<boolean>(initialIncludeBonus || (Boolean(initialBonusAmount) && initialBonusAmount > 0));
@@ -528,153 +564,119 @@ export function CtcCalculatorModal({
       <div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />
 
       {/* Main Container styled with clean GA-HRMS design, strictly bounded in viewport */}
-      <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-10 animate-scale-in">
-        {/* Clean Modal Header (Pinned at top) */}
-        <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 shrink-0">
-              <Calculator className="w-4 h-4" />
+      <div className="relative w-full max-w-6xl h-[92vh] max-h-[94vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-10 animate-scale-in">
+        {/* Compact Modal Header */}
+        <div className="px-4 py-2 border-b border-gray-200 flex items-center justify-between bg-white shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center text-gray-900 shrink-0">
+              <Calculator className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-gray-950 tracking-tight">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-gray-950 tracking-tight">
                 CTC Compensation Calculator
               </h3>
-              <p className="text-xs text-gray-500">
-                Simulate monthly gross salary, statutory PF/ESI, allowance structures, and net take-home pay.
-              </p>
+              <span className="text-[11px] text-gray-400 font-normal hidden md:inline">
+                • Simulate gross salary, statutory PF/ESI, & net take-home
+              </span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-950 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="text-gray-400 hover:text-gray-950 p-1 rounded-md hover:bg-gray-100 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Executive Top KPI Ribbon */}
-        <div className="px-6 py-3 bg-gray-50/70 border-b border-gray-200 shrink-0">
-          <div
-            className={`grid gap-3 ${
-              includeBonus && bonusAmount > 0
-                ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
-                : "grid-cols-2 lg:grid-cols-4"
-            }`}
-          >
-            {/* Monthly Gross Card */}
-            <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Monthly Gross Pay
-              </span>
-              <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded-lg border border-gray-200 focus-within:border-gray-950 focus-within:ring-1 focus-within:ring-gray-950">
+        {/* Executive Top KPI Toolbar (Compact Single Bar) */}
+        <div className="px-4 py-1.5 bg-gray-50/90 border-b border-gray-200 shrink-0">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            {/* Quick Metrics & Gross Input */}
+            <div className="flex items-center flex-wrap gap-2">
+              {/* Monthly Gross Input */}
+              <div className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-md border border-gray-300 shadow-2xs focus-within:border-gray-950 focus-within:ring-1 focus-within:ring-gray-950">
+                <span className="text-[10px] font-bold text-gray-500 uppercase">Gross:</span>
                 <span className="text-xs font-bold text-gray-400">₹</span>
                 <input
-                  type="number"
-                  value={monthlyGross}
-                  onChange={(e) => setMonthlyGross(Number(e.target.value))}
-                  className="w-full text-base font-bold text-gray-950 bg-transparent focus:outline-none font-mono"
+                  type="text"
+                  inputMode="numeric"
+                  value={grossInputStr}
+                  onChange={handleGrossChange}
+                  onBlur={handleGrossBlur}
+                  onFocus={(e) => e.target.select()}
+                  placeholder="0"
+                  className="w-20 text-xs font-bold text-gray-950 bg-transparent focus:outline-none font-mono"
                 />
-              </div>
-              <span className="text-[10px] text-gray-500 font-medium block mt-1 font-mono">
-                {formatINR(calculations.totalGrossAnnual)} / yr fixed
-              </span>
-            </div>
-
-            {/* Performance Bonus Card (Shown only when active) */}
-            {includeBonus && bonusAmount > 0 && (
-              <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
-                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                  Performance Bonus
+                <span className="text-[10px] text-gray-400 font-mono">
+                  ({formatINR(calculations.totalGrossAnnual)}/yr)
                 </span>
-                <div className="text-base font-bold text-gray-950 font-mono mt-0.5">
-                  {formatINR(bonusMetrics.annualBonus)}
+              </div>
+
+              {/* Annual CTC Badge */}
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-white rounded-md border border-gray-200 shadow-2xs text-xs font-mono">
+                <span className="text-[10px] font-bold text-gray-500 uppercase font-sans">CTC:</span>
+                <span className="font-bold text-gray-950">{formatINR(calculations.totalCtcAnnual)}</span>
+                <span className="text-[10px] text-gray-500 font-sans">({(calculations.totalCtcAnnual / 100000).toFixed(2)} LPA)</span>
+              </div>
+
+              {/* Monthly Deductions Badge */}
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-white rounded-md border border-gray-200 shadow-2xs text-xs font-mono">
+                <span className="text-[10px] font-bold text-gray-500 uppercase font-sans">Deductions:</span>
+                <span className="font-bold text-red-600">-{formatINR(calculations.totalDeductionsMonthly)}</span>
+                <span className="text-[10px] text-gray-400">/mo</span>
+              </div>
+
+              {/* Net Take-Home Badge */}
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-md shadow-2xs text-xs font-mono">
+                <span className="text-[10px] font-bold text-emerald-800 uppercase font-sans">Take-Home:</span>
+                <span className="font-bold text-emerald-950">{formatINR(calculations.netInHandMonthly)}</span>
+                <span className="text-[10px] text-emerald-700 font-sans">/mo</span>
+              </div>
+
+              {/* Performance Bonus (if active) */}
+              {includeBonus && bonusAmount > 0 && (
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-50 border border-purple-200 rounded-md shadow-2xs text-xs font-mono">
+                  <span className="text-[10px] font-bold text-purple-800 uppercase font-sans">Bonus:</span>
+                  <span className="font-bold text-purple-950">+{formatINR(bonusMetrics.annualBonus)}</span>
+                  <span className="text-[10px] text-purple-700 font-sans">({bonusMetrics.frequencyLabel})</span>
                 </div>
-                <span className="text-[10px] text-gray-500 font-medium block mt-1">
-                  {bonusMetrics.displayLabel}
-                </span>
-              </div>
-            )}
-
-            {/* Annual CTC Card */}
-            <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Total Annual CTC
-              </span>
-              <div className="text-base font-bold text-gray-950 font-mono mt-0.5">
-                {formatINR(calculations.totalCtcAnnual)}
-              </div>
-              <span className="text-[10px] text-gray-500 font-medium block mt-1">
-                {(calculations.totalCtcAnnual / 100000).toFixed(2)} LPA total package
-              </span>
+              )}
             </div>
 
-            {/* Deductions Card */}
-            <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Monthly Deductions
-              </span>
-              <div className="text-base font-bold text-gray-950 font-mono mt-0.5">
-                -{formatINR(calculations.totalDeductionsMonthly)}
-              </div>
-              <span className="text-[10px] text-gray-500 font-medium block mt-1">
-                PF, ESI & PT contributions
-              </span>
-            </div>
-
-            {/* Net Take-Home Pay Card */}
-            <div className="bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                Net Take-Home Pay
-              </span>
-              <div className="text-base font-bold text-gray-950 font-mono mt-0.5">
-                {formatINR(calculations.netInHandMonthly)}
-                <span className="text-xs font-medium text-gray-500"> / mo</span>
-              </div>
-              <span className="text-[10px] text-gray-500 font-medium block mt-1 font-mono">
-                {formatINR(calculations.netInHandAnnual)} / annum
-              </span>
-            </div>
-          </div>
-
-          {/* Clean Statutory Options bar */}
-          <div className="mt-2.5 flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-gray-200/80 text-xs">
-            <div className="flex items-center gap-5">
-              <span className="font-semibold text-gray-700">Statutory Rules:</span>
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-gray-800 hover:text-gray-950">
+            {/* Statutory Checkboxes Inline Right */}
+            <div className="flex items-center gap-3 text-xs">
+              <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700 hover:text-gray-950">
                 <input
                   type="checkbox"
                   checked={isPfChecked}
                   onChange={(e) => setIsPfChecked(e.target.checked)}
-                  className="w-4 h-4 text-gray-950 rounded border-gray-300 focus:ring-gray-950/20 cursor-pointer accent-gray-950"
+                  className="w-3.5 h-3.5 text-gray-950 rounded border-gray-300 focus:ring-gray-950/20 cursor-pointer accent-gray-950"
                 />
-                <span>Provident Fund (PF @ 12%)</span>
+                <span className="text-[11px] font-medium">PF (12%)</span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-gray-800 hover:text-gray-950">
+              <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700 hover:text-gray-950">
                 <input
                   type="checkbox"
                   checked={isEsiChecked}
                   onChange={(e) => setIsEsiChecked(e.target.checked)}
-                  className="w-4 h-4 text-gray-950 rounded border-gray-300 focus:ring-gray-950/20 cursor-pointer accent-gray-950"
+                  className="w-3.5 h-3.5 text-gray-950 rounded border-gray-300 focus:ring-gray-950/20 cursor-pointer accent-gray-950"
                 />
-                <span>ESIC (0.75% / 3.25%)</span>
-                {!calculations.isEsiApplicable && (
-                  <span className="text-[11px] text-gray-400 font-normal">(Auto-exempt when Basic &gt; ₹21,000/mo)</span>
-                )}
+                <span className="text-[11px] font-medium">ESIC</span>
               </label>
-            </div>
 
-            <div className="text-[11px] text-gray-500 font-medium">
-              Tax Regime: New Regime (FY 2025-26) Standard Rules
+              <span className="text-[10px] text-gray-400 border-l border-gray-200 pl-2 hidden sm:inline">
+                New Tax Regime
+              </span>
             </div>
           </div>
         </div>
 
         {/* Main Body: 2 Columns with no nested scrollbar trap */}
         <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-          {/* Left Library Column (25% width, w-64) */}
-          <div className="w-full md:w-64 shrink-0 border-r border-gray-200 bg-gray-50/40 p-3.5 space-y-2.5 overflow-y-auto">
-            <div className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1 px-1">
+          {/* Left Library Column (Compact w-56) */}
+          <div className="w-full md:w-56 shrink-0 border-r border-gray-200 bg-gray-50/40 p-2 space-y-1.5 overflow-y-auto">
+            <div className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-0.5 px-1">
               Add Salary Components
             </div>
 
@@ -682,7 +684,7 @@ export function CtcCalculatorModal({
             <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-2xs">
               <button
                 onClick={() => setIsEarningsOpen(!isEarningsOpen)}
-                className="w-full px-3 py-2 bg-gray-50 flex items-center justify-between text-xs font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
+                className="w-full px-2.5 py-1.5 bg-gray-50 flex items-center justify-between text-xs font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
               >
                 <span>Allowances & Earnings</span>
                 {isEarningsOpen ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500" />}
@@ -763,7 +765,7 @@ export function CtcCalculatorModal({
             <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-2xs">
               <button
                 onClick={() => setIsDeductionsOpen(!isDeductionsOpen)}
-                className="w-full px-3 py-2 bg-gray-50 flex items-center justify-between text-xs font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
+                className="w-full px-2.5 py-1.5 bg-gray-50 flex items-center justify-between text-xs font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
               >
                 <span>Deductions & Statutory</span>
                 {isDeductionsOpen ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500" />}
@@ -842,26 +844,26 @@ export function CtcCalculatorModal({
 
                 <thead className="sticky top-0 z-20">
                   <tr className="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 font-bold shadow-2xs">
-                    <th className="py-2.5 px-4 font-bold bg-gray-50 border-b border-gray-200 text-gray-600">
+                    <th className="py-1.5 px-3 font-bold bg-gray-50 border-b border-gray-200 text-gray-600">
                       Salary Component
                     </th>
-                    <th className="py-2.5 px-3 font-bold bg-gray-50 border-b border-gray-200 text-gray-600">
+                    <th className="py-1.5 px-3 font-bold bg-gray-50 border-b border-gray-200 text-gray-600">
                       Type & Split
                     </th>
-                    <th className="py-2.5 px-4 text-right font-bold bg-gray-50 border-b border-gray-200 text-gray-600 whitespace-nowrap">
+                    <th className="py-1.5 px-3 text-right font-bold bg-gray-50 border-b border-gray-200 text-gray-600 whitespace-nowrap">
                       Monthly (₹)
                     </th>
-                    <th className="py-2.5 px-4 text-right font-bold bg-gray-50 border-b border-gray-200 text-gray-600 whitespace-nowrap">
+                    <th className="py-1.5 px-3 text-right font-bold bg-gray-50 border-b border-gray-200 text-gray-600 whitespace-nowrap">
                       Annual (₹)
                     </th>
-                    <th className="py-2.5 px-2 text-center font-bold bg-gray-50 border-b border-gray-200"></th>
+                    <th className="py-1.5 px-2 text-center font-bold bg-gray-50 border-b border-gray-200"></th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {/* 1. EARNINGS & ALLOWANCES */}
                   <tr className="bg-gray-50">
-                    <td colSpan={5} className="py-2.5 px-4 bg-gray-50 border-y border-gray-200">
+                    <td colSpan={5} className="py-1.5 px-3 bg-gray-50 border-y border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-900">
@@ -880,7 +882,7 @@ export function CtcCalculatorModal({
 
                   {calculations.calculatedEarnings.map((item) => (
                     <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors group">
-                      <td className="py-2.5 px-4 border-b border-gray-100">
+                      <td className="py-1.5 px-3 border-b border-gray-100">
                         <div className="font-semibold text-gray-950 text-xs flex items-center gap-1.5">
                           <span>{item.name}</span>
                           {item.id === "basic" && (
@@ -894,7 +896,7 @@ export function CtcCalculatorModal({
                         </p>
                       </td>
 
-                      <td className="py-2.5 px-3 border-b border-gray-100">
+                      <td className="py-1.5 px-3 border-b border-gray-100">
                         <div className="flex items-center gap-2">
                           {/* Segmented Switch (% vs ₹) */}
                           <div className="inline-flex items-center p-0.5 bg-gray-100 rounded-lg border border-gray-200/80 shrink-0">
@@ -936,7 +938,11 @@ export function CtcCalculatorModal({
                               step="any"
                               value={item.value === 0 ? "" : item.value}
                               placeholder="0"
-                              onChange={(e) => updateComponentValue(item.id, Number(e.target.value))}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/^0+(?=\d)/, "");
+                                updateComponentValue(item.id, val === "" ? 0 : Number(val));
+                              }}
                               className="w-20 px-2 py-1 text-xs font-semibold text-gray-950 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-950 focus:ring-1 focus:ring-gray-950 font-mono text-right pr-6 shadow-2xs transition-all"
                             />
                             <span className="absolute right-2 text-[10px] font-bold text-gray-400 pointer-events-none">
@@ -946,13 +952,13 @@ export function CtcCalculatorModal({
                         </div>
                       </td>
 
-                      <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                      <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                         ₹{item.monthly.toLocaleString("en-IN")}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                      <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                         ₹{item.annual.toLocaleString("en-IN")}
                       </td>
-                      <td className="py-2.5 px-2 text-center border-b border-gray-100">
+                      <td className="py-1.5 px-2 text-center border-b border-gray-100">
                         {item.isDeletable ? (
                           <button
                             onClick={() => removeComponent(item.id)}
@@ -970,18 +976,18 @@ export function CtcCalculatorModal({
 
                   {/* Total Fixed Gross Row */}
                   <tr className="bg-gray-100/70 border-y border-gray-200/90 font-bold text-gray-950">
-                    <td className="py-2 px-4 border-b border-gray-200">
+                    <td className="py-1.5 px-3 border-b border-gray-200">
                       <span className="text-[11px] uppercase tracking-wider font-extrabold text-gray-900">
                         Total Fixed Gross
                       </span>
                     </td>
-                    <td className="py-2 px-3 text-xs text-gray-500 font-normal border-b border-gray-200">
+                    <td className="py-1.5 px-3 text-xs text-gray-500 font-normal border-b border-gray-200">
                       100% Monthly Gross Base
                     </td>
-                    <td className="py-2 px-4 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
+                    <td className="py-1.5 px-3 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
                       {formatINR(calculations.totalGrossMonthly)}
                     </td>
-                    <td className="py-2 px-4 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
+                    <td className="py-1.5 px-3 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
                       {formatINR(calculations.totalGrossAnnual)}
                     </td>
                     <td className="border-b border-gray-200"></td>
@@ -989,7 +995,7 @@ export function CtcCalculatorModal({
 
                   {/* 2. EMPLOYER CONTRIBUTIONS (COMPANY COST) */}
                   <tr className="bg-gray-50">
-                    <td colSpan={5} className="py-2.5 px-4 bg-gray-50 border-y border-gray-200">
+                    <td colSpan={5} className="py-1.5 px-3 bg-gray-50 border-y border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-900">
@@ -1008,19 +1014,19 @@ export function CtcCalculatorModal({
 
                   {/* Employer PF */}
                   <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                    <td className="py-2.5 px-4 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="font-semibold text-gray-950 text-xs">Employer PF Contribution (13%)</div>
                       <p className="text-[10px] text-gray-500 mt-0.5">{calculations.pfCeilingNote}</p>
                     </td>
-                    <td className="py-2.5 px-3 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <span className="text-[11px] font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/70 inline-block font-mono">
                         13% (Basic + Special)
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       +{formatINR(calculations.employerPfMonthly)}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       +{formatINR(calculations.employerPfAnnual)}
                     </td>
                     <td className="border-b border-gray-100"></td>
@@ -1029,17 +1035,17 @@ export function CtcCalculatorModal({
                   {/* EPS Breakdown Sub-row */}
                   {isPfChecked && calculations.employerPfMonthly > 0 && (
                     <tr className="border-b border-gray-100/60 bg-gray-50/30 text-gray-500">
-                      <td className="py-1.5 px-4 pl-7 text-xs text-gray-600 border-b border-gray-100/60">
+                      <td className="py-1 px-3 pl-7 text-xs text-gray-600 border-b border-gray-100/60">
                         <span className="text-gray-400 mr-1.5">↳</span>
                         <span>EPS (Pension Scheme @ 8.33%)</span>
                       </td>
                       <td className="py-1.5 px-3 text-[11px] text-gray-500 font-mono border-b border-gray-100/60">
                         8.33% of Wages (Cap ₹2,083)
                       </td>
-                      <td className="py-1.5 px-4 text-right text-xs text-gray-600 font-mono whitespace-nowrap border-b border-gray-100/60">
+                      <td className="py-1 px-3 text-right text-xs text-gray-600 font-mono whitespace-nowrap border-b border-gray-100/60">
                         +{formatINR(calculations.epsMonthly)}
                       </td>
-                      <td className="py-1.5 px-4 text-right text-xs text-gray-400 font-mono whitespace-nowrap border-b border-gray-100/60">
+                      <td className="py-1 px-3 text-right text-xs text-gray-400 font-mono whitespace-nowrap border-b border-gray-100/60">
                         +{formatINR(calculations.epsAnnual)}
                       </td>
                       <td className="border-b border-gray-100/60"></td>
@@ -1049,17 +1055,17 @@ export function CtcCalculatorModal({
                   {/* EPF Breakdown Sub-row */}
                   {isPfChecked && calculations.employerPfMonthly > 0 && (
                     <tr className="border-b border-gray-100/60 bg-gray-50/30 text-gray-500">
-                      <td className="py-1.5 px-4 pl-7 text-xs text-gray-600 border-b border-gray-100/60">
+                      <td className="py-1 px-3 pl-7 text-xs text-gray-600 border-b border-gray-100/60">
                         <span className="text-gray-400 mr-1.5">↳</span>
                         <span>EPF (Provident Fund @ 3.67%)</span>
                       </td>
                       <td className="py-1.5 px-3 text-[11px] text-gray-500 font-mono border-b border-gray-100/60">
                         Difference to EPF A/c 1
                       </td>
-                      <td className="py-1.5 px-4 text-right text-xs text-gray-600 font-mono whitespace-nowrap border-b border-gray-100/60">
+                      <td className="py-1 px-3 text-right text-xs text-gray-600 font-mono whitespace-nowrap border-b border-gray-100/60">
                         +{formatINR(calculations.epfEmployerMonthly)}
                       </td>
-                      <td className="py-1.5 px-4 text-right text-xs text-gray-400 font-mono whitespace-nowrap border-b border-gray-100/60">
+                      <td className="py-1 px-3 text-right text-xs text-gray-400 font-mono whitespace-nowrap border-b border-gray-100/60">
                         +{formatINR(calculations.epfEmployerAnnual)}
                       </td>
                       <td className="border-b border-gray-100/60"></td>
@@ -1068,21 +1074,21 @@ export function CtcCalculatorModal({
 
                   {/* Employer ESI */}
                   <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                    <td className="py-2.5 px-4 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="font-semibold text-gray-950 text-xs">Employer ESI Contribution (3.25%)</div>
                       <p className="text-[10px] text-gray-400 mt-0.5">
                         {calculations.isEsiApplicable ? "Statutory ESIC on Basic salary" : "Exempt: Basic exceeds statutory ₹21,000 threshold"}
                       </p>
                     </td>
-                    <td className="py-2.5 px-3 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <span className="text-[11px] font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/70 inline-block font-mono">
                         {calculations.isEsiApplicable ? "3.25% of Basic" : "Exempt"}
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       {calculations.isEsiApplicable && isEsiChecked ? `+${formatINR(calculations.employerEsiMonthly)}` : "—"}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       {calculations.isEsiApplicable && isEsiChecked ? `+${formatINR(calculations.employerEsiAnnual)}` : "—"}
                     </td>
                     <td className="border-b border-gray-100"></td>
@@ -1091,7 +1097,7 @@ export function CtcCalculatorModal({
                   {/* Optional Performance Bonus */}
                   {includeBonus && (
                     <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                      <td className="py-2.5 px-4 border-b border-gray-100">
+                      <td className="py-1.5 px-3 border-b border-gray-100">
                         <div className="font-semibold text-gray-950 text-xs flex items-center gap-2">
                           <span>Performance Bonus (Variable)</span>
                           <select
@@ -1107,27 +1113,30 @@ export function CtcCalculatorModal({
                         </div>
                         <p className="text-[10px] text-gray-500 mt-0.5">{bonusMetrics.displayLabel}</p>
                       </td>
-                      <td className="py-2.5 px-3 border-b border-gray-100">
+                      <td className="py-1.5 px-3 border-b border-gray-100">
                         <div className="relative flex items-center">
                           <span className="absolute left-2.5 text-xs font-bold text-gray-500">₹</span>
                           <input
-                            type="number"
-                            min="0"
-                            step="1000"
-                            value={bonusAmount}
-                            onChange={(e) => setBonusAmount(Math.max(0, Number(e.target.value)))}
+                            type="text"
+                            inputMode="numeric"
+                            value={bonusAmount === 0 ? "" : bonusAmount}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+                              setBonusAmount(raw === "" ? 0 : Number(raw));
+                            }}
+                            onFocus={(e) => e.target.select()}
                             placeholder="0"
                             className="w-24 pl-6 pr-2 py-1 text-xs font-semibold text-gray-950 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-950 focus:ring-1 focus:ring-gray-950 font-mono shadow-2xs"
                           />
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                      <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                         +{formatINR(bonusMetrics.monthlyBonusEquivalent)}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                      <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                         +{formatINR(bonusMetrics.annualBonus)}
                       </td>
-                      <td className="py-2.5 px-2 text-center border-b border-gray-100">
+                      <td className="py-1.5 px-2 text-center border-b border-gray-100">
                         <button
                           onClick={() => {
                             setIncludeBonus(false);
@@ -1144,7 +1153,7 @@ export function CtcCalculatorModal({
 
                   {/* 3. EMPLOYEE DEDUCTIONS */}
                   <tr className="bg-gray-50">
-                    <td colSpan={5} className="py-2.5 px-4 bg-gray-50 border-y border-gray-200">
+                    <td colSpan={5} className="py-1.5 px-3 bg-gray-50 border-y border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-900">
@@ -1163,19 +1172,19 @@ export function CtcCalculatorModal({
 
                   {/* Employee PF */}
                   <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                    <td className="py-2.5 px-4 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="font-semibold text-gray-950 text-xs">PF - Employee Contribution (12%)</div>
                       <p className="text-[10px] text-gray-400 mt-0.5">Deducted on PF wages (Basic + Special)</p>
                     </td>
-                    <td className="py-2.5 px-3 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <span className="text-[11px] font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/70 inline-block font-mono">
                         12% (Basic + Special)
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       -{formatINR(calculations.employeePfMonthly)}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       -{formatINR(calculations.employeePfAnnual)}
                     </td>
                     <td className="border-b border-gray-100"></td>
@@ -1183,25 +1192,31 @@ export function CtcCalculatorModal({
 
                   {/* PT */}
                   <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                    <td className="py-2.5 px-4 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="font-semibold text-gray-950 text-xs">Profession Tax (PT)</div>
                       <p className="text-[10px] text-gray-400 mt-0.5">State statutory PT slab rate</p>
                     </td>
-                    <td className="py-2.5 px-3 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="relative flex items-center">
                         <span className="absolute left-2.5 text-xs font-bold text-gray-500">₹</span>
                         <input
-                          type="number"
-                          value={calculations.ptMonthly}
-                          onChange={(e) => updateComponentValue("pt", Number(e.target.value))}
+                          type="text"
+                          inputMode="numeric"
+                          value={calculations.ptMonthly === 0 ? "" : calculations.ptMonthly}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+                            updateComponentValue("pt", raw === "" ? 0 : Number(raw));
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          placeholder="0"
                           className="w-20 pl-6 pr-2 py-1 text-xs font-semibold text-gray-950 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-950 focus:ring-1 focus:ring-gray-950 font-mono text-right shadow-2xs"
                         />
                       </div>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       -{formatINR(calculations.ptMonthly)}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       -{formatINR(calculations.ptAnnual)}
                     </td>
                     <td className="border-b border-gray-100"></td>
@@ -1209,21 +1224,21 @@ export function CtcCalculatorModal({
 
                   {/* Employee ESI */}
                   <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                    <td className="py-2.5 px-4 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="font-semibold text-gray-950 text-xs">ESI - Employee Contribution (0.75%)</div>
                       <p className="text-[10px] text-gray-400 mt-0.5">
                         {calculations.isEsiApplicable ? "Statutory ESIC on Basic salary" : "Exempt: Basic exceeds statutory ₹21,000 threshold"}
                       </p>
                     </td>
-                    <td className="py-2.5 px-3 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <span className="text-[11px] font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/70 inline-block font-mono">
                         {calculations.isEsiApplicable ? "0.75% of Basic" : "Exempt"}
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       {calculations.isEsiApplicable && isEsiChecked ? `-${formatINR(calculations.employeeEsiMonthly)}` : "—"}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       {calculations.isEsiApplicable && isEsiChecked ? `-${formatINR(calculations.employeeEsiAnnual)}` : "—"}
                     </td>
                     <td className="border-b border-gray-100"></td>
@@ -1231,19 +1246,19 @@ export function CtcCalculatorModal({
 
                   {/* TDS / Income Tax */}
                   <tr className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
-                    <td className="py-2.5 px-4 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <div className="font-semibold text-gray-950 text-xs">TDS / Income Tax (New Regime)</div>
                       <p className="text-[10px] text-gray-400 mt-0.5">{calculations.tdsNote}</p>
                     </td>
-                    <td className="py-2.5 px-3 border-b border-gray-100">
+                    <td className="py-1.5 px-3 border-b border-gray-100">
                       <span className="text-[11px] font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/70 inline-block font-mono">
                         Auto (u/s 87A)
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       {calculations.tdsMonthly > 0 ? `-${formatINR(calculations.tdsMonthly)}` : "₹0"}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-medium text-gray-500 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                    <td className="py-1.5 px-3 text-right font-medium text-gray-500 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                       {calculations.tdsAnnual > 0 ? `-${formatINR(calculations.tdsAnnual)}` : "₹0"}
                     </td>
                     <td className="border-b border-gray-100"></td>
@@ -1252,13 +1267,13 @@ export function CtcCalculatorModal({
                   {/* Other custom deductions */}
                   {calculations.calculatedOtherDeductions.map((item) => (
                     <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors group">
-                      <td className="py-2.5 px-4 border-b border-gray-100">
+                      <td className="py-1.5 px-3 border-b border-gray-100">
                         <div className="font-semibold text-gray-950 text-xs">{item.name}</div>
                         <p className="text-[10px] text-gray-400 mt-0.5">
                           {item.type === "PERCENT" ? `${item.value}% deduction` : "Fixed deduction"}
                         </p>
                       </td>
-                      <td className="py-2.5 px-3 border-b border-gray-100">
+                      <td className="py-1.5 px-3 border-b border-gray-100">
                         <div className="flex items-center gap-2">
                           <div className="inline-flex items-center p-0.5 bg-gray-100 rounded-lg border border-gray-200/80 shrink-0">
                             <button
@@ -1295,7 +1310,11 @@ export function CtcCalculatorModal({
                               step="any"
                               value={item.value === 0 ? "" : item.value}
                               placeholder="0"
-                              onChange={(e) => updateComponentValue(item.id, Number(e.target.value))}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/^0+(?=\d)/, "");
+                                updateComponentValue(item.id, val === "" ? 0 : Number(val));
+                              }}
                               className="w-20 px-2 py-1 text-xs font-semibold text-gray-950 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-950 focus:ring-1 focus:ring-gray-950 font-mono text-right pr-6 shadow-2xs"
                             />
                             <span className="absolute right-2 text-[10px] font-bold text-gray-400 pointer-events-none">
@@ -1304,13 +1323,13 @@ export function CtcCalculatorModal({
                           </div>
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                      <td className="py-1.5 px-3 text-right font-bold text-gray-950 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                         -{formatINR(item.monthly)}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
+                      <td className="py-1.5 px-3 text-right font-medium text-gray-600 font-mono whitespace-nowrap text-xs border-b border-gray-100">
                         -{formatINR(item.annual)}
                       </td>
-                      <td className="py-2.5 px-2 text-center border-b border-gray-100">
+                      <td className="py-1.5 px-2 text-center border-b border-gray-100">
                         <button
                           onClick={() => removeComponent(item.id)}
                           className="text-gray-400 hover:text-gray-950 p-1 rounded-md hover:bg-gray-100 transition-colors opacity-70 group-hover:opacity-100"
@@ -1324,86 +1343,76 @@ export function CtcCalculatorModal({
 
                   {/* Total Deductions Row */}
                   <tr className="bg-gray-100/70 border-y border-gray-200 font-bold text-gray-950">
-                    <td className="py-2 px-4 border-b border-gray-200">
+                    <td className="py-1.5 px-3 border-b border-gray-200">
                       <span className="text-[11px] uppercase tracking-wider font-extrabold text-gray-900">
                         Total Deductions
                       </span>
                     </td>
-                    <td className="py-2 px-3 text-xs text-gray-500 font-normal border-b border-gray-200">
+                    <td className="py-1.5 px-3 text-xs text-gray-500 font-normal border-b border-gray-200">
                       Subtracted from monthly take-home
                     </td>
-                    <td className="py-2 px-4 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
+                    <td className="py-1.5 px-3 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
                       -{formatINR(calculations.totalDeductionsMonthly)}
                     </td>
-                    <td className="py-2 px-4 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
+                    <td className="py-1.5 px-3 text-right font-mono font-bold text-gray-950 whitespace-nowrap text-xs border-b border-gray-200">
                       -{formatINR(calculations.totalDeductionsAnnual)}
                     </td>
                     <td className="border-b border-gray-200"></td>
                   </tr>
+
+                  {/* Final Net In-Hand Summary Row inside table */}
+                  <tr className="bg-emerald-50/80 border-t-2 border-emerald-300 font-bold text-gray-950">
+                    <td className="py-1.5 px-3 border-b border-emerald-200">
+                      <span className="text-[11px] uppercase tracking-wider font-extrabold text-emerald-950">
+                        Net Take-Home (In-Hand)
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-3 text-[11px] text-emerald-800 font-normal border-b border-emerald-200">
+                      Fixed Gross − Total Deductions
+                    </td>
+                    <td className="py-1.5 px-3 text-right font-mono font-extrabold text-emerald-950 whitespace-nowrap text-xs border-b border-emerald-200">
+                      {formatINR(calculations.netInHandMonthly)}/mo
+                    </td>
+                    <td className="py-1.5 px-3 text-right font-mono font-bold text-emerald-800 whitespace-nowrap text-xs border-b border-emerald-200">
+                      {formatINR(calculations.netInHandAnnual)}/yr
+                    </td>
+                    <td className="border-b border-emerald-200"></td>
+                  </tr>
                 </tbody>
               </table>
-            </div>
-
-            {/* Executive Compensation Summary Cards (Pinned at bottom of panel, permanently visible) */}
-            <div className="p-3.5 bg-gray-50/90 border-t border-gray-200 shrink-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Take Home Card */}
-                <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-2xs flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] font-black uppercase tracking-wider text-gray-900 block">
-                      Net In-Hand (Take Home)
-                    </span>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      Fixed Gross − All Employee Deductions
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-black text-gray-950 font-mono tracking-tight">
-                      {formatINR(calculations.netInHandMonthly)}
-                      <span className="text-xs font-semibold text-gray-500"> / mo</span>
-                    </div>
-                    <div className="text-[11px] font-semibold text-gray-600 font-mono mt-0.5">
-                      {formatINR(calculations.netInHandAnnual)} / annum
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total CTC Card */}
-                <div className="bg-gray-950 text-white border border-gray-900 rounded-xl p-3 shadow-md flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] font-black uppercase tracking-wider text-white block">
-                      Total Annual CTC
-                    </span>
-                    <p className="text-[10px] text-gray-400 mt-0.5">
-                      Gross + Employer Statutory {includeBonus && bonusAmount > 0 ? "+ Bonus" : ""}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-black text-white font-mono tracking-tight">
-                      {formatINR(calculations.totalCtcAnnual)}
-                    </div>
-                    <div className="text-[11px] font-semibold text-gray-300 font-mono mt-0.5">
-                      {formatINR(calculations.totalCtcMonthly)} / mo equiv
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Modal Footer (Pinned at bottom) */}
-        <div className="px-6 py-3.5 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
-          <Button variant="outline" size="sm" onClick={onClose}>
+        {/* Modal Footer (Pinned at bottom, ultra-compact) */}
+        <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs px-3">
             Cancel
           </Button>
 
-          <div className="flex items-center gap-3">
+          {/* Compact summary badges in footer */}
+          <div className="hidden sm:flex items-center gap-4 text-xs font-mono">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-gray-500 uppercase font-sans">Net Take-Home:</span>
+              <span className="font-extrabold text-emerald-700 text-sm">{formatINR(calculations.netInHandMonthly)}</span>
+              <span className="text-[10px] text-gray-400">/mo</span>
+            </div>
+            <span className="text-gray-300">|</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-gray-500 uppercase font-sans">Annual CTC:</span>
+              <span className="font-extrabold text-gray-950 text-sm">{formatINR(calculations.totalCtcAnnual)}</span>
+              <span className="text-[10px] text-gray-500 font-sans font-semibold">({(calculations.totalCtcAnnual / 100000).toFixed(2)} LPA)</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
+              className="h-8 text-xs px-2.5"
               onClick={() => {
                 setMonthlyGross(40000);
+                setGrossInputStr("40000");
                 setIsPfChecked(true);
                 setIsEsiChecked(true);
                 setIncludeBonus(false);
@@ -1420,15 +1429,16 @@ export function CtcCalculatorModal({
                 ]);
               }}
             >
-              Reset Defaults
+              Reset
             </Button>
             <Button
               variant="primary"
               size="sm"
+              className="h-8 text-xs px-3.5"
               onClick={handleApply}
-              leftIcon={<Check className="w-4 h-4" />}
+              leftIcon={<Check className="w-3.5 h-3.5" />}
             >
-              Apply to Employee Offer (₹{(calculations.totalCtcAnnual / 100000).toFixed(2)} LPA)
+              Apply Offer (₹{(calculations.totalCtcAnnual / 100000).toFixed(2)} LPA)
             </Button>
           </div>
         </div>

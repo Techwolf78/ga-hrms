@@ -30,10 +30,10 @@ export function DocumentsPage() {
 
   const categories = ["ALL", "IDENTITY", "ACADEMIC", "EXPERIENCE", "COMPANY_POLICY"];
 
-  const filteredDocs = documents.filter((doc) => {
+  const filteredDocs = (documents || []).filter((doc) => {
     const matchesSearch =
       searchQuery === "" ||
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase());
+      (doc?.title || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = selectedCategory === "ALL" || doc.category === selectedCategory;
     return matchesSearch && matchesCat;
   });

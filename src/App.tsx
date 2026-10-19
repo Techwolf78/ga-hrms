@@ -6,6 +6,7 @@ import { HrmsProvider } from "./lib/hrmsContext";
 import { AppShell } from "./components/layout/AppShell";
 import { AddEmployeeModal } from "./pages/people/AddEmployeeModal";
 import { ApplyLeaveModal } from "./pages/leave/ApplyLeaveModal";
+import { AttendanceCorrectionModal } from "./pages/time/AttendanceCorrectionModal";
 
 // Pages
 import { LandingPage } from "./pages/landing/LandingPage";
@@ -65,6 +66,7 @@ function RoleRoute({
 function MainAppContent() {
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
+  const [isAttendanceCorrectionOpen, setIsAttendanceCorrectionOpen] = useState(false);
 
   return (
     <>
@@ -79,6 +81,7 @@ function MainAppContent() {
               <AppShell
                 onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
                 onOpenApplyLeave={() => setIsApplyLeaveOpen(true)}
+                onOpenAttendanceCorrection={() => setIsAttendanceCorrectionOpen(true)}
               />
             </ProtectedRoute>
           }
@@ -289,6 +292,11 @@ function MainAppContent() {
       <ApplyLeaveModal
         isOpen={isApplyLeaveOpen}
         onClose={() => setIsApplyLeaveOpen(false)}
+      />
+
+      <AttendanceCorrectionModal
+        isOpen={isAttendanceCorrectionOpen}
+        onClose={() => setIsAttendanceCorrectionOpen(false)}
       />
     </>
   );

@@ -84,12 +84,12 @@ export function LeaveRequestsPage({ onOpenApplyLeave }: LeaveRequestsPageProps) 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight whitespace-nowrap">
             Leave Requests & Approvals
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">
             Review submitted leave applications, verify statutory quotas, and process manager signoffs.
           </p>
         </div>
@@ -98,8 +98,9 @@ export function LeaveRequestsPage({ onOpenApplyLeave }: LeaveRequestsPageProps) 
           <Button
             onClick={onOpenApplyLeave}
             variant="primary"
-            size="md"
-            leftIcon={<Plus className="w-4 h-4" />}
+            size="sm"
+            className="h-8 text-xs font-semibold whitespace-nowrap px-3 sm:px-3.5 shadow-xs shrink-0"
+            leftIcon={<Plus className="w-3.5 h-3.5" />}
           >
             Apply for Leave
           </Button>
@@ -181,35 +182,38 @@ export function LeaveRequestsPage({ onOpenApplyLeave }: LeaveRequestsPageProps) 
       {/* Filter Ribbon */}
       <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Status Tab Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+          {/* Status Tab Segmented Control */}
+          <div className="inline-flex items-center p-1 bg-gray-100/90 rounded-xl border border-gray-200/80 gap-1 shrink-0 overflow-x-auto">
             {[
               { id: "ALL", label: "All Requests", count: leaveRequests.length },
               { id: "PENDING", label: "Pending Review", count: pendingCount },
               { id: "APPROVED", label: "Approved", count: approvedCount },
               { id: "REJECTED", label: "Rejected", count: rejectedCount },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedStatus(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                  selectedStatus === tab.id
-                    ? "bg-gray-950 text-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-950 hover:bg-gray-100"
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    selectedStatus === tab.id
-                      ? "bg-gray-800 text-gray-200"
-                      : "bg-gray-100 text-gray-600"
+            ].map((tab) => {
+              const isActive = selectedStatus === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedStatus(tab.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                    isActive
+                      ? "bg-white text-gray-950 shadow-xs"
+                      : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
                   }`}
                 >
-                  {tab.count}
-                </span>
-              </button>
-            ))}
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                      isActive
+                        ? "bg-gray-950 text-white"
+                        : "bg-gray-200/80 text-gray-700"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Search & Leave Type Dropdown */}

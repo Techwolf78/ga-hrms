@@ -89,7 +89,8 @@ interface HrmsContextType {
   updateSettings: (updates: Partial<CompanySettings>) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
-  uploadDocument: (doc: Omit<EmployeeDocument, "id" | "uploadDate">) => void;
+  uploadDocument: (doc: Omit<EmployeeDocument, "id" | "uploadDate">, options?: { silent?: boolean }) => void;
+  uploadBatchDocuments: (docs: Omit<EmployeeDocument, "id" | "uploadDate">[]) => void;
   resetAllData: () => void;
 
   // New modules actions
@@ -491,6 +492,12 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const reg = regularizations.find((r) => r.id === id);
       if (!reg) return;
 
+      // Self-approval policy guard: Prevent any user from self-approving their own regularization
+      if (reg.employeeId === user?.employeeId || reg.employeeId === user?.id) {
+        toast.error("Compliance Violation: Self-approval is prohibited. An independent approver must review your request.");
+        return;
+      }
+
       const updatedRegs = regularizations.map((r) =>
         r.id === id ? { ...r, status: "APPROVED" as const, approvedBy: user?.name || "Manager" } : r
       );
@@ -520,6 +527,15 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const rejectRegularization = useCallback(
     (id: string, comment?: string) => {
+      const reg = regularizations.find((r) => r.id === id);
+      if (!reg) return;
+
+      // Self-decision policy guard
+      if (reg.employeeId === user?.employeeId || reg.employeeId === user?.id) {
+        toast.error("Compliance Violation: You cannot take administrative action on your own regularization request.");
+        return;
+      }
+
       const updated = regularizations.map((r) =>
         r.id === id ? { ...r, status: "REJECTED" as const, comments: comment } : r
       );
@@ -527,7 +543,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRegularizations(updated);
       toast.info("Regularization rejected.");
     },
-    [regularizations, toast]
+    [regularizations, user, toast]
   );
 
   // --- WEB PUNCH IN / OUT ---
@@ -687,17 +703,36 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [notifications, toast]);
 
   // --- DOCUMENTS ---
-  const uploadDocument = useCallback((doc: Omit<EmployeeDocument, "id" | "uploadDate">) => {
+  const uploadDocument = useCallback((doc: Omit<EmployeeDocument, "id" | "uploadDate">, options?: { silent?: boolean }) => {
     const newDoc: EmployeeDocument = {
       ...doc,
-      id: `doc-${Date.now()}`,
-      uploadDate: "2026-10-06",
+      id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      uploadDate: new Date().toISOString().split("T")[0],
     };
-    const updated = [newDoc, ...documents];
-    storage.set(STORAGE_KEYS.DOCUMENTS, updated);
-    setDocuments(updated);
-    toast.success(`Document "${newDoc.title}" uploaded.`);
-  }, [documents, toast]);
+    setDocuments((prevDocs) => {
+      const updated = [newDoc, ...prevDocs];
+      storage.set(STORAGE_KEYS.DOCUMENTS, updated);
+      return updated;
+    });
+    if (!options?.silent) {
+      toast.success(`Document "${newDoc.title}" uploaded.`);
+    }
+  }, [toast]);
+
+  const uploadBatchDocuments = useCallback((docs: Omit<EmployeeDocument, "id" | "uploadDate">[]) => {
+    if (!docs || docs.length === 0) return;
+    const now = Date.now();
+    const newDocs: EmployeeDocument[] = docs.map((doc, idx) => ({
+      ...doc,
+      id: `doc-${now}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+      uploadDate: new Date().toISOString().split("T")[0],
+    }));
+    setDocuments((prevDocs) => {
+      const updated = [...newDocs, ...prevDocs];
+      storage.set(STORAGE_KEYS.DOCUMENTS, updated);
+      return updated;
+    });
+  }, []);
 
   // --- RECRUITMENT & ATS ACTIONS ---
   const addJob = useCallback((jobData: Omit<JobPosting, "id" | "postedDate" | "applicantsCount">): JobPosting => {
@@ -902,6 +937,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         markNotificationRead,
         markAllNotificationsRead,
         uploadDocument,
+        uploadBatchDocuments,
         resetAllData,
         addJob,
         updateJobStatus,

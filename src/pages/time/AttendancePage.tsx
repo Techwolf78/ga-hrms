@@ -1,334 +1,479 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
-  Clock,
   Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  CalendarX2,
   ClockAlert,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  Eye,
-  Radio,
+  Building2,
+  Users,
+  UserCheck,
+  Sliders,
+  AlertTriangle,
   MapPin,
-  Fingerprint,
 } from "lucide-react";
 import { useHrms } from "../../lib/hrmsContext";
 import { useAuth } from "../../lib/authContext";
-import { AttendanceRecord, AttendanceStatus } from "../../types/hrms";
+import { AttendanceRecord } from "../../types/hrms";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import { Avatar } from "../../components/ui/Avatar";
 import { Modal } from "../../components/ui/Modal";
-import { formatTime, formatDate } from "../../lib/utils";
+import { formatDate, formatTime } from "../../lib/utils";
+import { AttendanceCorrectionModal } from "./AttendanceCorrectionModal";
+import { EmployeeAttendanceView } from "./components/EmployeeAttendanceView";
+import { ManagerAttendanceView } from "./components/ManagerAttendanceView";
+import { AdminAttendanceView } from "./components/AdminAttendanceView";
 
 export function AttendancePage() {
-  const { attendance, employees, departments, branches, shifts, punchAttendance } = useHrms();
+  const { employees, regularizations } = useHrms();
   const { user } = useAuth();
 
+  const role = user?.role || "SUPER_ADMIN";
+
+  // Resolved employee identity for the logged-in user:
+  // Super Admin is purely a system administrator and is NEVER linked to an employee record.
+  // Other roles (HR Admin, Manager, Employee) are employees of the organization.
+  const currentUserEmployee = useMemo(() => {
+    if (role === "SUPER_ADMIN" || !user?.employeeId) return null;
+    return (
+      employees.find(
+        (e) => e.id === user?.employeeId || e.employeeCode === user?.employeeId
+      ) || null
+    );
+  }, [employees, user?.employeeId, role]);
+
+  const hasEmployeeRecord = Boolean(currentUserEmployee);
+
+  // Main Navigation Tab: Super Admin always lands on ADMIN_MANAGEMENT; employees on MY_ATTENDANCE
+  const [activeNavTab, setActiveNavTab] = useState<string>(() => {
+    return role === "SUPER_ADMIN" ? "ADMIN_MANAGEMENT" : "MY_ATTENDANCE";
+  });
   const [currentDate, setCurrentDate] = useState("2026-10-06");
-  const [selectedDept, setSelectedDept] = useState("ALL");
-  const [selectedBranch, setSelectedBranch] = useState("ALL");
-  const [selectedStatus, setSelectedStatus] = useState("ALL");
+
+  // Sensor punch timeline detail modal
   const [detailRecord, setDetailRecord] = useState<AttendanceRecord | null>(null);
 
-  // Filter records for this date
-  const recordsForDate = attendance.filter((a) => a.date === currentDate);
+  // Correction / Regularization modal
+  const [isCorrectionOpen, setIsCorrectionOpen] = useState(false);
+  const [correctionRecord, setCorrectionRecord] = useState<AttendanceRecord | null>(null);
+  const [prefillDate, setPrefillDate] = useState<string | undefined>(undefined);
+  const [prefillEmployeeId, setPrefillEmployeeId] = useState<string | undefined>(undefined);
 
-  const filteredRecords = recordsForDate.filter((record) => {
-    const emp = employees.find((e) => e.id === record.employeeId);
-    if (!emp) return false;
+  // Compute pending regularizations count for badges
+  const tenantPendingCount = useMemo(() => {
+    return regularizations.filter((r) => r.status === "PENDING").length;
+  }, [regularizations]);
 
-    const matchesDept = selectedDept === "ALL" || emp.departmentId === selectedDept;
-    const matchesBranch = selectedBranch === "ALL" || emp.branchId === selectedBranch;
-    const matchesStatus = selectedStatus === "ALL" || record.status === selectedStatus;
+  const teamPendingCount = useMemo(() => {
+    if (!hasEmployeeRecord) return 0;
+    const managerEmpId = currentUserEmployee?.id || user?.employeeId || "EMP-1003";
+    const teamIds = employees
+      .filter((e) => e.managerId === managerEmpId || e.departmentId === currentUserEmployee?.departmentId)
+      .map((e) => e.id);
+    return regularizations.filter(
+      (r) => r.status === "PENDING" && teamIds.includes(r.employeeId)
+    ).length;
+  }, [regularizations, employees, currentUserEmployee, user?.employeeId, hasEmployeeRecord]);
 
-    return matchesDept && matchesBranch && matchesStatus;
-  });
+  const myPendingCount = useMemo(() => {
+    if (!hasEmployeeRecord) return 0;
+    const myId = currentUserEmployee?.id || user?.employeeId;
+    return regularizations.filter(
+      (r) => (r.employeeId === myId || r.employeeId === currentUserEmployee?.employeeCode) && r.status === "PENDING"
+    ).length;
+  }, [regularizations, currentUserEmployee, user?.employeeId, hasEmployeeRecord]);
 
-  // Today's summary counts
-  const presentCount = recordsForDate.filter(
-    (a) => a.status === "PRESENT" || a.status === "LATE" || a.status === "HALF_DAY"
-  ).length;
-  const lateCount = recordsForDate.filter((a) => a.status === "LATE").length;
-  const absentCount = recordsForDate.filter((a) => a.status === "ABSENT").length;
-  const halfDayCount = recordsForDate.filter((a) => a.status === "HALF_DAY").length;
-  const leaveCount = recordsForDate.filter((a) => a.status === "LEAVE").length;
+  // Dynamic Navigation Tabs per Role
+  // Super Admin: System-wide oversight only (No personal attendance)
+  // HR Admin / Manager / Employee: Personal attendance + role-authorized views
+  const navTabs = useMemo(() => {
+    switch (role) {
+      case "SUPER_ADMIN":
+        return [
+          {
+            id: "ADMIN_MANAGEMENT",
+            label: "Attendance Management",
+            icon: <Building2 className="w-3.5 h-3.5" />,
+          },
+          {
+            id: "ADMIN_REGULARIZATIONS",
+            label: "Regularization Requests",
+            icon: <ClockAlert className="w-3.5 h-3.5" />,
+            badge: tenantPendingCount > 0 ? tenantPendingCount : undefined,
+            badgeVariant: "warning" as const,
+          },
+          {
+            id: "ADMIN_POLICY",
+            label: "Policy & Settings",
+            icon: <Sliders className="w-3.5 h-3.5" />,
+          },
+        ];
 
-  const getStatusBadge = (status: AttendanceStatus) => {
-    switch (status) {
-      case "PRESENT":
-        return <Badge variant="success" size="sm" dot>Present</Badge>;
-      case "LATE":
-        return <Badge variant="warning" size="sm" dot>Late</Badge>;
-      case "HALF_DAY":
-        return <Badge variant="neutral" size="sm" dot>Half Day</Badge>;
-      case "ABSENT":
-        return <Badge variant="danger" size="sm" dot>Absent</Badge>;
-      case "LEAVE":
-        return <Badge variant="neutral" size="sm" dot>On Leave</Badge>;
+      case "HR_ADMIN":
+        return [
+          {
+            id: "MY_ATTENDANCE",
+            label: "My Attendance",
+            icon: <UserCheck className="w-3.5 h-3.5" />,
+            badge: myPendingCount > 0 ? `${myPendingCount} req` : undefined,
+            badgeVariant: "neutral" as const,
+          },
+          {
+            id: "ADMIN_OPERATIONS",
+            label: "Attendance Operations",
+            icon: <Building2 className="w-3.5 h-3.5" />,
+          },
+          {
+            id: "ADMIN_EXCEPTIONS",
+            label: "Exceptions Queue",
+            icon: <AlertTriangle className="w-3.5 h-3.5" />,
+          },
+          {
+            id: "ADMIN_REGULARIZATIONS",
+            label: "Regularization Approvals",
+            icon: <ClockAlert className="w-3.5 h-3.5" />,
+            badge: tenantPendingCount > 0 ? tenantPendingCount : undefined,
+            badgeVariant: "warning" as const,
+          },
+        ];
+
+      case "MANAGER":
+        return [
+          {
+            id: "MY_ATTENDANCE",
+            label: "My Attendance",
+            icon: <UserCheck className="w-3.5 h-3.5" />,
+            badge: myPendingCount > 0 ? `${myPendingCount} req` : undefined,
+            badgeVariant: "neutral" as const,
+          },
+          {
+            id: "MANAGER_TEAM",
+            label: "My Team Attendance",
+            icon: <Users className="w-3.5 h-3.5" />,
+          },
+          {
+            id: "MANAGER_APPROVALS",
+            label: "Pending Approvals",
+            icon: <ClockAlert className="w-3.5 h-3.5" />,
+            badge: teamPendingCount > 0 ? teamPendingCount : undefined,
+            badgeVariant: "warning" as const,
+          },
+        ];
+
+      case "EMPLOYEE":
       default:
-        return <Badge variant="neutral" size="sm">{status}</Badge>;
+        return [
+          {
+            id: "MY_ATTENDANCE",
+            label: "My Attendance",
+            icon: <UserCheck className="w-3.5 h-3.5" />,
+          },
+          {
+            id: "EMPLOYEE_REQUESTS",
+            label: "My Requests",
+            icon: <ClockAlert className="w-3.5 h-3.5" />,
+            badge: myPendingCount > 0 ? myPendingCount : undefined,
+            badgeVariant: "neutral" as const,
+          },
+        ];
     }
+  }, [role, myPendingCount, tenantPendingCount, teamPendingCount]);
+
+  // Synchronize activeNavTab if active tab is not in available tabs
+  useEffect(() => {
+    if (!navTabs.some((t) => t.id === activeNavTab)) {
+      setActiveNavTab(navTabs[0]?.id || "ADMIN_MANAGEMENT");
+    }
+  }, [navTabs, activeNavTab]);
+
+  // Context Header Info
+  const isPersonalView =
+    (activeNavTab === "MY_ATTENDANCE" ||
+      activeNavTab === "EMPLOYEE_REQUESTS") &&
+    hasEmployeeRecord;
+
+  const handleOpenCorrection = (record?: AttendanceRecord, date?: string) => {
+    setCorrectionRecord(record || null);
+    setPrefillDate(date || record?.date || currentDate);
+
+    if (isPersonalView && currentUserEmployee) {
+      // In personal view, always enforce current user's employee identity
+      setPrefillEmployeeId(currentUserEmployee.id || user?.employeeId);
+    } else {
+      setPrefillEmployeeId(record?.employeeId);
+    }
+
+    setIsCorrectionOpen(true);
   };
 
+  const pageSubtitle = useMemo(() => {
+    if (role === "SUPER_ADMIN") {
+      return "Organization-wide attendance oversight, shift allocations, and compliance policies.";
+    }
+    if (role === "HR_ADMIN") {
+      return "Workforce attendance operations, exceptions queue, and regularizations.";
+    }
+    if (role === "MANAGER") {
+      return "Team attendance tracking, shift schedules, and regularization approvals.";
+    }
+    return "Monthly attendance calendar, shift timings, and regularization requests.";
+  }, [role]);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+    <div className="space-y-4">
+      {/* Breadcrumb Context & Page Header */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-xs text-text-muted">
+          <Link
+            to="/time/attendance"
+            className="hover:text-text-primary transition-colors"
+          >
             Time & Attendance
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Biometric punch normalization, GPS web check-in, and working hours analytics.
-          </p>
+          </Link>
+          <span>/</span>
+          <span className="text-text-secondary font-medium">Attendance</span>
         </div>
 
-        {/* Date Selector */}
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-card border border-surface-border shadow-xs">
-          <button
-            onClick={() => setCurrentDate("2026-10-05")}
-            className="p-1 rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            title="Previous Day"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <div className="flex items-center gap-2 px-2 text-xs font-semibold text-gray-900">
-            <Calendar className="w-3.5 h-3.5 text-gray-700" />
-            <span>{formatDate(currentDate)}</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-text-primary tracking-tight">
+              Attendance
+            </h1>
+            <p className="text-xs text-text-secondary mt-0.5">
+              {pageSubtitle}
+            </p>
           </div>
 
-          <button
-            onClick={() => setCurrentDate("2026-10-06")}
-            className="p-1 rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            title="Next Day"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Date Selector for Admin and Manager Daily Registers */}
+            {!isPersonalView && (
+              <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-input border border-surface-border shadow-card h-8">
+                <button
+                  onClick={() => setCurrentDate("2026-10-05")}
+                  className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+                  title="Previous Day"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="flex items-center gap-1.5 px-1.5 text-xs font-semibold text-text-primary whitespace-nowrap">
+                  <Calendar className="w-3.5 h-3.5 text-text-muted" />
+                  <span>{formatDate(currentDate)}</span>
+                </div>
+
+                <button
+                  onClick={() => setCurrentDate("2026-10-06")}
+                  className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+                  title="Next Day"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Primary Action Button */}
+            <Button
+              onClick={() => handleOpenCorrection()}
+              variant={isPersonalView ? "primary" : "outline"}
+              size="sm"
+              className="h-8 text-xs font-medium whitespace-nowrap"
+              leftIcon={<ClockAlert className="w-3.5 h-3.5" />}
+            >
+              {isPersonalView ? "Request Regularization" : "Manual Correction"}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Summary KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-emerald-700">Present</span>
-          <p className="text-2xl font-bold text-gray-950 mt-0.5">{presentCount}</p>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-amber-700">Late Arrival</span>
-          <p className="text-2xl font-bold text-gray-950 mt-0.5">{lateCount}</p>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-indigo-700">Half Day</span>
-          <p className="text-2xl font-bold text-gray-950 mt-0.5">{halfDayCount}</p>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-rose-700">Absent</span>
-          <p className="text-2xl font-bold text-gray-950 mt-0.5">{absentCount}</p>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-xs col-span-2 sm:col-span-1">
-          <span className="text-[11px] font-semibold uppercase text-blue-700">On Leave</span>
-          <p className="text-2xl font-bold text-gray-950 mt-0.5">{leaveCount}</p>
-        </div>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-card border border-surface-border shadow-card flex items-center gap-3 flex-wrap justify-between">
-        <div className="flex items-center gap-1.5 text-xs text-text-muted font-medium">
-          <Filter className="w-3.5 h-3.5" />
-          <span>Filter Records:</span>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <select
-            value={selectedDept}
-            onChange={(e) => setSelectedDept(e.target.value)}
-            className="h-9 px-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
-          >
-            <option value="ALL">All Departments</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-            className="h-9 px-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
-          >
-            <option value="ALL">All Branches</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="h-9 px-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="PRESENT">Present</option>
-            <option value="LATE">Late Arrival</option>
-            <option value="HALF_DAY">Half Day</option>
-            <option value="ABSENT">Absent</option>
-            <option value="LEAVE">On Leave</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Daily Attendance Sheet */}
-      <div className="bg-white rounded-card border border-surface-border shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-                <th className="py-3.5 px-4">Employee</th>
-                <th className="py-3.5 px-4">Shift</th>
-                <th className="py-3.5 px-4">First In</th>
-                <th className="py-3.5 px-4">Last Out</th>
-                <th className="py-3.5 px-4">Logged Hours</th>
-                <th className="py-3.5 px-4">Late Buffer</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Punch Detail</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-14 text-center text-gray-400 text-sm">
-                    No attendance logs found for selected parameters.
-                  </td>
-                </tr>
-              ) : (
-                filteredRecords.map((rec) => {
-                  const emp = employees.find((e) => e.id === rec.employeeId);
-                  const shift = shifts.find((s) => s.id === rec.shiftId);
-
-                  return (
-                    <tr key={rec.id} className="hover:bg-gray-50/70 transition-colors">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            src={emp?.avatar}
-                            name={`${emp?.firstName} ${emp?.lastName}`}
-                            size="sm"
-                          />
-                          <div>
-                            <span className="font-semibold text-gray-950">
-                              {emp?.firstName} {emp?.lastName}
-                            </span>
-                            <span className="text-xs text-gray-500 block">
-                              {emp?.employeeCode}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-3 px-4 text-xs text-gray-600">
-                        {shift?.name || "General Shift"}
-                      </td>
-
-                      <td className="py-3 px-4 font-mono text-xs font-semibold text-emerald-700">
-                        {formatTime(rec.firstIn)}
-                      </td>
-
-                      <td className="py-3 px-4 font-mono text-xs font-semibold text-gray-900">
-                        {formatTime(rec.lastOut)}
-                      </td>
-
-                      <td className="py-3 px-4 font-bold text-gray-950 text-xs">
-                        {rec.workingHours ? `${rec.workingHours} hrs` : "--"}
-                      </td>
-
-                      <td className="py-3 px-4 text-xs">
-                        {rec.lateMinutes > 0 ? (
-                          <span className="font-semibold text-rose-600">
-                            +{rec.lateMinutes} mins
-                          </span>
-                        ) : (
-                          <span className="text-emerald-600 font-medium">On-time</span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4">{getStatusBadge(rec.status)}</td>
-
-                      <td className="py-3 px-4 text-right">
-                        <Button
-                          onClick={() => setDetailRecord(rec)}
-                          variant="ghost"
-                          size="sm"
-                          leftIcon={<Eye className="w-3.5 h-3.5" />}
-                        >
-                          Timeline
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })
+      {/* Dual-Persona Module Navigation Tabs */}
+      <div className="flex items-center gap-1 border-b border-surface-border overflow-x-auto scrollbar-none pt-1">
+        {navTabs.map((tab) => {
+          const isActive = activeNavTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveNavTab(tab.id)}
+              className={`flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                isActive
+                  ? "border-brand-primary text-text-primary font-semibold"
+                  : "border-transparent text-text-secondary hover:text-text-primary hover:border-surface-border"
+              }`}
+            >
+              <span
+                className={isActive ? "text-brand-primary" : "text-text-muted"}
+              >
+                {tab.icon}
+              </span>
+              <span>{tab.label}</span>
+              {tab.badge !== undefined && (
+                <span
+                  className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
+                    tab.badgeVariant === "warning"
+                      ? "bg-amber-100 text-amber-800 border border-amber-300"
+                      : "bg-surface-bg text-text-secondary border border-surface-border"
+                  }`}
+                >
+                  {tab.badge}
+                </span>
               )}
-            </tbody>
-          </table>
-        </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Punch Timeline Modal */}
+      {/* View Switcher based on active navigation tab */}
+      {/* 1. Personal Attendance Experience (Available to HR Admin, Manager, and Employee) */}
+      {activeNavTab === "MY_ATTENDANCE" && (
+        <EmployeeAttendanceView
+          employeeId={currentUserEmployee?.id || user?.employeeId}
+          defaultSubTab="HISTORY"
+          onOpenRegularizationModal={(date) =>
+            handleOpenCorrection(undefined, date)
+          }
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+        />
+      )}
+
+      {activeNavTab === "EMPLOYEE_REQUESTS" && (
+        <EmployeeAttendanceView
+          employeeId={currentUserEmployee?.id || user?.employeeId}
+          defaultSubTab="REGULARIZATIONS"
+          onOpenRegularizationModal={(date) =>
+            handleOpenCorrection(undefined, date)
+          }
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+        />
+      )}
+
+      {/* 2. Manager Views */}
+      {activeNavTab === "MANAGER_TEAM" && (
+        <ManagerAttendanceView
+          currentDate={currentDate}
+          defaultTab="REGISTER"
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+          onOpenCorrectionModal={(rec) => handleOpenCorrection(rec)}
+        />
+      )}
+
+      {activeNavTab === "MANAGER_APPROVALS" && (
+        <ManagerAttendanceView
+          currentDate={currentDate}
+          defaultTab="APPROVALS"
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+          onOpenCorrectionModal={(rec) => handleOpenCorrection(rec)}
+        />
+      )}
+
+      {/* 3. Admin Views (Super Admin & HR Admin) */}
+      {(activeNavTab === "ADMIN_MANAGEMENT" ||
+        activeNavTab === "ADMIN_OPERATIONS") && (
+        <AdminAttendanceView
+          currentDate={currentDate}
+          defaultTab="REGISTER"
+          isSuperAdmin={role === "SUPER_ADMIN"}
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+          onOpenCorrectionModal={(rec) => handleOpenCorrection(rec)}
+        />
+      )}
+
+      {activeNavTab === "ADMIN_EXCEPTIONS" && (
+        <AdminAttendanceView
+          currentDate={currentDate}
+          defaultTab="EXCEPTIONS"
+          isSuperAdmin={role === "SUPER_ADMIN"}
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+          onOpenCorrectionModal={(rec) => handleOpenCorrection(rec)}
+        />
+      )}
+
+      {activeNavTab === "ADMIN_REGULARIZATIONS" && (
+        <AdminAttendanceView
+          currentDate={currentDate}
+          defaultTab="REGULARIZATIONS"
+          isSuperAdmin={role === "SUPER_ADMIN"}
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+          onOpenCorrectionModal={(rec) => handleOpenCorrection(rec)}
+        />
+      )}
+
+      {activeNavTab === "ADMIN_POLICY" && (
+        <AdminAttendanceView
+          currentDate={currentDate}
+          defaultTab="POLICY"
+          isSuperAdmin={role === "SUPER_ADMIN"}
+          onOpenTimelineModal={(rec) => setDetailRecord(rec)}
+          onOpenCorrectionModal={(rec) => handleOpenCorrection(rec)}
+        />
+      )}
+
+      {/* Raw Punch Sensor Timeline Modal (Reusable for all roles) */}
       <Modal
         isOpen={!!detailRecord}
         onClose={() => setDetailRecord(null)}
         title="Biometric & Web Punch Timeline"
-        description={`Detailed biometric sensor events recorded on ${formatDate(detailRecord?.date)}.`}
+        description={`Raw sensor events recorded on ${formatDate(detailRecord?.date)}.`}
       >
         {detailRecord && (
-          <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+          <div className="space-y-3">
+            <div className="p-3 bg-surface-subtle rounded-card border border-surface-border flex items-center justify-between text-xs">
               <div>
-                <p className="text-xs font-semibold text-gray-950">
-                  {employees.find((e) => e.id === detailRecord.employeeId)?.firstName}{" "}
-                  {employees.find((e) => e.id === detailRecord.employeeId)?.lastName}
+                <p className="font-semibold text-text-primary">
+                  {
+                    employees.find((e) => e.id === detailRecord.employeeId)
+                      ?.firstName
+                  }{" "}
+                  {
+                    employees.find((e) => e.id === detailRecord.employeeId)
+                      ?.lastName
+                  }
                 </p>
-                <p className="text-[11px] text-gray-500">
-                  Total Logged: {detailRecord.workingHours} hours
+                <p className="text-text-secondary text-[11px] mt-0.5">
+                  Logged:{" "}
+                  <strong className="text-text-primary font-mono">
+                    {detailRecord.workingHours} hours
+                  </strong>
                 </p>
               </div>
-              {getStatusBadge(detailRecord.status)}
+              <Badge
+                variant={
+                  detailRecord.status === "PRESENT" ? "success" : "neutral"
+                }
+                size="sm"
+              >
+                {detailRecord.status}
+              </Badge>
             </div>
 
             <div>
-              <h5 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
-                Raw Biometric Sensor Events
-              </h5>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary mb-2.5 block">
+                Sensor Punch Events
+              </span>
 
               {detailRecord.punches.length === 0 ? (
-                <p className="text-xs text-text-muted text-center py-4">
+                <p className="text-xs text-text-muted text-center py-6">
                   No sensor punches registered for this date.
                 </p>
               ) : (
-                <div className="space-y-3 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                <div className="space-y-2 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-border">
                   {detailRecord.punches.map((p) => (
-                    <div key={p.id} className="flex items-start gap-4 relative pl-7 text-xs">
+                    <div
+                      key={p.id}
+                      className="flex items-start gap-3 relative pl-6 text-xs"
+                    >
                       <div
-                        className={`absolute left-2 top-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                          p.type === "IN" ? "bg-emerald-500" : "bg-gray-900"
+                        className={`absolute left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white ${
+                          p.type === "IN" ? "bg-emerald-500" : "bg-gray-800"
                         }`}
                       />
-                      <div className="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-100 flex items-center justify-between">
+                      <div className="flex-1 p-2.5 bg-surface-subtle/60 rounded-lg border border-surface-border flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-gray-950">
-                            Punch {p.type} • {formatTime(p.time)}
+                          <p className="font-medium text-text-primary">
+                            Punch {p.type} ·{" "}
+                            <span className="font-mono tabular-nums">
+                              {formatTime(p.time)}
+                            </span>
                           </p>
-                          <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
+                          <p className="text-[11px] text-text-muted flex items-center gap-1 mt-0.5">
                             <MapPin className="w-3 h-3" />
                             {p.location || "Biometric Terminal"}
                           </p>
@@ -345,6 +490,28 @@ export function AttendancePage() {
           </div>
         )}
       </Modal>
+
+      {/* Attendance Correction Modal (USD-06 / USD-07) */}
+      <AttendanceCorrectionModal
+        isOpen={isCorrectionOpen}
+        onClose={() => {
+          setIsCorrectionOpen(false);
+          setCorrectionRecord(null);
+          setPrefillDate(undefined);
+          setPrefillEmployeeId(undefined);
+        }}
+        prefillDate={prefillDate || correctionRecord?.date || currentDate}
+        prefillEmployeeId={prefillEmployeeId || correctionRecord?.employeeId}
+        prefillCorrectionType={
+          correctionRecord?.status === "ABSENT"
+            ? "MISSING_BOTH"
+            : !correctionRecord?.lastOut && correctionRecord?.firstIn
+              ? "MISSING_OUT"
+              : !correctionRecord?.firstIn && correctionRecord?.lastOut
+                ? "MISSING_IN"
+                : "INCORRECT_PUNCH"
+        }
+      />
     </div>
   );
 }

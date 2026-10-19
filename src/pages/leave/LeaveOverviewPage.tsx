@@ -62,22 +62,23 @@ export function LeaveOverviewPage({ onOpenApplyLeave }: LeaveOverviewPageProps) 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight whitespace-nowrap">
             Leave & Time-Off Overview
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">
             Monitor organizational leave utilization, pending approvals, and statutory quota balances.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto scrollbar-none shrink-0 py-0.5">
           <Button
             onClick={() => navigate("/leave/policies")}
             variant="outline"
-            size="md"
-            leftIcon={<ShieldCheck className="w-4 h-4 text-gray-500" />}
+            size="sm"
+            className="h-8 text-xs whitespace-nowrap px-2.5 sm:px-3 shrink-0"
+            leftIcon={<ShieldCheck className="w-3.5 h-3.5 text-gray-500" />}
           >
             Leave Policies
           </Button>
@@ -85,8 +86,9 @@ export function LeaveOverviewPage({ onOpenApplyLeave }: LeaveOverviewPageProps) 
           <Button
             onClick={() => navigate("/leave/requests")}
             variant="outline"
-            size="md"
-            leftIcon={<CalendarCheck2 className="w-4 h-4 text-gray-500" />}
+            size="sm"
+            className="h-8 text-xs whitespace-nowrap px-2.5 sm:px-3 shrink-0"
+            leftIcon={<CalendarCheck2 className="w-3.5 h-3.5 text-gray-500" />}
           >
             Review Requests
           </Button>
@@ -95,8 +97,9 @@ export function LeaveOverviewPage({ onOpenApplyLeave }: LeaveOverviewPageProps) 
             <Button
               onClick={onOpenApplyLeave}
               variant="primary"
-              size="md"
-              leftIcon={<CalendarPlus className="w-4 h-4" />}
+              size="sm"
+              className="h-8 text-xs font-semibold whitespace-nowrap px-3 sm:px-3.5 shadow-xs shrink-0"
+              leftIcon={<CalendarPlus className="w-3.5 h-3.5" />}
             >
               Apply Leave
             </Button>

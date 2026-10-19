@@ -27,14 +27,13 @@ import {
 import { CurrentUser, Employee } from "../types/hrms";
 
 export const DEFAULT_USER: CurrentUser = {
-  id: "EMP-1001",
-  name: "Ajay Pawar",
-  email: "ajay.pawar@ga-hrms.io",
+  id: "usr-admin-01",
+  name: "System Admin",
+  email: "admin@ga-hrms.io",
   role: "SUPER_ADMIN",
-  avatar: "/avatars/superman.jpg",
-  employeeId: "EMP-1001",
-  designation: "Vice President of Engineering",
-  department: "Engineering & Cloud Platforms",
+  avatar: "",
+  designation: "System Administrator",
+  department: "System Administration",
 };
 
 export function initializeHrmsStorage(forceReset = false) {
@@ -80,6 +79,29 @@ export function initializeHrmsStorage(forceReset = false) {
     checkAndSeed(STORAGE_KEYS.ASSETS, initialAssets);
     checkAndSeed(STORAGE_KEYS.GOALS, initialGoals);
     checkAndSeed(STORAGE_KEYS.APPRAISALS, initialAppraisals);
+
+    // Migration guard: ensure full 31-day demo attendance is present in existing localStorage
+    const currentAttendance = storage.get<any[]>(STORAGE_KEYS.ATTENDANCE, []);
+    if (Array.isArray(currentAttendance)) {
+      const emp1004Count = currentAttendance.filter((a) => a.employeeId === "EMP-1004").length;
+      if (emp1004Count < 28) {
+        const emp1004Records = initialAttendanceRecords.filter((a) => a.employeeId === "EMP-1004");
+        const mergedAttendance = [
+          ...currentAttendance.filter((a) => a.employeeId !== "EMP-1004"),
+          ...emp1004Records,
+        ];
+        storage.set(STORAGE_KEYS.ATTENDANCE, mergedAttendance);
+      }
+    }
+
+    // Migration guard: ensure new demo regularizations are present
+    const currentRegs = storage.get<any[]>(STORAGE_KEYS.REGULARIZATIONS, []);
+    if (Array.isArray(currentRegs)) {
+      const hasReg3 = currentRegs.some((r) => r.id === "reg-003");
+      if (!hasReg3) {
+        storage.set(STORAGE_KEYS.REGULARIZATIONS, initialRegularizations);
+      }
+    }
 
     // Sync Ajay Pawar avatar to Superman in existing localStorage
     const currentEmployees = storage.get<Employee[]>(STORAGE_KEYS.EMPLOYEES, []);

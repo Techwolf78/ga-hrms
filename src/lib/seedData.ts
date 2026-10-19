@@ -24,6 +24,7 @@ import {
   AppraisalReview,
 } from "../types/hrms";
 import { calculateSalaryComponents } from "./utils";
+import { generate31DaysEmployeeAttendance } from "./attendanceDemoData";
 
 export const initialCompany: Company = {
   id: "comp-ga-01",
@@ -1318,7 +1319,7 @@ export const initialSalaryStructures: SalaryStructure[] = initialEmployees.map((
 });
 
 // Today's date is 2026-10-06 (from metadata)
-export const initialAttendanceRecords: AttendanceRecord[] = initialEmployees.map((emp, index) => {
+const baseDailyAttendance: AttendanceRecord[] = initialEmployees.map((emp, index) => {
   let status: AttendanceRecord["status"] = "PRESENT";
   let firstIn: string | null = "09:22";
   let lastOut: string | null = "18:35";
@@ -1383,10 +1384,18 @@ export const initialAttendanceRecords: AttendanceRecord[] = initialEmployees.map
   };
 });
 
+// Seed full 31-day October demo attendance for employee EMP-1004
+const demoEmployee31Days = generate31DaysEmployeeAttendance("EMP-1004", "shift-gen", baseDailyAttendance);
+
+export const initialAttendanceRecords: AttendanceRecord[] = [
+  ...baseDailyAttendance.filter((a) => a.employeeId !== "EMP-1004"),
+  ...demoEmployee31Days,
+];
+
 export const initialRegularizations: AttendanceRegularization[] = [
   {
     id: "reg-001",
-    employeeId: "EMP-1004", // Ananya Iyer
+    employeeId: "EMP-1004", // Ananya Iyer (Employee)
     date: "2026-10-05",
     missingPunchType: "OUT",
     requestedTime: "18:30",
@@ -1405,6 +1414,36 @@ export const initialRegularizations: AttendanceRegularization[] = [
     approvedBy: "Rajesh Kulkarni",
     appliedDate: "2026-10-01",
     comments: "Verified with security log.",
+  },
+  {
+    id: "reg-003",
+    employeeId: "EMP-1003", // Rajesh Kulkarni (Manager - Self-Request)
+    date: "2026-10-05",
+    missingPunchType: "OUT",
+    requestedTime: "19:15",
+    reason: "Client architecture review meeting ran late past office hours.",
+    status: "PENDING",
+    appliedDate: "2026-10-06",
+  },
+  {
+    id: "reg-004",
+    employeeId: "EMP-1005", // Vikram Malhotra
+    date: "2026-10-05",
+    missingPunchType: "IN",
+    requestedTime: "09:15",
+    reason: "On-call production incident triage early morning offsite.",
+    status: "PENDING",
+    appliedDate: "2026-10-06",
+  },
+  {
+    id: "reg-005",
+    employeeId: "EMP-1006", // Sneha Patel (Team member)
+    date: "2026-10-05",
+    missingPunchType: "BOTH",
+    requestedTime: "09:30",
+    reason: "Biometric device sensor glitch at Hinjawadi Gate 1.",
+    status: "PENDING",
+    appliedDate: "2026-10-06",
   },
 ];
 

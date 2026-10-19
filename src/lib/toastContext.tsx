@@ -23,7 +23,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addToast = useCallback((message: string, type: ToastType) => {
     const id = `${Date.now()}-${Math.random()}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => {
+      const next = [...prev, { id, message, type }];
+      // Cap at 3 visible toasts max to avoid covering the interface
+      return next.slice(-3);
+    });
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));

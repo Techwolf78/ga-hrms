@@ -104,40 +104,55 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
           <GaHrmsLogo size="xs" variant="light" />
         </div>
 
-        {/* Global Search Input Button */}
+        {/* Mobile Search Icon Trigger */}
         <button
           onClick={onOpenSearch}
-          className="w-full flex items-center justify-between px-3.5 py-2 bg-surface-bg border border-surface-border rounded-input text-sm text-text-muted hover:border-gray-400 hover:bg-white transition-all shadow-xs group"
+          className="sm:hidden p-2 text-text-secondary hover:text-text-primary hover:bg-gray-100 rounded-lg"
+          aria-label="Open search"
+          title="Search anything..."
+        >
+          <Search className="w-5 h-5" />
+        </button>
+
+        {/* Desktop / Tablet Global Search Input Button */}
+        <button
+          onClick={onOpenSearch}
+          aria-label="Search anything"
+          className="hidden sm:flex w-full items-center justify-between px-3.5 py-2 bg-surface-bg border border-surface-border rounded-input text-sm text-text-muted hover:border-gray-400 hover:bg-white focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-400 transition-all shadow-xs group"
         >
           <div className="flex items-center gap-2.5">
-            <Search className="w-4 h-4 text-text-muted group-hover:text-gray-900 transition-colors" />
-            <span className="truncate">Search employees, departments, payroll...</span>
+            <Search className="w-4 h-4 text-text-muted group-hover:text-gray-950 transition-colors" />
+            <span className="truncate">Search anything...</span>
           </div>
-          <kbd className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded shadow-2xs">
-            Ctrl K
+          <kbd className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded shadow-2xs">
+            {typeof window !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+              ? "⌘ K"
+              : "Ctrl K"}
           </kbd>
         </button>
       </div>
 
       {/* Right: Quick Punch, Role Switcher, Notifications, User Menu */}
       <div className="flex items-center gap-2.5 shrink-0">
-        {/* Quick Punch-In / Punch-Out Widget */}
-        <button
-          onClick={handlePunchToggle}
-          className={`hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 ${
-            isPunchedIn
-              ? "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-800"
-              : "bg-gray-100 border-gray-200 text-gray-900 hover:bg-gray-950 hover:text-white"
-          }`}
-          title={isPunchedIn ? "Click to Punch-Out" : "Click to Punch-In"}
-        >
-          <Clock className="w-3.5 h-3.5" />
-          <span>
-            {isPunchedIn
-              ? `In: ${userTodayAttendance?.firstIn} (Click to Out)`
-              : "Web Punch In"}
-          </span>
-        </button>
+        {/* Quick Punch-In / Punch-Out Widget (Only for users with an employee profile) */}
+        {user?.employeeId && (
+          <button
+            onClick={handlePunchToggle}
+            className={`hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 ${
+              isPunchedIn
+                ? "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-800"
+                : "bg-gray-100 border-gray-200 text-gray-900 hover:bg-gray-950 hover:text-white"
+            }`}
+            title={isPunchedIn ? "Click to Punch-Out" : "Click to Punch-In"}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>
+              {isPunchedIn
+                ? `In: ${userTodayAttendance?.firstIn} (Click to Out)`
+                : "Web Punch In"}
+            </span>
+          </button>
+        )}
 
         {/* Monitor Density Switcher */}
         <button
@@ -314,16 +329,18 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
               </div>
 
               <div className="space-y-0.5">
-                <button
-                  onClick={() => {
-                    navigate(`/people/employees/${user?.employeeId || "EMP-1001"}`);
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-primary hover:bg-gray-100 transition-colors"
-                >
-                  <User className="w-4 h-4 text-text-muted" />
-                  <span>My Profile</span>
-                </button>
+                {user?.employeeId && (
+                  <button
+                    onClick={() => {
+                      navigate(`/people/employees/${user.employeeId}`);
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-primary hover:bg-gray-100 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-text-muted" />
+                    <span>My Profile</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => {

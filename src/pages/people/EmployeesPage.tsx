@@ -244,62 +244,72 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
-            Employee Directory & Accounts
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your organization members, statutory profiles, onboarding compliance, and credentials.
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight whitespace-nowrap">
+              Employee Directory
+            </h1>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200/80">
+              {employees.length} Accounts
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5 truncate hidden sm:block">
+            Manage organization members, statutory profiles, onboarding compliance, and credentials.
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
+        {/* Action Buttons (All in the same line, clearly clickable individual buttons) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto scrollbar-none shrink-0 py-0.5">
+          <button
+            type="button"
             onClick={handleExportPendingDocReport}
-            variant="outline"
-            size="sm"
-            leftIcon={<Download className="w-4 h-4 text-gray-500" />}
+            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+            title="Export CSV report of employees with pending compliance documents"
           >
-            Pending Docs Report
-          </Button>
+            <FileWarning className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>Pending Docs</span>
+          </button>
 
-          <Button
+          <button
+            type="button"
             onClick={handleSendMailToAll}
-            variant="outline"
-            size="sm"
-            leftIcon={<Mail className="w-4 h-4 text-gray-500" />}
+            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+            title="Dispatch login credentials to active roster"
           >
-            Send Credentials
-          </Button>
+            <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span>Send Creds</span>
+          </button>
 
-          <Button
+          <button
+            type="button"
             onClick={() => setIsCtcCalculatorOpen(true)}
-            variant="outline"
-            size="sm"
-            leftIcon={<Calculator className="w-4 h-4 text-gray-500" />}
+            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+            title="Open CTC & Gross Salary Breakdown Calculator"
           >
-            CTC Calculator
-          </Button>
+            <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>CTC Calc</span>
+          </button>
 
-          <Button
+          <button
+            type="button"
             onClick={handleExportCSV}
-            variant="outline"
-            size="sm"
-            leftIcon={<Download className="w-4 h-4 text-gray-500" />}
+            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+            title="Export full employee directory to CSV"
           >
-            Export
-          </Button>
+            <Download className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+            <span>Export</span>
+          </button>
 
           {onOpenAddEmployee && (
             <Button
               onClick={onOpenAddEmployee}
               variant="primary"
               size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
+              className="h-8 text-xs font-semibold whitespace-nowrap px-3 sm:px-3.5 shadow-xs"
+              leftIcon={<Plus className="w-3.5 h-3.5" />}
             >
               Onboard Employee
             </Button>
@@ -308,129 +318,181 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
       </div>
 
       {/* Clean Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <button
-          onClick={() => {
-            setActiveTab("ALL");
-            setCurrentPage(1);
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-            activeTab === "ALL"
-              ? "bg-gray-950 text-white shadow-xs"
-              : "bg-white text-gray-600 border border-gray-200 hover:text-gray-950 hover:bg-gray-50"
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>All Accounts</span>
-          <span
-            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-              activeTab === "ALL" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+      <div className="flex items-center justify-between gap-3 overflow-x-auto pb-0.5">
+        <div className="inline-flex items-center p-1 bg-gray-100/80 rounded-xl border border-gray-200/70 gap-1 shrink-0">
+          <button
+            onClick={() => {
+              setActiveTab("ALL");
+              setCurrentPage(1);
+            }}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "ALL"
+                ? "bg-white text-gray-950 shadow-xs"
+                : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
             }`}
           >
-            {tabCounts.all}
-          </span>
-        </button>
+            <Users className="w-3.5 h-3.5" />
+            <span>All Accounts</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === "ALL" ? "bg-gray-950 text-white" : "bg-gray-200/80 text-gray-700"
+              }`}
+            >
+              {tabCounts.all}
+            </span>
+          </button>
 
-        <button
-          onClick={() => {
-            setActiveTab("DOCUMENT_PENDING");
-            setCurrentPage(1);
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-            activeTab === "DOCUMENT_PENDING"
-              ? "bg-gray-950 text-white shadow-xs"
-              : "bg-white text-gray-600 border border-gray-200 hover:text-gray-950 hover:bg-gray-50"
-          }`}
-        >
-          <FileWarning className="w-4 h-4 text-amber-500" />
-          <span>Document Pending</span>
-          <span
-            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-              activeTab === "DOCUMENT_PENDING" ? "bg-white/20 text-white" : "bg-amber-50 text-amber-800 border border-amber-200"
+          <button
+            onClick={() => {
+              setActiveTab("DOCUMENT_PENDING");
+              setCurrentPage(1);
+            }}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "DOCUMENT_PENDING"
+                ? "bg-white text-gray-950 shadow-xs"
+                : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
             }`}
           >
-            {tabCounts.docPending}
-          </span>
-        </button>
+            <FileWarning className="w-3.5 h-3.5 text-amber-500" />
+            <span>Document Pending</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === "DOCUMENT_PENDING" ? "bg-amber-500 text-white" : "bg-amber-100 text-amber-800"
+              }`}
+            >
+              {tabCounts.docPending}
+            </span>
+          </button>
 
-        <button
-          onClick={() => {
-            setActiveTab("SEND_CREDENTIALS");
-            setCurrentPage(1);
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-            activeTab === "SEND_CREDENTIALS"
-              ? "bg-gray-950 text-white shadow-xs"
-              : "bg-white text-gray-600 border border-gray-200 hover:text-gray-950 hover:bg-gray-50"
-          }`}
-        >
-          <Send className="w-4 h-4 text-indigo-500" />
-          <span>Send Credentials</span>
-          <span
-            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-              activeTab === "SEND_CREDENTIALS" ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
+          <button
+            onClick={() => {
+              setActiveTab("SEND_CREDENTIALS");
+              setCurrentPage(1);
+            }}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "SEND_CREDENTIALS"
+                ? "bg-white text-gray-950 shadow-xs"
+                : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
             }`}
           >
-            {tabCounts.sendCreds}
-          </span>
-        </button>
+            <Send className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Send Credentials</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === "SEND_CREDENTIALS" ? "bg-indigo-600 text-white" : "bg-indigo-100 text-indigo-800"
+              }`}
+            >
+              {tabCounts.sendCreds}
+            </span>
+          </button>
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-xs text-rose-600 hover:text-rose-800 font-medium inline-flex items-center gap-1 shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+            Reset all filters
+          </button>
+        )}
       </div>
 
       {/* Minimalist Executive KPI Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-card flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-900 shrink-0">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <button
+          onClick={() => {
+            setSelectedStatus("ALL");
+            setCurrentPage(1);
+          }}
+          className={`bg-white p-3 rounded-card border text-left transition-all group ${
+            selectedStatus === "ALL"
+              ? "border-gray-950/20 shadow-xs ring-1 ring-gray-950/5"
+              : "border-surface-border hover:border-gray-300 hover:shadow-2xs"
+          } flex items-center gap-3`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 shrink-0 group-hover:scale-105 transition-transform">
             <Users className="w-4 h-4" />
           </div>
-          <div>
-            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider block">Total Roster</span>
-            <span className="text-lg font-bold text-gray-950 tracking-tight">{stats.total}</span>
+          <div className="min-w-0">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Total Roster</span>
+            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.total}</span>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-card flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700 shrink-0">
+        <button
+          onClick={() => {
+            setSelectedStatus(selectedStatus === "ACTIVE" ? "ALL" : "ACTIVE");
+            setCurrentPage(1);
+          }}
+          className={`bg-white p-3 rounded-card border text-left transition-all group ${
+            selectedStatus === "ACTIVE"
+              ? "border-emerald-500/40 shadow-xs ring-1 ring-emerald-500/20"
+              : "border-surface-border hover:border-emerald-200 hover:shadow-2xs"
+          } flex items-center gap-3`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-700 shrink-0 group-hover:scale-105 transition-transform">
             <UserCheck className="w-4 h-4" />
           </div>
-          <div>
-            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider block">Active Staff</span>
-            <span className="text-lg font-bold text-gray-950 tracking-tight">{stats.active}</span>
+          <div className="min-w-0">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Active Staff</span>
+            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.active}</span>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-card flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">
+        <button
+          onClick={() => {
+            setSelectedStatus(selectedStatus === "PROBATION" ? "ALL" : "PROBATION");
+            setCurrentPage(1);
+          }}
+          className={`bg-white p-3 rounded-card border text-left transition-all group ${
+            selectedStatus === "PROBATION"
+              ? "border-amber-500/40 shadow-xs ring-1 ring-amber-500/20"
+              : "border-surface-border hover:border-amber-200 hover:shadow-2xs"
+          } flex items-center gap-3`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 shrink-0 group-hover:scale-105 transition-transform">
             <Clock className="w-4 h-4" />
           </div>
-          <div>
-            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider block">In Probation</span>
-            <span className="text-lg font-bold text-gray-950 tracking-tight">{stats.probation}</span>
+          <div className="min-w-0">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">In Probation</span>
+            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.probation}</span>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-card flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-rose-700 shrink-0">
+        <button
+          onClick={() => {
+            setSelectedStatus(selectedStatus === "NOTICE_PERIOD" ? "ALL" : "NOTICE_PERIOD");
+            setCurrentPage(1);
+          }}
+          className={`bg-white p-3 rounded-card border text-left transition-all group ${
+            selectedStatus === "NOTICE_PERIOD"
+              ? "border-rose-500/40 shadow-xs ring-1 ring-rose-500/20"
+              : "border-surface-border hover:border-rose-200 hover:shadow-2xs"
+          } flex items-center gap-3`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-700 shrink-0 group-hover:scale-105 transition-transform">
             <UserX className="w-4 h-4" />
           </div>
-          <div>
-            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider block">Notice Period</span>
-            <span className="text-lg font-bold text-gray-950 tracking-tight">{stats.notice}</span>
+          <div className="min-w-0">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Notice Period</span>
+            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.notice}</span>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-3.5 rounded-card border border-surface-border shadow-card flex items-center gap-3 col-span-2 sm:col-span-4 lg:col-span-1">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-700 shrink-0">
+        <div className="bg-white p-3 rounded-card border border-surface-border shadow-card flex items-center gap-3 col-span-2 sm:col-span-1">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-700 shrink-0">
             <Building2 className="w-4 h-4" />
           </div>
-          <div>
-            <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider block">Departments</span>
-            <span className="text-lg font-bold text-gray-950 tracking-tight">{stats.deptsCount}</span>
+          <div className="min-w-0">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Departments</span>
+            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.deptsCount}</span>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-card border border-surface-border shadow-card flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+      <div className="bg-white p-3 rounded-card border border-surface-border shadow-card flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -442,15 +504,26 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               setCurrentPage(1);
             }}
             placeholder="Search by name, employee code, or email..."
-            className="w-full h-9 pl-9 pr-4 text-sm bg-gray-50/70 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-950 transition-all"
+            className="w-full h-8.5 pl-9 pr-8 text-xs bg-gray-50/80 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-gray-950/5 focus:border-gray-950 transition-all"
           />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
             <Filter className="w-3.5 h-3.5" />
-            <span>Filters:</span>
+            <span className="hidden sm:inline">Filters:</span>
           </div>
 
           {/* Department */}
@@ -460,7 +533,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               setSelectedDept(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-9 px-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="h-8.5 px-2.5 text-xs bg-gray-50/70 hover:bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
           >
             <option value="ALL">All Departments</option>
             {departments.map((d) => (
@@ -477,7 +550,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               setSelectedBranch(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-9 px-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="h-8.5 px-2.5 text-xs bg-gray-50/70 hover:bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
           >
             <option value="ALL">All Branches</option>
             {branches.map((b) => (
@@ -494,7 +567,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               setSelectedStatus(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-9 px-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="h-8.5 px-2.5 text-xs bg-gray-50/70 hover:bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
           >
             <option value="ALL">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -505,7 +578,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="h-9 px-2.5 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center gap-1 transition-colors"
+              className="h-8.5 px-2 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center gap-1 transition-colors"
               title="Reset all filters"
             >
               <X className="w-3.5 h-3.5" />
@@ -727,7 +800,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
       <CtcCalculatorModal
         isOpen={isCtcCalculatorOpen}
         onClose={() => setIsCtcCalculatorOpen(false)}
-        initialGross={27000}
+        initialGross={25000}
       />
     </div>
   );

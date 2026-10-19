@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -44,6 +44,7 @@ interface NavItem {
 
 interface NavGroup {
   group: string;
+  collapsible?: boolean;
   items: NavItem[];
 }
 
@@ -53,6 +54,9 @@ export interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }
+
+const STORAGE_KEY = "ga_hrms_sidebar_expanded_groups";
+const DEFAULT_EXPANDED_GROUPS = ["Overview", "People", "Time", "Leave"];
 
 export function Sidebar({
   collapsed,
@@ -64,6 +68,34 @@ export function Sidebar({
   const { user } = useAuth();
   const { leaveRequests, regularizations, notifications, company } = useHrms();
 
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return DEFAULT_EXPANDED_GROUPS;
+  });
+
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups((prev) => {
+      const isExpanded = prev.includes(groupName);
+      const updated = isExpanded
+        ? prev.filter((g) => g !== groupName)
+        : [...prev, groupName];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+  };
+
   const pendingLeavesCount = leaveRequests.filter((l) => l.status === "PENDING").length;
   const pendingRegsCount = regularizations.filter((r) => r.status === "PENDING").length;
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
@@ -73,6 +105,7 @@ export function Sidebar({
   const navigationGroups: NavGroup[] = [
     {
       group: "Overview",
+      collapsible: false,
       items: [
         { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       ],
@@ -155,6 +188,28 @@ export function Sidebar({
     },
   ];
 
+  // Auto-expand group when current route changes
+  useEffect(() => {
+    const activeGroup = navigationGroups.find((g) =>
+      g.items.some(
+        (item) =>
+          location.pathname === item.path ||
+          (item.path !== "/dashboard" && location.pathname.startsWith(item.path))
+      )
+    );
+    if (activeGroup && !expandedGroups.includes(activeGroup.group)) {
+      setExpandedGroups((prev) => {
+        const next = [...prev, activeGroup.group];
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+    }
+  }, [location.pathname]);
+
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gray-950 text-gray-400 border-r border-gray-900 select-none">
       {/* Brand Header */}
@@ -210,8 +265,8 @@ export function Sidebar({
       )}
 
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-        {navigationGroups.map((group) => {
+      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
+        {navigationGroups.map((group, groupIdx) => {
           // Filter items based on user role
           const visibleItems = group.items.filter(
             (item) => !item.roles || item.roles.includes(role)
@@ -219,60 +274,105 @@ export function Sidebar({
 
           if (visibleItems.length === 0) return null;
 
+          const isCollapsible = group.collapsible !== false;
+          const isExpanded = collapsed || !isCollapsible || expandedGroups.includes(group.group);
+          const groupBadgeCount = visibleItems.reduce((acc, item) => acc + (item.badge || 0), 0);
+
           return (
             <div key={group.group} className="space-y-1">
-              {!collapsed && (
-                <p className="px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
-                  {group.group}
-                </p>
+              {/* Divider between sections in compact icon mode */}
+              {collapsed && groupIdx > 0 && (
+                <div className="w-8 h-px bg-gray-900 mx-auto my-1.5" />
               )}
-              {visibleItems.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  location.pathname === item.path ||
-                  (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
 
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={onCloseMobile}
-                    title={collapsed ? item.label : undefined}
-                    className={cn(
-                      "flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150 group relative",
-                      isActive
-                        ? "bg-white/10 text-white shadow-2xs font-semibold"
-                        : "text-gray-400 hover:bg-gray-900 hover:text-white"
-                    )}
+              {/* Group Header in full sidebar mode */}
+              {!collapsed && (
+                isCollapsible ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.group)}
+                    className="w-full flex items-center justify-between px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-gray-300 hover:bg-gray-900/60 transition-colors group/header focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-700"
+                    aria-expanded={isExpanded}
                   >
-                    <Icon
-                      className={cn(
-                        "w-4 h-4 shrink-0 transition-transform duration-150",
-                        isActive ? "text-white" : "text-gray-400 group-hover:text-white"
+                    <span className="truncate">{group.group}</span>
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                      {!isExpanded && groupBadgeCount > 0 && (
+                        <span className="text-[9.5px] px-1.5 py-0.2 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {groupBadgeCount}
+                        </span>
                       )}
-                    />
-
-                    {!collapsed && <span className="truncate flex-1">{item.label}</span>}
-
-                    {!collapsed && item.badge !== undefined && (
-                      <span
+                      <ChevronDown
                         className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-auto shrink-0",
+                          "w-3.5 h-3.5 text-gray-500 group-hover/header:text-gray-300 transition-transform duration-200",
+                          isExpanded ? "rotate-0" : "-rotate-90"
+                        )}
+                      />
+                    </div>
+                  </button>
+                ) : (
+                  <p className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                    {group.group}
+                  </p>
+                )
+              )}
+
+              {/* Collapsible child list */}
+              <div
+                className={cn(
+                  "grid transition-[grid-template-rows,opacity] duration-200 ease-in-out",
+                  isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                )}
+              >
+                <div className="min-h-0 overflow-hidden space-y-1">
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      location.pathname === item.path ||
+                      (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
+
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        onClick={onCloseMobile}
+                        title={collapsed ? item.label : undefined}
+                        className={cn(
+                          "flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150 group relative",
                           isActive
-                            ? "bg-white text-gray-950"
-                            : "bg-gray-800 text-gray-200"
+                            ? "bg-white/10 text-white shadow-2xs font-semibold"
+                            : "text-gray-400 hover:bg-gray-900 hover:text-white"
                         )}
                       >
-                        {item.badge}
-                      </span>
-                    )}
+                        <Icon
+                          className={cn(
+                            "w-4 h-4 shrink-0 transition-transform duration-150",
+                            isActive ? "text-white" : "text-gray-400 group-hover:text-white"
+                          )}
+                        />
 
-                    {collapsed && item.badge !== undefined && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400" />
-                    )}
-                  </NavLink>
-                );
-              })}
+                        {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+
+                        {!collapsed && item.badge !== undefined && (
+                          <span
+                            className={cn(
+                              "text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-auto shrink-0",
+                              isActive
+                                ? "bg-white text-gray-950"
+                                : "bg-gray-800 text-gray-200"
+                            )}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+
+                        {collapsed && item.badge !== undefined && (
+                          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400" />
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           );
         })}
