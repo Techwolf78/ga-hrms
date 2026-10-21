@@ -134,6 +134,7 @@ export interface Employee {
   policiesAccepted?: boolean;
   offerLetterAccepted?: boolean;
   onboardingCompleted?: boolean;
+  onboardingStatus?: 'INVITED' | 'IN_PROGRESS' | 'SUBMITTED' | 'VERIFIED';
 }
 
 export interface FamilyDetails {
@@ -499,4 +500,134 @@ export interface AppraisalReview {
   status: 'PENDING_SELF' | 'PENDING_MANAGER' | 'COMPLETED';
   feedback?: string;
   submittedDate?: string;
+}
+
+// ----------------------------------------------------
+// DYNAMIC ONBOARDING CONFIGURATION & DOSSIER TYPES
+// ----------------------------------------------------
+export type OnboardingSubmissionStatus =
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'SUBMITTED'
+  | 'CHANGES_REQUESTED'
+  | 'RESUBMITTED'
+  | 'APPROVED'
+  | 'REJECTED';
+
+export type OnboardingFieldType =
+  | 'TEXT'
+  | 'TEXTAREA'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'NUMBER'
+  | 'DATE'
+  | 'SELECT'
+  | 'MULTISELECT'
+  | 'RADIO'
+  | 'CHECKBOX'
+  | 'ADDRESS'
+  | 'READONLY';
+
+export interface OnboardingCondition {
+  field: string;
+  operator: 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'IS_EMPTY' | 'IS_NOT_EMPTY';
+  value?: any;
+}
+
+export interface OnboardingFieldOption {
+  label: string;
+  value: string;
+}
+
+export interface OnboardingFieldValidation {
+  pattern?: string;
+  min?: number;
+  max?: number;
+  message?: string;
+}
+
+export interface OnboardingFieldConfig {
+  id: string;
+  name: string;
+  label: string;
+  type: OnboardingFieldType;
+  required: boolean;
+  order: number;
+  placeholder?: string;
+  helpText?: string;
+  defaultValue?: any;
+  readOnly?: boolean;
+  options?: OnboardingFieldOption[];
+  validation?: OnboardingFieldValidation;
+  condition?: OnboardingCondition;
+}
+
+export interface OnboardingDocRequirement {
+  id: string;
+  name: string;
+  description?: string;
+  required: boolean;
+  acceptedFormats: string[]; // e.g. ['PDF', 'JPG', 'PNG']
+  maxSizeBytes: number; // e.g. 5242880 for 5MB
+  category: 'IDENTITY' | 'ACADEMIC' | 'EXPERIENCE' | 'PAYROLL' | 'OTHER';
+  condition?: OnboardingCondition;
+}
+
+export interface OnboardingRepeatingConfig {
+  minItems?: number;
+  maxItems?: number;
+  itemLabel?: string;
+}
+
+export interface OnboardingSectionConfig {
+  id: string;
+  title: string;
+  description?: string;
+  order: number;
+  enabled: boolean;
+  icon?: string;
+  applicableCategories?: string[]; // e.g. ['ALL'], ['TECH'], ['OPERATIONS']
+  condition?: OnboardingCondition;
+  isRepeating?: boolean;
+  repeatingConfig?: OnboardingRepeatingConfig;
+  fields: OnboardingFieldConfig[];
+  documents?: OnboardingDocRequirement[];
+}
+
+export interface OnboardingConfig {
+  id: string;
+  tenantId: string;
+  title: string;
+  version: number;
+  isPublished: boolean;
+  publishedAt?: string;
+  sections: OnboardingSectionConfig[];
+}
+
+export interface CandidateUploadedDoc {
+  id: string;
+  requirementId: string;
+  name: string;
+  size: string;
+  type: string;
+  url?: string;
+  uploadedAt: string;
+  status?: 'UPLOADED' | 'VERIFIED' | 'REJECTED';
+}
+
+export interface CandidateDossier {
+  id: string;
+  employeeId: string;
+  configId: string;
+  configVersion: number;
+  status: OnboardingSubmissionStatus;
+  currentSectionId?: string;
+  formData: Record<string, any>;
+  uploadedDocuments: CandidateUploadedDoc[];
+  reviewNotes?: string;
+  lastSavedAt: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  approvedAt?: string;
 }

@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
   ASSETS: 'hrms_assets',
   GOALS: 'hrms_goals',
   APPRAISALS: 'hrms_appraisals',
+  ONBOARDING_CONFIG: 'hrms_onboarding_config',
+  ONBOARDING_DOSSIERS: 'hrms_onboarding_dossiers',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];

@@ -22,7 +22,7 @@ import {
   Send,
   FileCheck,
   FileWarning,
-  Sparkles,
+  Settings,
 } from "lucide-react";
 import { useHrms } from "../../lib/hrmsContext";
 import { useToast } from "../../lib/toastContext";
@@ -33,6 +33,7 @@ import { Avatar } from "../../components/ui/Avatar";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { formatDate, exportToCsv } from "../../lib/utils";
 import { CtcCalculatorModal } from "./CtcCalculatorModal";
+import { DossierReviewDrawer } from "../../components/onboarding/DossierReviewDrawer";
 
 export interface EmployeesPageProps {
   onOpenAddEmployee?: () => void;
@@ -41,7 +42,7 @@ export interface EmployeesPageProps {
 type AccountTab = "ALL" | "DOCUMENT_PENDING" | "SEND_CREDENTIALS";
 
 export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
-  const { employees, departments, designations, branches, deleteEmployee, documents } = useHrms();
+  const { employees, departments, designations, branches, deleteEmployee, updateEmployee, documents, getCandidateDossier } = useHrms();
   const { success, info } = useToast();
   const navigate = useNavigate();
 
@@ -50,6 +51,9 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
 
   // CTC Calculator Modal
   const [isCtcCalculatorOpen, setIsCtcCalculatorOpen] = useState(false);
+
+  // Review Dossier Slide-over Drawer
+  const [reviewingEmployee, setReviewingEmployee] = useState<Employee | null>(null);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,18 +68,36 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
   // Delete modal state
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
-  // Helper to check employee document completion status
+  // Helper to check employee document completion status & stage
   const getEmployeeDocStatus = (emp: Employee) => {
     const empDocs = documents.filter((d) => d.employeeId === emp.id);
     const hasOnboardingData = emp.familyDetails || emp.educationDetails?.length || emp.workExperienceDetails?.length;
-    
-    // If has full onboarding or >= 3 uploaded docs, consider verified, else pending
-    const isPending = empDocs.length < 2 && !hasOnboardingData && emp.status === "PROBATION";
+
+    let stage: "INVITED" | "IN_PROGRESS" | "SUBMITTED" | "VERIFIED" = "VERIFIED";
+    if (emp.onboardingCompleted === false || emp.onboardingStatus === "INVITED") {
+      stage = "INVITED";
+    } else if (emp.onboardingStatus === "IN_PROGRESS") {
+      stage = "IN_PROGRESS";
+    } else if (emp.onboardingStatus === "SUBMITTED" || (!emp.onboardingCompleted && hasOnboardingData)) {
+      stage = "SUBMITTED";
+    }
+
+    const isPending = stage !== "VERIFIED" || (empDocs.length < 2 && !hasOnboardingData && emp.status === "PROBATION");
     return {
+      stage,
       isPending,
       count: empDocs.length + (hasOnboardingData ? 8 : 1),
       totalRequired: 14,
     };
+  };
+
+  const handleApproveOnboarding = (emp: Employee) => {
+    updateEmployee(emp.id, {
+      onboardingCompleted: true,
+      onboardingStatus: "VERIFIED",
+      status: "ACTIVE",
+    });
+    success(`Onboarding approved for ${emp.firstName} ${emp.lastName}. Status updated to Active.`);
   };
 
   // Tab Counts
@@ -291,6 +313,16 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
           >
             <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>CTC Calc</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/admin/onboarding-setup")}
+            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+            title="Configure Dynamic Onboarding Form, Fields & Document Requirements"
+          >
+            <Settings className="w-3.5 h-3.5 text-gray-700 shrink-0" />
+            <span>Form Config</span>
           </button>
 
           <button
@@ -662,15 +694,58 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
 
                       {/* Onboarding Documents Status */}
                       <td className="py-3 px-4">
-                        {docStat.isPending ? (
-                          <Badge variant="warning" size="sm" dot>
-                            Docs Pending ({docStat.count}/{docStat.totalRequired})
-                          </Badge>
-                        ) : (
-                          <Badge variant="success" size="sm" dot>
-                            Verified ({Math.min(docStat.count, docStat.totalRequired)}/{docStat.totalRequired})
-                          </Badge>
-                        )}
+                        {(() => {
+                          const dossier = getCandidateDossier(emp.id);
+                          if (dossier?.status === "SUBMITTED" || dossier?.status === "RESUBMITTED") {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => setReviewingEmployee(emp)}
+                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors cursor-pointer"
+                                title="Candidate submitted onboarding dossier. Click to review."
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                                <span>Review Dossier</span>
+                              </button>
+                            );
+                          }
+                          if (dossier?.status === "CHANGES_REQUESTED") {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => setReviewingEmployee(emp)}
+                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
+                                title="Changes requested from candidate. Click to inspect."
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                <span>Changes Requested</span>
+                              </button>
+                            );
+                          }
+                          if (dossier?.status === "APPROVED" || emp.onboardingCompleted) {
+                            return (
+                              <Badge variant="success" size="sm" dot>
+                                Verified
+                              </Badge>
+                            );
+                          }
+                          if (dossier?.status === "IN_PROGRESS") {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => setReviewingEmployee(emp)}
+                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors cursor-pointer"
+                              >
+                                In Progress
+                              </button>
+                            );
+                          }
+                          return (
+                            <Badge variant="warning" size="sm" dot>
+                              Docs Pending
+                            </Badge>
+                          );
+                        })()}
                       </td>
 
                       {/* Joining Date */}
@@ -687,6 +762,24 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setReviewingEmployee(emp)}
+                            className="p-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors"
+                            title="Inspect Candidate Onboarding Dossier"
+                          >
+                            <FileCheck className="w-4 h-4" />
+                          </button>
+
+                          {docStat.isPending && (
+                            <button
+                              onClick={() => handleApproveOnboarding(emp)}
+                              className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors"
+                              title="Approve Onboarding & Activate Employee"
+                            >
+                              <UserCheck className="w-4 h-4" />
+                            </button>
+                          )}
+
                           <button
                             onClick={() => navigate(`/people/employees/${emp.id}`)}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-gray-950 hover:bg-gray-100 transition-colors"
@@ -801,6 +894,13 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
         isOpen={isCtcCalculatorOpen}
         onClose={() => setIsCtcCalculatorOpen(false)}
         initialGross={25000}
+      />
+
+      {/* HR Candidate Onboarding Dossier Slide-over Drawer */}
+      <DossierReviewDrawer
+        isOpen={Boolean(reviewingEmployee)}
+        onClose={() => setReviewingEmployee(null)}
+        employee={reviewingEmployee}
       />
     </div>
   );

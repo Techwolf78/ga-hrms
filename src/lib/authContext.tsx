@@ -6,9 +6,10 @@ import { DEFAULT_USER } from "./storageInit";
 interface AuthContextType {
   user: CurrentUser | null;
   isAuthenticated: boolean;
-  login: (email: string, role: UserRole) => void;
+  login: (email: string, role: UserRole, customUser?: CurrentUser) => void;
   logout: () => void;
   switchRole: (role: UserRole) => void;
+  switchPersona: (personaKey: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +56,23 @@ export const DEMO_USERS: Record<UserRole, CurrentUser> = {
   },
 };
 
+export const DEMO_PERSONAS: Record<string, CurrentUser> = {
+  SUPER_ADMIN: DEMO_USERS.SUPER_ADMIN,
+  HR_ADMIN: DEMO_USERS.HR_ADMIN,
+  MANAGER: DEMO_USERS.MANAGER,
+  EMPLOYEE: DEMO_USERS.EMPLOYEE,
+  NEW_HIRE: {
+    id: "EMP-1033",
+    name: "Ramesh Patil",
+    email: "ramesh.patil@ga-hrms.io",
+    role: "EMPLOYEE",
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    employeeId: "EMP-1033",
+    designation: "Full Stack Developer",
+    department: "Engineering & Cloud Platforms",
+  },
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<CurrentUser | null>(() => {
     return storage.get<CurrentUser | null>(STORAGE_KEYS.USER, DEFAULT_USER);
@@ -69,12 +87,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const login = (email: string, role: UserRole) => {
-    const demoUser = DEMO_USERS[role] || {
-      ...DEFAULT_USER,
-      email,
-      role,
-    };
+  const login = (email: string, role: UserRole, customUser?: CurrentUser) => {
+    let demoUser: CurrentUser;
+    if (customUser) {
+      demoUser = customUser;
+    } else if (email === "ramesh.patil@ga-hrms.io") {
+      demoUser = DEMO_PERSONAS.NEW_HIRE;
+    } else {
+      demoUser = DEMO_USERS[role] || {
+        ...DEFAULT_USER,
+        email,
+        role,
+      };
+    }
     storage.set(STORAGE_KEYS.USER, demoUser);
     setUser(demoUser);
   };
@@ -90,6 +115,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(updated);
   };
 
+  const switchPersona = (personaKey: string) => {
+    const persona = DEMO_PERSONAS[personaKey];
+    if (persona) {
+      storage.set(STORAGE_KEYS.USER, persona);
+      setUser(persona);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -98,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         switchRole,
+        switchPersona,
       }}
     >
       {children}

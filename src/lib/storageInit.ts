@@ -23,8 +23,10 @@ import {
   initialAssets,
   initialGoals,
   initialAppraisals,
+  initialOnboardingConfig,
+  initialOnboardingDossiers,
 } from "./seedData";
-import { CurrentUser, Employee } from "../types/hrms";
+import { CurrentUser, Employee, OnboardingConfig, CandidateDossier } from "../types/hrms";
 
 export const DEFAULT_USER: CurrentUser = {
   id: "usr-admin-01",
@@ -64,6 +66,8 @@ export function initializeHrmsStorage(forceReset = false) {
     storage.set(STORAGE_KEYS.ASSETS, initialAssets);
     storage.set(STORAGE_KEYS.GOALS, initialGoals);
     storage.set(STORAGE_KEYS.APPRAISALS, initialAppraisals);
+    storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, initialOnboardingConfig);
+    storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, initialOnboardingDossiers);
     storage.set(STORAGE_KEYS.INITIALIZED, true);
     console.log("✅ GA-HRMS LocalStorage successfully initialized with enterprise demo dataset.");
   } else {
@@ -79,6 +83,25 @@ export function initializeHrmsStorage(forceReset = false) {
     checkAndSeed(STORAGE_KEYS.ASSETS, initialAssets);
     checkAndSeed(STORAGE_KEYS.GOALS, initialGoals);
     checkAndSeed(STORAGE_KEYS.APPRAISALS, initialAppraisals);
+    const existingDossiers = storage.get<CandidateDossier[]>(STORAGE_KEYS.ONBOARDING_DOSSIERS, []);
+    if (!Array.isArray(existingDossiers) || existingDossiers.length === 0) {
+      storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, initialOnboardingDossiers);
+    } else {
+      const emp1033 = existingDossiers.find((d) => d.employeeId === "EMP-1033");
+      if (emp1033) {
+        const needsDocsUpdate = !emp1033.uploadedDocuments?.[0]?.url;
+        const needsOfferUpdate = !emp1033.formData?.offeredDesignation || !emp1033.formData?.offeredDepartment || !emp1033.formData?.offeredAnnualCtc;
+        if (needsDocsUpdate || needsOfferUpdate) {
+          const merged = existingDossiers.map((d) => (d.employeeId === "EMP-1033" ? initialOnboardingDossiers[0] : d));
+          storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, merged);
+        }
+      }
+    }
+
+    const existingConfig = storage.get<OnboardingConfig | null>(STORAGE_KEYS.ONBOARDING_CONFIG, null);
+    if (!existingConfig || !existingConfig.sections || existingConfig.sections.length === 0) {
+      storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, initialOnboardingConfig);
+    }
 
     // Migration guard: ensure full 31-day demo attendance is present in existing localStorage
     const currentAttendance = storage.get<any[]>(STORAGE_KEYS.ATTENDANCE, []);
@@ -118,6 +141,15 @@ export function initializeHrmsStorage(forceReset = false) {
       });
       if (updated) {
         storage.set(STORAGE_KEYS.EMPLOYEES, syncedEmployees);
+      }
+
+      // Migration guard: ensure EMP-1033 (Ramesh Patil - new hire demo) is present
+      const hasEmp1033 = currentEmployees.some((emp) => emp.id === "EMP-1033");
+      if (!hasEmp1033) {
+        const emp1033 = initialEmployees.find((e) => e.id === "EMP-1033");
+        if (emp1033) {
+          storage.set(STORAGE_KEYS.EMPLOYEES, [emp1033, ...currentEmployees]);
+        }
       }
     }
 

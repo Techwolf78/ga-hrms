@@ -25,7 +25,7 @@ export interface TopbarProps {
 }
 
 export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout, switchRole, switchPersona } = useAuth();
   const {
     notifications,
     markNotificationRead,
@@ -81,11 +81,12 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
     }
   };
 
-  const rolesList: { role: UserRole; label: string; desc: string }[] = [
-    { role: "SUPER_ADMIN", label: "Super Admin", desc: "Full platform & organization access" },
-    { role: "HR_ADMIN", label: "HR Admin", desc: "People, payroll, leave & policy control" },
-    { role: "MANAGER", label: "Manager", desc: "Team attendance, leaves & regularizations" },
-    { role: "EMPLOYEE", label: "Employee (ESS)", desc: "Self-service portal, leaves, payslips" },
+  const rolesList: { key: string; label: string; desc: string; isNewHire?: boolean }[] = [
+    { key: "SUPER_ADMIN", label: "Super Admin", desc: "Full platform & organization access" },
+    { key: "HR_ADMIN", label: "HR Admin", desc: "People, payroll, leave & policy control" },
+    { key: "MANAGER", label: "Manager", desc: "Team attendance, leaves & regularizations" },
+    { key: "EMPLOYEE", label: "Employee", desc: "Self-service portal, leaves, payslips" },
+    { key: "NEW_HIRE", label: "New Hire", desc: "Pending self-onboarding submission", isNewHire: true },
   ];
 
   return (
@@ -190,29 +191,50 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
                 Switch Interactive Role
               </p>
               <div className="space-y-1">
-                {rolesList.map((r) => (
-                  <button
-                    key={r.role}
-                    onClick={() => {
-                      switchRole(r.role);
-                      setShowRoleMenu(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
-                      user?.role === r.role
-                        ? "bg-gray-950 text-white font-semibold"
-                        : "hover:bg-gray-100 text-gray-900"
-                    }`}
-                  >
-                    <div className="font-semibold">{r.label}</div>
-                    <div
-                      className={`text-[10px] mt-0.5 ${
-                        user?.role === r.role ? "text-gray-300" : "text-gray-500"
+                {rolesList.map((r) => {
+                  const isCurrent = r.isNewHire
+                    ? user?.employeeId === "EMP-1033"
+                    : user?.role === r.key && user?.employeeId !== "EMP-1033";
+
+                  return (
+                    <button
+                      key={r.key}
+                      onClick={() => {
+                        if (r.isNewHire) {
+                          switchPersona("NEW_HIRE");
+                          setShowRoleMenu(false);
+                          navigate("/onboarding");
+                        } else {
+                          switchRole(r.key as UserRole);
+                          setShowRoleMenu(false);
+                        }
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
+                        isCurrent
+                          ? "bg-gray-950 text-white font-semibold"
+                          : r.isNewHire
+                          ? "bg-indigo-50/70 hover:bg-indigo-100/80 text-indigo-950 font-medium border border-indigo-200/60"
+                          : "hover:bg-gray-100 text-gray-900"
                       }`}
                     >
-                      {r.desc}
-                    </div>
-                  </button>
-                ))}
+                      <div className="font-semibold flex items-center justify-between">
+                        <span>{r.label}</span>
+                        {r.isNewHire && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold border border-amber-300">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className={`text-[10px] mt-0.5 ${
+                          isCurrent ? "text-gray-300" : "text-gray-500"
+                        }`}
+                      >
+                        {r.desc}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

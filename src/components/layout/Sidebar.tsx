@@ -20,6 +20,7 @@ import {
   FileSpreadsheet,
   BarChart3,
   UserCheck,
+  UserPlus,
   Settings,
   Bell,
   ScrollText,
@@ -168,6 +169,7 @@ export function Sidebar({
       group: "Administration",
       items: [
         { label: "Users & Roles", path: "/admin/users-roles", icon: UserCheck, roles: ["SUPER_ADMIN"] },
+        { label: "Onboarding Config", path: "/admin/onboarding-setup", icon: UserPlus, roles: ["SUPER_ADMIN", "HR_ADMIN"] },
         { label: "Company Settings", path: "/admin/settings", icon: Settings, roles: ["SUPER_ADMIN", "HR_ADMIN"] },
         {
           label: "Notifications",

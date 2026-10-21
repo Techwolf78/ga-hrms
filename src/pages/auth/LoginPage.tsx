@@ -9,9 +9,10 @@ import {
   Users,
   Building,
   User,
+  UserCheck,
   ArrowLeft,
 } from "lucide-react";
-import { useAuth, DEMO_USERS } from "../../lib/authContext";
+import { useAuth, DEMO_USERS, DEMO_PERSONAS } from "../../lib/authContext";
 import { UserRole } from "../../types/hrms";
 import { Input } from "../../components/ui/Input";
 import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
@@ -19,7 +20,7 @@ import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
 export function LoginPage() {
   const [email, setEmail] = useState("ajay.pawar@ga-hrms.io");
   const [password, setPassword] = useState("••••••••••••");
-  const [selectedRole, setSelectedRole] = useState<UserRole>("SUPER_ADMIN");
+  const [selectedRole, setSelectedRole] = useState<string>("SUPER_ADMIN");
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,21 +31,30 @@ export function LoginPage() {
     if (e) e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      login(email, selectedRole);
+      login(email, selectedRole as UserRole);
       setIsLoading(false);
       navigate("/dashboard");
     }, 400);
   };
 
-  const handleQuickDemo = (role: UserRole) => {
-    setSelectedRole(role);
-    const demo = DEMO_USERS[role];
-    setEmail(demo.email);
+  const handleQuickDemo = (personaKey: string) => {
+    setSelectedRole(personaKey);
     setIsLoading(true);
     setTimeout(() => {
-      login(demo.email, role);
-      setIsLoading(false);
-      navigate("/dashboard");
+      if (personaKey === "NEW_HIRE") {
+        const demo = DEMO_PERSONAS.NEW_HIRE;
+        setEmail(demo.email);
+        login(demo.email, "EMPLOYEE", demo);
+        setIsLoading(false);
+        navigate("/onboarding");
+      } else {
+        const role = personaKey as UserRole;
+        const demo = DEMO_USERS[role];
+        setEmail(demo.email);
+        login(demo.email, role);
+        setIsLoading(false);
+        navigate("/dashboard");
+      }
     }, 300);
   };
 
@@ -131,19 +141,22 @@ export function LoginPage() {
             </p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { role: "SUPER_ADMIN" as UserRole, name: "Super Admin", icon: Shield },
-                { role: "HR_ADMIN" as UserRole, name: "HR Manager", icon: Users },
-                { role: "MANAGER" as UserRole, name: "Team Manager", icon: Building },
-                { role: "EMPLOYEE" as UserRole, name: "Employee (ESS)", icon: User },
-              ].map((p) => {
+                { key: "SUPER_ADMIN", name: "Super Admin", icon: Shield, subtitle: "Admin" },
+                { key: "HR_ADMIN", name: "HR Manager", icon: Users, subtitle: "Priya" },
+                { key: "MANAGER", name: "Team Manager", icon: Building, subtitle: "Rajesh" },
+                { key: "EMPLOYEE", name: "Employee", icon: User, subtitle: "Ananya" },
+                { key: "NEW_HIRE", name: "New Hire", icon: UserCheck, subtitle: "Ramesh (Onboarding)" },
+              ].map((p, idx) => {
                 const Icon = p.icon;
-                const isSelected = selectedRole === p.role;
+                const isSelected = selectedRole === p.key;
                 return (
                   <button
-                    key={p.role}
+                    key={p.key}
                     type="button"
-                    onClick={() => handleQuickDemo(p.role)}
+                    onClick={() => handleQuickDemo(p.key)}
                     className={`p-2.5 rounded-xl border text-left text-xs transition-all flex items-center gap-2.5 ${
+                      idx === 4 ? "col-span-2" : ""
+                    } ${
                       isSelected
                         ? "bg-gray-950 border-gray-950 text-white shadow-xs font-semibold"
                         : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300"
@@ -157,7 +170,7 @@ export function LoginPage() {
                     <div className="truncate">
                       <div className="font-semibold">{p.name}</div>
                       <div className={`text-[10px] truncate ${isSelected ? "text-gray-300" : "text-gray-400"}`}>
-                        {DEMO_USERS[p.role].name.split(" ")[0]}
+                        {p.subtitle}
                       </div>
                     </div>
                   </button>

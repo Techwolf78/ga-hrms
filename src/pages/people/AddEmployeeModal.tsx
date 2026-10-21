@@ -32,7 +32,9 @@ import {
   Download,
   Eye,
   CheckSquare,
-  Sparkles,
+  Send,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { Modal } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
@@ -85,7 +87,113 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isCtcCalculatorOpen, setIsCtcCalculatorOpen] = useState<boolean>(false);
 
-  // --- STEP 1: OFFER ACCEPTANCE STATE ---
+  // Mode selection: Quick Invite vs Full Assisted
+  const [onboardingMode, setOnboardingMode] = useState<"QUICK_INVITE" | "FULL_ASSISTED">("QUICK_INVITE");
+
+  // Quick Invite State
+  const [quickFirstName, setQuickFirstName] = useState("Ramesh");
+  const [quickLastName, setQuickLastName] = useState("Patil");
+  const [quickPersonalEmail, setQuickPersonalEmail] = useState("ramesh.patil.personal@gmail.com");
+  const [quickWorkEmail, setQuickWorkEmail] = useState("ramesh.patil@ga-hrms.io");
+  const [quickPhone, setQuickPhone] = useState("+91 98201 12345");
+  const [quickGender, setQuickGender] = useState<Gender>("MALE");
+  const [quickDeptId, setQuickDeptId] = useState(departments[0]?.id || "dept-eng");
+  const [quickDesigId, setQuickDesigId] = useState(designations[0]?.id || "desig-sde-2");
+  const [quickBranchId, setQuickBranchId] = useState(branches[0]?.id || "branch-pune");
+  const [quickManagerId, setQuickManagerId] = useState(employees[0]?.id || "EMP-1003");
+  const [quickJoiningDate, setQuickJoiningDate] = useState("2026-11-01");
+  const [quickEmpType, setQuickEmpType] = useState<EmploymentType>("FULL_TIME");
+  const [quickShiftId, setQuickShiftId] = useState("shift-gen");
+  const [quickAnnualCtc, setQuickAnnualCtc] = useState<number>(1020000);
+  const [inviteSuccessData, setInviteSuccessData] = useState<{
+    id: string;
+    code: string;
+    name: string;
+    email: string;
+    personalEmail: string;
+    tempPass: string;
+    inviteUrl: string;
+  } | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleQuickInviteSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!quickFirstName.trim() || !quickLastName.trim() || !quickPersonalEmail.trim()) {
+      alert("Please provide the candidate's First Name, Last Name, and Personal Email.");
+      return;
+    }
+
+    const generatedWorkEmail = quickWorkEmail.trim() || `${quickFirstName.toLowerCase()}.${quickLastName.toLowerCase()}@ga-hrms.io`;
+    const tempPassword = `Welcome@${new Date().getFullYear()}`;
+    const annual = Number(quickAnnualCtc) || 1020000;
+    const monthly = Math.round(annual / 12);
+
+    const newEmp = addEmployee({
+      employeeCode: "",
+      firstName: quickFirstName.trim(),
+      lastName: quickLastName.trim(),
+      email: generatedWorkEmail,
+      personalEmail: quickPersonalEmail.trim(),
+      phone: quickPhone.trim() || "+91 98200 11223",
+      gender: quickGender,
+      dob: "1998-05-15",
+      avatar: quickGender === "FEMALE"
+        ? "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80"
+        : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      departmentId: quickDeptId,
+      designationId: quickDesigId,
+      branchId: quickBranchId,
+      managerId: quickManagerId || undefined,
+      joiningDate: quickJoiningDate,
+      employmentType: quickEmpType,
+      shiftId: quickShiftId,
+      status: "PROBATION",
+      onboardingCompleted: false,
+      onboardingStatus: "INVITED",
+      pan: "",
+      aadhaar: "",
+      uan: "",
+      esicNumber: "",
+      bankName: "",
+      accountNumber: "",
+      ifscCode: "",
+      accountHolderName: "",
+      monthlyCtc: monthly,
+      annualCtc: annual,
+      offerLetterAccepted: false,
+      policiesAccepted: false,
+    });
+
+    setInviteSuccessData({
+      id: newEmp.id,
+      code: newEmp.employeeCode,
+      name: `${newEmp.firstName} ${newEmp.lastName}`,
+      email: newEmp.email,
+      personalEmail: newEmp.personalEmail || quickPersonalEmail,
+      tempPass: tempPassword,
+      inviteUrl: `${window.location.origin}/onboarding`,
+    });
+  };
+
+  const handleCopyInviteMessage = () => {
+    if (!inviteSuccessData) return;
+    const msg = `Hello ${inviteSuccessData.name},
+
+Your employee account has been created for GA-HRMS. Please log in to complete your onboarding details.
+
+Portal URL: ${inviteSuccessData.inviteUrl}
+Login Email: ${inviteSuccessData.email}
+Temporary Password: ${inviteSuccessData.tempPass}
+
+Regards,
+HR Operations`;
+
+    navigator.clipboard.writeText(msg);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2500);
+  };
+
+  // --- STEP 1: OFFER ACCEPTANCE STATE (for Full Assisted mode) ---
   const [offerAccepted, setOfferAccepted] = useState<boolean>(true);
   const [offerDeclined, setOfferDeclined] = useState<boolean>(false);
 
@@ -580,53 +688,67 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size={isFullscreen ? "full" : "3xl"}
+        size={onboardingMode === "QUICK_INVITE" ? "2xl" : isFullscreen ? "full" : "3xl"}
         bodyClassName="p-0 overflow-hidden flex flex-col"
         containerClassName="p-2 sm:p-3"
-        className="h-[94vh] max-h-[96vh] my-0.5 sm:my-1 transition-all duration-300"
+        className={onboardingMode === "QUICK_INVITE" ? "max-h-[92vh] my-auto transition-all" : "h-[94vh] max-h-[96vh] my-0.5 sm:my-1 transition-all duration-300"}
       >
         <div className="flex flex-col flex-1 min-h-0">
-          {/* Top Wizard Navigation Bar (Compact Single-line) */}
-          <div className="bg-white text-gray-950 px-4 py-2 flex items-center justify-between gap-3 border-b border-gray-200 shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center text-gray-900 shrink-0">
-                <FileCheck2 className="w-3.5 h-3.5" />
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <h3 className="text-sm font-bold tracking-tight text-gray-950 whitespace-nowrap">
-                  Employee Onboarding Wizard
-                </h3>
-                <span className="text-[10px] font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200 shrink-0">
-                  10 Steps
-                </span>
-                <span className="text-[11px] text-gray-400 font-normal hidden md:inline truncate">
-                  • Comprehensive candidate dossier, statutory compliance & digital onboarding verification
-                </span>
+          {/* Top Wizard Navigation Bar with Mode Switcher */}
+          <div className="bg-white text-gray-950 px-4 py-2.5 flex items-center justify-between gap-3 border-b border-gray-200 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Mode Switch Tabs */}
+              <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingMode("QUICK_INVITE")}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    onboardingMode === "QUICK_INVITE"
+                      ? "bg-white text-gray-950 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5 text-gray-600" />
+                  <span>Send Invite</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOnboardingMode("FULL_ASSISTED")}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    onboardingMode === "FULL_ASSISTED"
+                      ? "bg-white text-gray-950 shadow-xs"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-gray-600" />
+                  <span>Detailed Entry</span>
+                </button>
               </div>
             </div>
 
             {/* Quick Actions & Utilities */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {/* Demo Presets */}
-              <div className="hidden lg:flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-md p-0.5 text-xs">
-                <span className="text-gray-400 px-1 text-[10px] font-medium flex items-center gap-0.5">
-                  <Sparkles className="w-3 h-3 text-gray-600" /> Presets:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => loadPreset("tech")}
-                  className="px-1.5 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors text-[11px] font-medium"
-                >
-                  Sr. Eng
-                </button>
-                <button
-                  type="button"
-                  onClick={() => loadPreset("design")}
-                  className="px-1.5 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors text-[11px] font-medium"
-                >
-                  Lead
-                </button>
-              </div>
+              {onboardingMode === "FULL_ASSISTED" && (
+                <div className="hidden lg:flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-md p-0.5 text-xs">
+                  <span className="text-gray-400 px-1 text-[10px] font-medium flex items-center gap-0.5">
+                    Presets:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => loadPreset("tech")}
+                    className="px-1.5 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors text-[11px] font-medium"
+                  >
+                    Sr. Eng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loadPreset("design")}
+                    className="px-1.5 py-0.5 rounded bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 shadow-2xs transition-colors text-[11px] font-medium"
+                  >
+                    Lead
+                  </button>
+                </div>
+              )}
 
               {/* CTC Calculator Launcher Button */}
               <button
@@ -638,15 +760,16 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 <span>CTC Calc</span>
               </button>
 
-              {/* Fullscreen Toggle */}
-              <button
-                type="button"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="text-gray-400 hover:text-gray-950 p-1 rounded-md hover:bg-gray-100 transition-colors"
-                title={isFullscreen ? "Exit Fullscreen" : "Expand Fullscreen"}
-              >
-                {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-              </button>
+              {onboardingMode === "FULL_ASSISTED" && (
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="text-gray-400 hover:text-gray-950 p-1 rounded-md hover:bg-gray-100 transition-colors"
+                  title={isFullscreen ? "Exit Fullscreen" : "Expand Fullscreen"}
+                >
+                  {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+              )}
 
               {/* Close */}
               <button
@@ -658,6 +781,252 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
               </button>
             </div>
           </div>
+
+          {onboardingMode === "QUICK_INVITE" ? (
+            inviteSuccessData ? (
+              // SUCCESS VIEW: Invite Dispatched
+              <div className="p-8 text-center space-y-5 flex-1 overflow-y-auto">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+
+                <div className="space-y-1">
+                  <Badge variant="success" size="sm" dot>
+                    Invite Generated
+                  </Badge>
+                  <h3 className="text-lg font-bold text-gray-950">
+                    Onboarding Invitation Ready
+                  </h3>
+                  <p className="text-xs text-gray-500 max-w-md mx-auto">
+                    An onboarding account has been generated for {inviteSuccessData.name}. Share the credentials below with the employee to complete their profile.
+                  </p>
+                </div>
+
+                {/* Credentials Card */}
+                <div className="max-w-md mx-auto bg-gray-50 p-4 rounded-xl border border-gray-200 text-left text-xs space-y-2.5">
+                  <div className="flex justify-between items-center pb-2 border-b border-gray-200">
+                    <span className="text-gray-500">Employee ID:</span>
+                    <span className="font-mono font-bold text-gray-950">{inviteSuccessData.code}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Work Email:</span>
+                    <span className="font-mono font-medium text-gray-950">{inviteSuccessData.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Personal Email:</span>
+                    <span className="font-mono text-gray-700">{inviteSuccessData.personalEmail}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Temporary Password:</span>
+                    <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-gray-300 text-gray-950">
+                      {inviteSuccessData.tempPass}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Portal Link:</span>
+                    <span className="font-mono text-gray-700 truncate max-w-[200px]">{inviteSuccessData.inviteUrl}</span>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <Button
+                    type="button"
+                    onClick={handleCopyInviteMessage}
+                    variant="outline"
+                    size="md"
+                    leftIcon={isCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  >
+                    {isCopied ? "Credentials Copied" : "Copy Credentials"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setInviteSuccessData(null);
+                      onClose();
+                    }}
+                    variant="primary"
+                    size="md"
+                  >
+                    Done
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // FORM VIEW: Quick Invite Form
+              <form onSubmit={handleQuickInviteSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Left Column: Personal Contact */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-gray-700" />
+                      <span>Candidate Information</span>
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        label="First Name"
+                        value={quickFirstName}
+                        onChange={(e) => setQuickFirstName(e.target.value)}
+                        placeholder="e.g. Ramesh"
+                        required
+                      />
+                      <Input
+                        label="Last Name"
+                        value={quickLastName}
+                        onChange={(e) => setQuickLastName(e.target.value)}
+                        placeholder="e.g. Patil"
+                        required
+                      />
+                    </div>
+
+                    <Input
+                      label="Personal Email (For Invite Delivery)"
+                      type="email"
+                      value={quickPersonalEmail}
+                      onChange={(e) => setQuickPersonalEmail(e.target.value)}
+                      placeholder="candidate@gmail.com"
+                      required
+                    />
+
+                    <Input
+                      label="Official Work Email (Generated/Custom)"
+                      type="email"
+                      value={quickWorkEmail}
+                      onChange={(e) => setQuickWorkEmail(e.target.value)}
+                      placeholder="ramesh.patil@ga-hrms.io"
+                      required
+                    />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        label="Mobile Number"
+                        value={quickPhone}
+                        onChange={(e) => setQuickPhone(e.target.value)}
+                        placeholder="+91 98200 00000"
+                        required
+                      />
+                      <Select
+                        label="Gender"
+                        value={quickGender}
+                        onChange={(e) => setQuickGender(e.target.value as Gender)}
+                        options={[
+                          { value: "MALE", label: "Male" },
+                          { value: "FEMALE", label: "Female" },
+                          { value: "OTHER", label: "Other" },
+                        ]}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column: Job Placement & Compensation */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-gray-700" />
+                      <span>Job Placement & Compensation</span>
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Select
+                        label="Department"
+                        value={quickDeptId}
+                        onChange={(e) => setQuickDeptId(e.target.value)}
+                        options={departments.map((d) => ({ value: d.id, label: d.name }))}
+                      />
+                      <Select
+                        label="Designation"
+                        value={quickDesigId}
+                        onChange={(e) => setQuickDesigId(e.target.value)}
+                        options={designations.map((d) => ({ value: d.id, label: d.title }))}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Select
+                        label="Branch / Office"
+                        value={quickBranchId}
+                        onChange={(e) => setQuickBranchId(e.target.value)}
+                        options={branches.map((b) => ({ value: b.id, label: `${b.name} (${b.city})` }))}
+                      />
+                      <Select
+                        label="Reporting Manager"
+                        value={quickManagerId}
+                        onChange={(e) => setQuickManagerId(e.target.value)}
+                        options={employees.slice(0, 15).map((e) => ({
+                          value: e.id,
+                          label: `${e.firstName} ${e.lastName}`,
+                        }))}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        label="Joining Date"
+                        type="date"
+                        value={quickJoiningDate}
+                        onChange={(e) => setQuickJoiningDate(e.target.value)}
+                        required
+                      />
+                      <Select
+                        label="Employment Type"
+                        value={quickEmpType}
+                        onChange={(e) => setQuickEmpType(e.target.value as EmploymentType)}
+                        options={[
+                          { value: "FULL_TIME", label: "Full Time Permanent" },
+                          { value: "CONTRACT", label: "Contract" },
+                          { value: "INTERN", label: "Intern" },
+                        ]}
+                      />
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-900">Offered Annual CTC (INR)</label>
+                        <button
+                          type="button"
+                          onClick={() => setIsCtcCalculatorOpen(true)}
+                          className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                        >
+                          <Calculator className="w-3 h-3" />
+                          <span>Calculate Breakdown</span>
+                        </button>
+                      </div>
+                      <Input
+                        type="number"
+                        value={quickAnnualCtc}
+                        onChange={(e) => setQuickAnnualCtc(Number(e.target.value))}
+                        placeholder="1020000"
+                        required
+                      />
+                      <div className="text-[11px] text-gray-500 flex justify-between pt-0.5">
+                        <span>Gross Monthly Estimate:</span>
+                        <span className="font-bold text-gray-950">{formatINR(Math.round(quickAnnualCtc / 12))} / month</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
+                  <Button type="button" onClick={onClose} variant="outline" size="md">
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="md"
+                    className="bg-indigo-600 hover:bg-indigo-700 shadow-sm"
+                    rightIcon={<Send className="w-4 h-4" />}
+                  >
+                    Create Employee & Send Onboarding Invite
+                  </Button>
+                </div>
+              </form>
+            )
+          ) : (
+            // Full Assisted 10-Step Wizard
+            <>
 
           {/* Stepper Progress Ribbon (Compact Single Rail) */}
           <div className="bg-gray-50/80 border-b border-gray-200 px-4 py-1.5 shrink-0">
@@ -2053,8 +2422,10 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
               )}
             </div>
           </div>
-        </div>
-      </Modal>
+        </>
+      )}
+    </div>
+  </Modal>
 
       {/* Embedded CTC Calculator Modal matching Screenshot 1 */}
       <CtcCalculatorModal

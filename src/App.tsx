@@ -38,6 +38,10 @@ import { RecruitmentPage } from "./pages/recruitment/RecruitmentPage";
 import { AssetsPage } from "./pages/assets/AssetsPage";
 import { PerformancePage } from "./pages/performance/PerformancePage";
 
+import { SelfOnboardingPage } from "./pages/people/SelfOnboardingPage";
+import { OnboardingSetupPage } from "./pages/admin/OnboardingSetupPage";
+import { useHrms } from "./lib/hrmsContext";
+
 import { UserRole } from "./types/hrms";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +49,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+  return <>{children}</>;
+}
+
+function OnboardingGuard({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const { employees } = useHrms();
+
+  if (user?.role === "EMPLOYEE") {
+    const emp = employees.find((e) => e.id === user.employeeId || e.email === user.email);
+    if (emp && emp.onboardingCompleted === false) {
+      return <Navigate to="/onboarding" replace />;
+    }
+  }
+
   return <>{children}</>;
 }
 
@@ -74,15 +92,27 @@ function MainAppContent() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected Dashboard Layout */}
+        {/* Standalone Employee Self-Onboarding Route */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <SelfOnboardingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Dashboard Layout with Onboarding Guard */}
         <Route
           element={
             <ProtectedRoute>
-              <AppShell
-                onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
-                onOpenApplyLeave={() => setIsApplyLeaveOpen(true)}
-                onOpenAttendanceCorrection={() => setIsAttendanceCorrectionOpen(true)}
-              />
+              <OnboardingGuard>
+                <AppShell
+                  onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
+                  onOpenApplyLeave={() => setIsApplyLeaveOpen(true)}
+                  onOpenAttendanceCorrection={() => setIsAttendanceCorrectionOpen(true)}
+                />
+              </OnboardingGuard>
             </ProtectedRoute>
           }
         >
@@ -239,6 +269,14 @@ function MainAppContent() {
             element={
               <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
                 <SettingsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/admin/onboarding-setup"
+            element={
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+                <OnboardingSetupPage />
               </RoleRoute>
             }
           />

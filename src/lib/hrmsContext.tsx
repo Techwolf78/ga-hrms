@@ -23,6 +23,9 @@ import {
   CompanyAsset,
   PerformanceGoal,
   AppraisalReview,
+  OnboardingConfig,
+  CandidateDossier,
+  CandidateUploadedDoc,
 } from "../types/hrms";
 import { storage, STORAGE_KEYS } from "./storage";
 import { useAuth } from "./authContext";
@@ -34,6 +37,8 @@ import {
   initialAssets,
   initialGoals,
   initialAppraisals,
+  initialOnboardingConfig,
+  initialOnboardingDossiers,
 } from "./seedData";
 
 interface HrmsContextType {
@@ -104,6 +109,18 @@ interface HrmsContextType {
   addGoal: (goal: Omit<PerformanceGoal, "id">) => PerformanceGoal;
   updateGoalProgress: (id: string, progress: number) => void;
   submitAppraisalReview: (reviewId: string, managerRating: number, feedback: string) => void;
+
+  // Dynamic Onboarding Engine State & Actions
+  onboardingConfig: OnboardingConfig;
+  onboardingDossiers: CandidateDossier[];
+  getCandidateDossier: (employeeId: string) => CandidateDossier | undefined;
+  saveOnboardingDraft: (employeeId: string, formData: Record<string, any>, currentSectionId?: string) => void;
+  submitOnboarding: (employeeId: string, formData: Record<string, any>, uploadedDocs: CandidateUploadedDoc[]) => void;
+  reviewOnboardingDossier: (employeeId: string, action: 'APPROVE' | 'REQUEST_CHANGES' | 'REJECT', notes?: string) => void;
+  updateOnboardingConfig: (updates: Partial<OnboardingConfig>) => void;
+  publishOnboardingConfig: () => void;
+  uploadCandidateDocument: (employeeId: string, requirementId: string, fileData: { name: string; size: string; type: string; url?: string }) => void;
+  removeCandidateDocument: (employeeId: string, requirementId: string) => void;
 }
 
 const HrmsContext = createContext<HrmsContextType | undefined>(undefined);
@@ -157,6 +174,14 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = storage.get<AppraisalReview[]>(STORAGE_KEYS.APPRAISALS, []);
     return data && data.length > 0 ? data : initialAppraisals;
   });
+  const [onboardingConfig, setOnboardingConfig] = useState<OnboardingConfig>(() => {
+    const data = storage.get<OnboardingConfig | null>(STORAGE_KEYS.ONBOARDING_CONFIG, null);
+    return data && data.sections ? data : initialOnboardingConfig;
+  });
+  const [onboardingDossiers, setOnboardingDossiers] = useState<CandidateDossier[]>(() => {
+    const data = storage.get<CandidateDossier[]>(STORAGE_KEYS.ONBOARDING_DOSSIERS, []);
+    return data && data.length > 0 ? data : initialOnboardingDossiers;
+  });
 
   // Ensure seed data is synced into storage if initially empty
   useEffect(() => {
@@ -175,7 +200,13 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (appraisalReviews.length > 0 && storage.get<AppraisalReview[]>(STORAGE_KEYS.APPRAISALS, []).length === 0) {
       storage.set(STORAGE_KEYS.APPRAISALS, appraisalReviews);
     }
-  }, [jobs, candidates, assets, performanceGoals, appraisalReviews]);
+    if (!storage.get<OnboardingConfig | null>(STORAGE_KEYS.ONBOARDING_CONFIG, null)) {
+      storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, onboardingConfig);
+    }
+    if (storage.get<CandidateDossier[]>(STORAGE_KEYS.ONBOARDING_DOSSIERS, []).length === 0) {
+      storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, onboardingDossiers);
+    }
+  }, [jobs, candidates, assets, performanceGoals, appraisalReviews, onboardingConfig, onboardingDossiers]);
 
   // Subscribe to storage changes
   useEffect(() => {
@@ -884,6 +915,295 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     recordAuditLog(`Appraisal Review Submitted`, "EMPLOYEE", `Review ID: ${reviewId}, Rating: ${managerRating}★`, user || undefined);
   }, [appraisalReviews, user, toast]);
 
+  // --- DYNAMIC ONBOARDING ENGINE METHODS ---
+  const getCandidateDossier = useCallback(
+    (employeeId: string) => {
+      return onboardingDossiers.find((d) => d.employeeId === employeeId);
+    },
+    [onboardingDossiers]
+  );
+
+  const saveOnboardingDraft = useCallback(
+    (employeeId: string, formData: Record<string, any>, currentSectionId?: string) => {
+      setOnboardingDossiers((prev) => {
+        const existingIdx = prev.findIndex((d) => d.employeeId === employeeId);
+        const now = new Date().toISOString();
+        let nextDossiers: CandidateDossier[];
+
+        if (existingIdx >= 0) {
+          const current = prev[existingIdx];
+          const updatedDossier: CandidateDossier = {
+            ...current,
+            formData: { ...current.formData, ...formData },
+            currentSectionId: currentSectionId || current.currentSectionId,
+            status: current.status === "NOT_STARTED" ? "IN_PROGRESS" : current.status,
+            lastSavedAt: now,
+          };
+          nextDossiers = [...prev];
+          nextDossiers[existingIdx] = updatedDossier;
+        } else {
+          const newDossier: CandidateDossier = {
+            id: `dos-${Date.now()}`,
+            employeeId,
+            configId: onboardingConfig.id,
+            configVersion: onboardingConfig.version,
+            status: "IN_PROGRESS",
+            currentSectionId,
+            formData,
+            uploadedDocuments: [],
+            lastSavedAt: now,
+          };
+          nextDossiers = [...prev, newDossier];
+        }
+
+        storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, nextDossiers);
+        return nextDossiers;
+      });
+    },
+    [onboardingConfig]
+  );
+
+  const uploadCandidateDocument = useCallback(
+    (employeeId: string, requirementId: string, fileData: { name: string; size: string; type: string; url?: string }) => {
+      setOnboardingDossiers((prev) => {
+        const existingIdx = prev.findIndex((d) => d.employeeId === employeeId);
+        const now = new Date().toISOString();
+        const newDoc: CandidateUploadedDoc = {
+          id: `up-${Date.now()}`,
+          requirementId,
+          name: fileData.name,
+          size: fileData.size,
+          type: fileData.type,
+          url: fileData.url,
+          uploadedAt: now,
+          status: "UPLOADED",
+        };
+
+        let nextDossiers: CandidateDossier[];
+        if (existingIdx >= 0) {
+          const current = prev[existingIdx];
+          const filteredDocs = current.uploadedDocuments.filter((d) => d.requirementId !== requirementId);
+          const updatedDossier: CandidateDossier = {
+            ...current,
+            uploadedDocuments: [...filteredDocs, newDoc],
+            lastSavedAt: now,
+          };
+          nextDossiers = [...prev];
+          nextDossiers[existingIdx] = updatedDossier;
+        } else {
+          const newDossier: CandidateDossier = {
+            id: `dos-${Date.now()}`,
+            employeeId,
+            configId: onboardingConfig.id,
+            configVersion: onboardingConfig.version,
+            status: "IN_PROGRESS",
+            formData: {},
+            uploadedDocuments: [newDoc],
+            lastSavedAt: now,
+          };
+          nextDossiers = [...prev, newDossier];
+        }
+
+        storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, nextDossiers);
+        return nextDossiers;
+      });
+    },
+    [onboardingConfig]
+  );
+
+  const removeCandidateDocument = useCallback(
+    (employeeId: string, requirementId: string) => {
+      setOnboardingDossiers((prev) => {
+        const existingIdx = prev.findIndex((d) => d.employeeId === employeeId);
+        if (existingIdx < 0) return prev;
+        const current = prev[existingIdx];
+        const nextDocs = current.uploadedDocuments.filter((d) => d.requirementId !== requirementId);
+        const updatedDossier: CandidateDossier = {
+          ...current,
+          uploadedDocuments: nextDocs,
+          lastSavedAt: new Date().toISOString(),
+        };
+        const nextDossiers = [...prev];
+        nextDossiers[existingIdx] = updatedDossier;
+        storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, nextDossiers);
+        return nextDossiers;
+      });
+    },
+    []
+  );
+
+  const submitOnboarding = useCallback(
+    (employeeId: string, formData: Record<string, any>, uploadedDocs: CandidateUploadedDoc[]) => {
+      const now = new Date().toISOString();
+      setOnboardingDossiers((prev) => {
+        const existingIdx = prev.findIndex((d) => d.employeeId === employeeId);
+        let nextDossiers: CandidateDossier[];
+
+        if (existingIdx >= 0) {
+          const current = prev[existingIdx];
+          const updatedDossier: CandidateDossier = {
+            ...current,
+            formData: { ...current.formData, ...formData },
+            uploadedDocuments: uploadedDocs.length > 0 ? uploadedDocs : current.uploadedDocuments,
+            status: "SUBMITTED",
+            submittedAt: now,
+            lastSavedAt: now,
+          };
+          nextDossiers = [...prev];
+          nextDossiers[existingIdx] = updatedDossier;
+        } else {
+          const newDossier: CandidateDossier = {
+            id: `dos-${Date.now()}`,
+            employeeId,
+            configId: onboardingConfig.id,
+            configVersion: onboardingConfig.version,
+            status: "SUBMITTED",
+            formData,
+            uploadedDocuments: uploadedDocs,
+            submittedAt: now,
+            lastSavedAt: now,
+          };
+          nextDossiers = [...prev, newDossier];
+        }
+
+        storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, nextDossiers);
+        return nextDossiers;
+      });
+
+      // Update employee record with candidate submitted data so directory reflects it
+      updateEmployee(employeeId, {
+        firstName: formData.firstName || undefined,
+        middleName: formData.middleName || undefined,
+        lastName: formData.lastName || undefined,
+        dob: formData.dob || undefined,
+        gender: formData.gender || undefined,
+        bloodGroup: formData.bloodGroup || undefined,
+        maritalStatus: formData.maritalStatus || undefined,
+        personalEmail: formData.personalEmail || undefined,
+        phone: formData.personalMobile || undefined,
+        presentAddress: formData.presentAddress || undefined,
+        permanentAddress: formData.permanentAddress || undefined,
+        familyDetails: {
+          fathersName: formData.fathersName,
+          mothersName: formData.mothersName,
+          spouseName: formData.spouseName,
+        },
+        emergencyContactName: formData.emergencyContactName,
+        emergencyContactRelation: formData.emergencyContactRelation,
+        emergencyContactPhone: formData.emergencyContactPhone,
+        nomineeName: formData.nomineeName,
+        nomineeRelationship: formData.nomineeRelationship,
+        educationDetails: formData.education || undefined,
+        workExperienceDetails: formData.experience || undefined,
+        bankName: formData.bankName,
+        accountHolderName: formData.accountHolderName,
+        accountNumber: formData.accountNumber,
+        ifscCode: formData.ifscCode,
+        pan: formData.pan,
+        aadhaar: formData.aadhaar,
+        uan: formData.uan,
+        onboardingStatus: "SUBMITTED",
+      });
+
+      // Batch upload documents to central documents repository
+      if (uploadedDocs.length > 0) {
+        uploadBatchDocuments(
+          uploadedDocs.map((doc) => ({
+            employeeId,
+            title: doc.name,
+            category: "IDENTITY",
+            fileSize: doc.size,
+            fileType: doc.type,
+          }))
+        );
+      }
+
+      recordAuditLog("Onboarding Dossier Submitted", "EMPLOYEE", `Employee ID: ${employeeId}`, user || undefined);
+      toast.success("Onboarding submitted successfully for HR verification.");
+    },
+    [onboardingConfig, updateEmployee, uploadBatchDocuments, user, toast]
+  );
+
+  const reviewOnboardingDossier = useCallback(
+    (employeeId: string, action: "APPROVE" | "REQUEST_CHANGES" | "REJECT", notes?: string) => {
+      const now = new Date().toISOString();
+      setOnboardingDossiers((prev) => {
+        const existingIdx = prev.findIndex((d) => d.employeeId === employeeId);
+        if (existingIdx < 0) return prev;
+        const current = prev[existingIdx];
+
+        let newStatus: CandidateDossier["status"] = current.status;
+        if (action === "APPROVE") newStatus = "APPROVED";
+        else if (action === "REQUEST_CHANGES") newStatus = "CHANGES_REQUESTED";
+        else if (action === "REJECT") newStatus = "REJECTED";
+
+        const updatedDossier: CandidateDossier = {
+          ...current,
+          status: newStatus,
+          reviewNotes: notes || current.reviewNotes,
+          reviewedAt: now,
+          reviewedBy: user?.name || "HR Admin",
+          approvedAt: action === "APPROVE" ? now : current.approvedAt,
+        };
+
+        const nextDossiers = [...prev];
+        nextDossiers[existingIdx] = updatedDossier;
+        storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, nextDossiers);
+        return nextDossiers;
+      });
+
+      if (action === "APPROVE") {
+        updateEmployee(employeeId, {
+          onboardingCompleted: true,
+          onboardingStatus: "VERIFIED",
+          status: "ACTIVE",
+        });
+        recordAuditLog("Onboarding Approved", "EMPLOYEE", `Employee ID: ${employeeId}`, user || undefined);
+        toast.success("Candidate onboarding approved and employee activated.");
+      } else if (action === "REQUEST_CHANGES") {
+        updateEmployee(employeeId, {
+          onboardingStatus: "IN_PROGRESS",
+        });
+        recordAuditLog("Onboarding Changes Requested", "EMPLOYEE", `Employee ID: ${employeeId}. Notes: ${notes || ""}`, user || undefined);
+        toast.info("Changes requested. Candidate dossier returned with feedback.");
+      } else if (action === "REJECT") {
+        updateEmployee(employeeId, {
+          status: "TERMINATED",
+        });
+        recordAuditLog("Onboarding Rejected", "EMPLOYEE", `Employee ID: ${employeeId}. Reason: ${notes || ""}`, user || undefined);
+        toast.error("Candidate onboarding submission was rejected.");
+      }
+    },
+    [user, updateEmployee, toast]
+  );
+
+  const updateOnboardingConfig = useCallback(
+    (updates: Partial<OnboardingConfig>) => {
+      setOnboardingConfig((prev) => {
+        const updated = { ...prev, ...updates };
+        storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, updated);
+        return updated;
+      });
+      toast.info("Onboarding configuration draft updated.");
+    },
+    [toast]
+  );
+
+  const publishOnboardingConfig = useCallback(() => {
+    setOnboardingConfig((prev) => {
+      const published: OnboardingConfig = {
+        ...prev,
+        version: (prev.version || 1) + 1,
+        isPublished: true,
+        publishedAt: new Date().toISOString(),
+      };
+      storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, published);
+      recordAuditLog("Onboarding Config Published", "SETTINGS", `Version ${published.version}`, user || undefined);
+      toast.success(`Onboarding Configuration v${published.version} published successfully!`);
+      return published;
+    });
+  }, [user, toast]);
+
   // --- RESET DEMO DATA ---
   const resetAllData = useCallback(() => {
     storage.clear();
@@ -916,6 +1236,16 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         assets,
         performanceGoals,
         appraisalReviews,
+        onboardingConfig,
+        onboardingDossiers,
+        getCandidateDossier,
+        saveOnboardingDraft,
+        submitOnboarding,
+        reviewOnboardingDossier,
+        updateOnboardingConfig,
+        publishOnboardingConfig,
+        uploadCandidateDocument,
+        removeCandidateDocument,
         addEmployee,
         updateEmployee,
         deleteEmployee,
