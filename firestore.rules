@@ -76,8 +76,15 @@ service cloud.firestore {
     match /payroll_runs/{runId} {
       allow read, write: if isHRAdmin();
     }
+    match /payroll_records/{recordId} {
+      allow read, write: if isHRAdmin();
+    }
     match /payslips/{slipId} {
       allow read: if isHRAdmin() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
+      allow write: if isHRAdmin();
+    }
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
       allow write: if isHRAdmin();
     }
 
@@ -87,4 +94,3 @@ service cloud.firestore {
     }
   }
 }
-

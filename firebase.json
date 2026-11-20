@@ -5,6 +5,19 @@
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "auth": {
+    "providers": {
+      "anonymous": true,
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Gryphon HRMS",
+        "supportEmail": "connect.gryphonacademy@gmail.com",
+        "authorizedRedirectUris": [
+          "https://ga-hrms-70260.firebaseapp.com/__/auth/handler",
+          "http://localhost"
+        ]
+      }
+    }
   }
 }
-
