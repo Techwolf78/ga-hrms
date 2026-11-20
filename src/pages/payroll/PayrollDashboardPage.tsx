@@ -191,7 +191,7 @@ export function PayrollDashboardPage() {
 
         <KpiCard
           label="Processed Staff Count"
-          value={sepRecords.length || 32}
+          value={octRecords.length || 32}
           icon={<Receipt className="w-6 h-6 text-indigo-600" />}
           trend={{ value: "32/32 Active", isPositive: true }}
           subtitle="Zero failed transfers"

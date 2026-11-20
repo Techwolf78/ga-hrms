@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isHRAdmin() {
+      return isAuthenticated() && (
+        getUserData().role in ['super_admin', 'hr_admin', 'admin'] ||
+        request.auth.token.role in ['super_admin', 'hr_admin', 'admin'] ||
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      );
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isHRAdmin();
+    }
+
+    match /company/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+    match /branches/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+    match /departments/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+    match /designations/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+    match /shifts/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+    match /policies/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+
+    match /attendance/{recordId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isHRAdmin();
+    }
+
+    match /leave_requests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isHRAdmin() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
+    }
+    match /regularization_requests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isHRAdmin() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
+    }
+
+    match /payroll_runs/{runId} {
+      allow read, write: if isHRAdmin();
+    }
+    match /payslips/{slipId} {
+      allow read: if isHRAdmin() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
+      allow write: if isHRAdmin();
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isHRAdmin();
+      allow create: if isAuthenticated();
+    }
+  }
+}
+

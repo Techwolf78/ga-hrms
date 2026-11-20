@@ -2,14 +2,27 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { CurrentUser, UserRole } from "../types/hrms";
 import { storage, STORAGE_KEYS } from "./storage";
 import { DEFAULT_USER } from "./storageInit";
+import {
+  signInWithGoogle,
+  signInWithEmail,
+  firebaseSignOut,
+  subscribeToAuth,
+} from "./firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "./firebase/config";
 
 interface AuthContextType {
   user: CurrentUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
   login: (email: string, role: UserRole, customUser?: CurrentUser) => void;
-  logout: () => void;
+  loginWithGoogle: () => Promise<CurrentUser>;
+  loginWithEmailPassword: (email: string, pass: string) => Promise<void>;
+  logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
   switchPersona: (personaKey: string) => void;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,7 +90,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<CurrentUser | null>(() => {
     return storage.get<CurrentUser | null>(STORAGE_KEYS.USER, DEFAULT_USER);
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Sync state with storage updates
   useEffect(() => {
     const unsubscribe = storage.subscribe(({ key, value }) => {
       if (key === STORAGE_KEYS.USER) {
@@ -86,6 +102,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     return unsubscribe;
   }, []);
+
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    const unsubAuth = subscribeToAuth(async (fbUser) => {
+      if (fbUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", fbUser.uid));
+          if (userDoc.exists()) {
+            const hrmsUser = userDoc.data() as CurrentUser;
+            storage.set(STORAGE_KEYS.USER, hrmsUser);
+            setUser(hrmsUser);
+          }
+        } catch (e) {
+          console.warn("Could not fetch user profile from Firestore:", e);
+        }
+      }
+    });
+    return unsubAuth;
+  }, []);
+
+  const clearError = () => setError(null);
+
+  const loginWithGoogle = async (): Promise<CurrentUser> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { hrmsUser } = await signInWithGoogle();
+      storage.set(STORAGE_KEYS.USER, hrmsUser);
+      setUser(hrmsUser);
+      setIsLoading(false);
+      return hrmsUser;
+    } catch (err: any) {
+      setIsLoading(false);
+      const msg = err.message || "Failed to sign in with Google.";
+      setError(msg);
+      throw err;
+    }
+  };
+
+  const loginWithEmailPassword = async (emailInput: string, pass: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const fbUser = await signInWithEmail(emailInput, pass);
+      const userDoc = await getDoc(doc(db, "users", fbUser.uid));
+      let hrmsUser: CurrentUser;
+      if (userDoc.exists()) {
+        hrmsUser = userDoc.data() as CurrentUser;
+      } else {
+        hrmsUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || emailInput.split("@")[0],
+          email: fbUser.email || emailInput,
+          role: "EMPLOYEE",
+          avatar: fbUser.photoURL || "",
+          employeeId: `EMP-${fbUser.uid.substring(0, 5).toUpperCase()}`,
+          designation: "Staff Member",
+          department: "General",
+        };
+      }
+      storage.set(STORAGE_KEYS.USER, hrmsUser);
+      setUser(hrmsUser);
+      setIsLoading(false);
+    } catch (err: any) {
+      setIsLoading(false);
+      const msg = err.message || "Failed to sign in. Please check your email and password.";
+      setError(msg);
+      throw err;
+    }
+  };
 
   const login = (email: string, role: UserRole, customUser?: CurrentUser) => {
     let demoUser: CurrentUser;
@@ -104,7 +190,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(demoUser);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await firebaseSignOut();
+    } catch (e) {
+      console.warn("Firebase signout error:", e);
+    }
     storage.set<CurrentUser | null>(STORAGE_KEYS.USER, null);
     setUser(null);
   };
@@ -128,10 +219,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isAuthenticated: !!user,
+        isLoading,
+        error,
         login,
+        loginWithGoogle,
+        loginWithEmailPassword,
         logout,
         switchRole,
         switchPersona,
+        clearError,
       }}
     >
       {children}
