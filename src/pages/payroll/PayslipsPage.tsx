@@ -150,6 +150,7 @@ export function PayslipsPage() {
             className="h-9 px-3 text-xs bg-gray-50/70 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
           >
             <option value="ALL">All Pay Months</option>
+            <option value="2026-11">November 2026</option>
             <option value="2026-10">October 2026</option>
             <option value="2026-09">September 2026</option>
           </select>

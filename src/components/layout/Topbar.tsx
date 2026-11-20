@@ -64,7 +64,7 @@ export function Topbar({ onOpenMobileSidebar, onOpenSearch }: TopbarProps) {
   }, []);
 
   // Today's attendance status for current logged in user
-  const todayStr = "2026-10-06";
+  const todayStr = "2026-11-20";
   const userTodayAttendance = attendance.find(
     (a) => a.employeeId === user?.employeeId && a.date === todayStr
   );

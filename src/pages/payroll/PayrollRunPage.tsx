@@ -21,7 +21,7 @@ export function PayrollRunPage() {
   const { employees, processPayrollRun } = useHrms();
   const navigate = useNavigate();
 
-  const [selectedMonth, setSelectedMonth] = useState("2026-10");
+  const [selectedMonth, setSelectedMonth] = useState("2026-11");
   const [selectedEmpIds, setSelectedEmpIds] = useState<string[]>(employees.map((e) => e.id));
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -122,8 +122,8 @@ export function PayrollRunPage() {
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="mt-1 text-base font-bold text-gray-950 bg-transparent border-none focus:outline-none cursor-pointer"
               >
-                <option value="2026-10">October 2026</option>
                 <option value="2026-11">November 2026</option>
+                <option value="2026-10">October 2026</option>
               </select>
             </div>
 

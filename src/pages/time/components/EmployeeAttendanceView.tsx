@@ -65,9 +65,9 @@ export function EmployeeAttendanceView({
   const assignedShift: Shift = shifts.find((s) => s.id === currentEmp?.shiftId) || shifts[0];
   const desigTitle = designations.find((d) => d.id === currentEmp?.designationId)?.title || "Employee";
 
-  const todayStr = "2026-10-06";
+  const todayStr = "2026-11-20";
 
-  // Full 31-day attendance records for current employee (October 2026: Oct 01 to Oct 31)
+  // Full 30-day attendance records for current employee (November 2026: Nov 01 to Nov 30)
   const myRecords = useMemo(() => {
     if (!currentEmp) return [];
     const existing = attendance.filter((a) => a.employeeId === currentEmp.id);

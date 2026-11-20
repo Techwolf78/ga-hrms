@@ -76,6 +76,12 @@ interface HrmsContextType {
   updateDepartment: (id: string, updates: Partial<Department>) => void;
   deleteDepartment: (id: string) => void;
 
+  updateCompany: (updates: Partial<Company>) => void;
+  addBranch: (branch: Omit<Branch, "id" | "headCount">) => Branch;
+  updateBranch: (id: string, updates: Partial<Branch>) => void;
+  deleteBranch: (id: string) => boolean;
+  transferBranchEmployees: (fromBranchId: string, toBranchId: string) => void;
+
   addShift: (shift: Omit<Shift, "id">) => Shift;
   updateShift: (id: string, updates: Partial<Shift>) => void;
 
@@ -280,7 +286,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSalaryStructures(updatedSalaries);
 
     // Initial attendance for today (Present)
-    const todayStr = "2026-10-06";
+    const todayStr = "2026-11-20";
     const newAtt: AttendanceRecord = {
       id: `att-${todayStr}-${newId}`,
       employeeId: newId,
@@ -392,6 +398,68 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.info(`Department "${dept?.name || id}" removed.`);
   }, [departments, toast]);
 
+  // --- COMPANY & BRANCH CRUD ---
+  const updateCompany = useCallback((updates: Partial<Company>) => {
+    const updated = { ...company, ...updates };
+    storage.set(STORAGE_KEYS.COMPANY, updated);
+    setCompany(updated);
+    recordAuditLog("Company Profile Updated", "SETTINGS", "Company details updated.", user || undefined);
+    toast.success("Organization profile updated successfully.");
+  }, [company, user, toast]);
+
+  const addBranch = useCallback((data: Omit<Branch, "id" | "headCount">): Branch => {
+    const newId = `branch-${Date.now()}`;
+    const newBranch: Branch = { ...data, id: newId, headCount: 0 };
+    const updated = [...branches, newBranch];
+    storage.set(STORAGE_KEYS.BRANCHES, updated);
+    setBranches(updated);
+    recordAuditLog("Branch Created", "SETTINGS", `Branch "${newBranch.name}" created (${newBranch.city}).`, user || undefined);
+    toast.success(`Branch "${newBranch.name}" created successfully.`);
+    return newBranch;
+  }, [branches, user, toast]);
+
+  const updateBranch = useCallback((id: string, updates: Partial<Branch>) => {
+    const updated = branches.map((b) => (b.id === id ? { ...b, ...updates } : b));
+    storage.set(STORAGE_KEYS.BRANCHES, updated);
+    setBranches(updated);
+    recordAuditLog("Branch Updated", "SETTINGS", `Branch details updated.`, user || undefined);
+    toast.success("Branch details updated successfully.");
+  }, [branches, user, toast]);
+
+  const deleteBranch = useCallback((id: string): boolean => {
+    const branch = branches.find((b) => b.id === id);
+    const branchEmps = employees.filter((e) => e.branchId === id);
+    if (branchEmps.length > 0) {
+      toast.error(`Cannot delete "${branch?.name || id}" because ${branchEmps.length} active employee(s) are assigned to it.`);
+      return false;
+    }
+    const updated = branches.filter((b) => b.id !== id);
+    storage.set(STORAGE_KEYS.BRANCHES, updated);
+    setBranches(updated);
+    recordAuditLog("Branch Deleted", "SETTINGS", `Branch "${branch?.name || id}" removed.`, user || undefined, "WARNING");
+    toast.info(`Branch "${branch?.name || id}" removed.`);
+    return true;
+  }, [branches, employees, user, toast]);
+
+  const transferBranchEmployees = useCallback((fromBranchId: string, toBranchId: string) => {
+    const fromBranch = branches.find((b) => b.id === fromBranchId);
+    const toBranch = branches.find((b) => b.id === toBranchId);
+    const affected = employees.filter((e) => e.branchId === fromBranchId);
+    if (affected.length === 0) return;
+
+    const updated = employees.map((e) => (e.branchId === fromBranchId ? { ...e, branchId: toBranchId } : e));
+    storage.set(STORAGE_KEYS.EMPLOYEES, updated);
+    setEmployees(updated);
+
+    recordAuditLog(
+      "Branch Staff Transfer",
+      "EMPLOYEE",
+      `Transferred ${affected.length} staff member(s) from "${fromBranch?.name || fromBranchId}" to "${toBranch?.name || toBranchId}".`,
+      user || undefined
+    );
+    toast.success(`Successfully shifted ${affected.length} employee(s) to ${toBranch?.name || toBranchId}.`);
+  }, [branches, employees, user, toast]);
+
   // --- SHIFTS ---
   const addShift = useCallback((data: Omit<Shift, "id">): Shift => {
     const newId = `shift-${Date.now()}`;
@@ -417,7 +485,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...requestData,
       id: newId,
       status: "PENDING",
-      appliedDate: "2026-10-06",
+      appliedDate: "2026-11-20",
     };
     const updated = [newRequest, ...leaveRequests];
     storage.set(STORAGE_KEYS.LEAVE_REQUESTS, updated);
@@ -457,7 +525,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...r,
             status: "APPROVED" as const,
             reviewedBy: user?.name || "HR Admin",
-            reviewedAt: "2026-10-06",
+            reviewedAt: "2026-11-20",
           }
         : r
     );
@@ -465,7 +533,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLeaveRequests(updated);
 
     // If leave covers today, update today's attendance to LEAVE
-    const todayStr = "2026-10-06";
+    const todayStr = "2026-11-20";
     if (req.fromDate <= todayStr && req.toDate >= todayStr) {
       const updatedAtt = attendance.map((a) =>
         a.employeeId === req.employeeId && a.date === todayStr
@@ -487,7 +555,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...r,
             status: "REJECTED" as const,
             reviewedBy: user?.name || "HR Admin",
-            reviewedAt: "2026-10-06",
+            reviewedAt: "2026-11-20",
             rejectionReason: reason || "Operational requirement at current sprint.",
           }
         : r
@@ -507,7 +575,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data,
         id: newId,
         status: "PENDING",
-        appliedDate: "2026-10-06",
+        appliedDate: "2026-11-20",
       };
       const updated = [newReg, ...regularizations];
       storage.set(STORAGE_KEYS.REGULARIZATIONS, updated);
@@ -580,7 +648,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // --- WEB PUNCH IN / OUT ---
   const punchAttendance = useCallback(
     (employeeId: string, type: "IN" | "OUT") => {
-      const todayStr = "2026-10-06";
+      const todayStr = "2026-11-20";
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
@@ -643,7 +711,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // --- PAYROLL RUN WORKFLOW ---
   const processPayrollRun = useCallback(
     (month: string, employeeIds: string[]) => {
-      const monthName = month === "2026-10" ? "October 2026" : "November 2026";
+      const monthName = month === "2026-11" ? "November 2026" : month === "2026-10" ? "October 2026" : "September 2026";
       const newPayrollRecords: PayrollRecord[] = employeeIds.map((empId) => {
         const emp = employees.find((e) => e.id === empId);
         const comp = calculateSalaryComponents(emp?.monthlyCtc || 100000);
@@ -665,9 +733,9 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tdsDeduction: comp.tdsMonthly,
           lopDeduction: 0,
           status: "PROCESSED",
-          processedDate: "2026-10-06",
+          processedDate: "2026-11-20",
           paymentMode: "BANK_TRANSFER",
-          transactionRef: `CMS-HDFC-OCT-${empId.replace("EMP-", "")}`,
+          transactionRef: `CMS-HDFC-NOV-${empId.replace("EMP-", "")}`,
         };
       });
 
@@ -684,7 +752,7 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         employeeId: p.employeeId,
         month: monthName.split(" ")[0],
         year: 2026,
-        issueDate: "2026-10-06",
+        issueDate: "2026-11-20",
       }));
       const existingPayslipsFiltered = payslips.filter((ps) => !ps.payrollRecordId.startsWith(`pay-${month}`));
       const updatedPayslips = [...newPayslips, ...existingPayslipsFiltered];
@@ -1249,6 +1317,11 @@ export const HrmsProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addEmployee,
         updateEmployee,
         deleteEmployee,
+        updateCompany,
+        addBranch,
+        updateBranch,
+        deleteBranch,
+        transferBranchEmployees,
         addDepartment,
         updateDepartment,
         deleteDepartment,

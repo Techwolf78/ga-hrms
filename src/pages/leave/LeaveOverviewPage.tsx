@@ -56,7 +56,7 @@ export function LeaveOverviewPage({ onOpenApplyLeave }: LeaveOverviewPageProps) 
   });
 
   const upcomingLeaves = leaveRequests.filter(
-    (l) => l.status === "APPROVED" && l.fromDate >= "2026-10-06"
+    (l) => l.status === "APPROVED" && l.fromDate >= "2026-11-20"
   );
 
   return (

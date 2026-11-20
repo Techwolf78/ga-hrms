@@ -1355,7 +1355,7 @@ export const initialSalaryStructures: SalaryStructure[] = initialEmployees.map((
   };
 });
 
-// Today's date is 2026-10-06 (from metadata)
+// Today's date is 2026-11-20 (from metadata)
 const baseDailyAttendance: AttendanceRecord[] = initialEmployees.map((emp, index) => {
   let status: AttendanceRecord["status"] = "PRESENT";
   let firstIn: string | null = "09:22";
@@ -1387,9 +1387,9 @@ const baseDailyAttendance: AttendanceRecord[] = initialEmployees.map((emp, index
   }
 
   return {
-    id: `att-2026-10-06-${emp.id}`,
+    id: `att-2026-11-20-${emp.id}`,
     employeeId: emp.id,
-    date: "2026-10-06",
+    date: "2026-11-20",
     shiftId: emp.shiftId,
     firstIn,
     lastOut,
@@ -1421,66 +1421,66 @@ const baseDailyAttendance: AttendanceRecord[] = initialEmployees.map((emp, index
   };
 });
 
-// Seed full 31-day October demo attendance for employee EMP-1004
-const demoEmployee31Days = generate31DaysEmployeeAttendance("EMP-1004", "shift-gen", baseDailyAttendance);
+// Seed full 30-day November demo attendance for employee EMP-1004
+const demoEmployee30Days = generate31DaysEmployeeAttendance("EMP-1004", "shift-gen", baseDailyAttendance);
 
 export const initialAttendanceRecords: AttendanceRecord[] = [
   ...baseDailyAttendance.filter((a) => a.employeeId !== "EMP-1004"),
-  ...demoEmployee31Days,
+  ...demoEmployee30Days,
 ];
 
 export const initialRegularizations: AttendanceRegularization[] = [
   {
     id: "reg-001",
     employeeId: "EMP-1004", // Ananya Iyer (Employee)
-    date: "2026-10-05",
+    date: "2026-11-06",
     missingPunchType: "OUT",
     requestedTime: "18:30",
-    reason: "Forgot to punch out due to critical production release meeting.",
+    reason: "Forgot to punch out due to critical release meeting.",
     status: "PENDING",
-    appliedDate: "2026-10-06",
+    appliedDate: "2026-11-20",
   },
   {
     id: "reg-002",
     employeeId: "EMP-1007", // Rohan Deshmukh
-    date: "2026-10-01",
+    date: "2026-11-02",
     missingPunchType: "IN",
     requestedTime: "09:30",
     reason: "Biometric device offline at Tower 4 lobby.",
     status: "APPROVED",
     approvedBy: "Rajesh Kulkarni",
-    appliedDate: "2026-10-01",
+    appliedDate: "2026-11-03",
     comments: "Verified with security log.",
   },
   {
     id: "reg-003",
     employeeId: "EMP-1003", // Rajesh Kulkarni (Manager - Self-Request)
-    date: "2026-10-05",
+    date: "2026-11-19",
     missingPunchType: "OUT",
     requestedTime: "19:15",
     reason: "Client architecture review meeting ran late past office hours.",
     status: "PENDING",
-    appliedDate: "2026-10-06",
+    appliedDate: "2026-11-20",
   },
   {
     id: "reg-004",
     employeeId: "EMP-1005", // Vikram Malhotra
-    date: "2026-10-05",
+    date: "2026-11-19",
     missingPunchType: "IN",
     requestedTime: "09:15",
     reason: "On-call production incident triage early morning offsite.",
     status: "PENDING",
-    appliedDate: "2026-10-06",
+    appliedDate: "2026-11-20",
   },
   {
     id: "reg-005",
     employeeId: "EMP-1006", // Sneha Patel (Team member)
-    date: "2026-10-05",
+    date: "2026-11-18",
     missingPunchType: "BOTH",
     requestedTime: "09:30",
     reason: "Biometric device sensor glitch at Hinjawadi Gate 1.",
     status: "PENDING",
-    appliedDate: "2026-10-06",
+    appliedDate: "2026-11-19",
   },
 ];
 
@@ -1489,78 +1489,78 @@ export const initialLeaveRequests: LeaveRequest[] = [
     id: "lr-001",
     employeeId: "EMP-1006", // Sneha Patel
     leaveTypeId: "lt-cl",
-    fromDate: "2026-10-06",
-    toDate: "2026-10-06",
+    fromDate: "2026-11-20",
+    toDate: "2026-11-20",
     days: 1,
     isHalfDay: false,
     reason: "Personal family commitment at native town.",
     status: "APPROVED",
-    appliedDate: "2026-10-04",
+    appliedDate: "2026-11-18",
     reviewedBy: "Ajay Pawar",
-    reviewedAt: "2026-10-04",
+    reviewedAt: "2026-11-18",
   },
   {
     id: "lr-002",
     employeeId: "EMP-1020", // Meera Rao
     leaveTypeId: "lt-sl",
-    fromDate: "2026-10-06",
-    toDate: "2026-10-07",
+    fromDate: "2026-11-19",
+    toDate: "2026-11-20",
     days: 2,
     isHalfDay: false,
     reason: "Suffering from acute viral fever and recommended medical rest.",
     status: "APPROVED",
-    appliedDate: "2026-10-05",
+    appliedDate: "2026-11-18",
     reviewedBy: "Priya Sharma",
-    reviewedAt: "2026-10-05",
+    reviewedAt: "2026-11-18",
   },
   {
     id: "lr-003",
     employeeId: "EMP-1005", // Vikramaditya Sen
     leaveTypeId: "lt-pl",
-    fromDate: "2026-10-19",
-    toDate: "2026-10-23",
-    days: 4,
+    fromDate: "2026-11-25",
+    toDate: "2026-11-27",
+    days: 3,
     isHalfDay: false,
-    reason: "Pre-planned Dussehra holiday trip with family.",
+    reason: "Pre-planned family vacation trip.",
     status: "PENDING",
-    appliedDate: "2026-10-05",
+    appliedDate: "2026-11-15",
   },
   {
     id: "lr-004",
     employeeId: "EMP-1009", // Rahul Verma
     leaveTypeId: "lt-cl",
-    fromDate: "2026-10-12",
-    toDate: "2026-10-12",
+    fromDate: "2026-11-23",
+    toDate: "2026-11-23",
     days: 1,
     isHalfDay: true,
     halfDaySession: "AFTERNOON",
     reason: "Visiting Regional Passport Office for visa interview.",
     status: "PENDING",
-    appliedDate: "2026-10-06",
+    appliedDate: "2026-11-19",
   },
   {
     id: "lr-005",
     employeeId: "EMP-1013", // Siddharth Roy
     leaveTypeId: "lt-co",
-    fromDate: "2026-09-28",
-    toDate: "2026-09-28",
+    fromDate: "2026-10-28",
+    toDate: "2026-10-28",
     days: 1,
     isHalfDay: false,
     reason: "Compensatory off for working on Sunday maintenance window.",
     status: "APPROVED",
-    appliedDate: "2026-09-25",
+    appliedDate: "2026-10-25",
     reviewedBy: "Rajesh Kulkarni",
-    reviewedAt: "2026-09-26",
+    reviewedAt: "2026-10-26",
   },
 ];
 
-// Payroll for September 2026 (Already Processed) and October 2026 (Draft)
+// Payroll for October 2026 (Already Processed) and November 2026 (Active/Draft)
 export const initialPayrollRecords: PayrollRecord[] = initialEmployees.map((emp) => {
   const comp = calculateSalaryComponents(emp.monthlyCtc);
   return {
-    id: `pay-2026-09-${emp.id}`,
-    month: "2026-09",
-    monthName: "September 2026",
+    id: `pay-2026-10-${emp.id}`,
+    month: "2026-10",
+    monthName: "October 2026",
     employeeId: emp.id,
     workingDaysInMonth: 22,
     presentDays: 21,
@@ -1575,9 +1575,9 @@ export const initialPayrollRecords: PayrollRecord[] = initialEmployees.map((emp)
     tdsDeduction: comp.tdsMonthly,
     lopDeduction: 0,
     status: "PROCESSED",
-    processedDate: "2026-09-30",
+    processedDate: "2026-10-31",
     paymentMode: "BANK_TRANSFER",
-    transactionRef: `CMS-HDFC-SEP-${emp.id.replace("EMP-", "")}`,
+    transactionRef: `CMS-HDFC-OCT-${emp.id.replace("EMP-", "")}`,
   };
 });
 
@@ -1585,9 +1585,9 @@ export const initialPayslips: Payslip[] = initialPayrollRecords.map((pay) => ({
   id: `ps-${pay.id}`,
   payrollRecordId: pay.id,
   employeeId: pay.employeeId,
-  month: "September",
+  month: "October",
   year: 2026,
-  issueDate: "2026-09-30",
+  issueDate: "2026-10-31",
 }));
 
 export const initialDocuments: EmployeeDocument[] = [
@@ -1680,19 +1680,19 @@ export const initialNotifications: NotificationItem[] = [
 export const initialAuditLogs: AuditLog[] = [
   {
     id: "aud-01",
-    timestamp: "2026-10-06T09:30:00Z",
+    timestamp: "2026-11-20T09:30:00Z",
     userId: "EMP-1001",
     userName: "Ajay Pawar",
     userRole: "SUPER_ADMIN",
     action: "System Session Initialized",
     module: "SYSTEM",
-    details: "Authenticated into Enterprise HRMS SaaS Dashboard from HQ Network.",
+    details: "Authenticated into Internal HRMS Dashboard from HQ Network.",
     ipAddress: "192.168.1.104",
     status: "SUCCESS",
   },
   {
     id: "aud-02",
-    timestamp: "2026-10-06T09:15:22Z",
+    timestamp: "2026-11-20T09:15:22Z",
     userId: "EMP-1002",
     userName: "Priya Sharma",
     userRole: "HR_ADMIN",
@@ -1705,20 +1705,20 @@ export const initialAuditLogs: AuditLog[] = [
   },
   {
     id: "aud-03",
-    timestamp: "2026-10-05T18:40:10Z",
+    timestamp: "2026-11-19T18:40:10Z",
     userId: "EMP-1011",
     userName: "Amit Trivedi",
     userRole: "HR_ADMIN",
     action: "Payroll Finalized & Locked",
     module: "PAYROLL",
-    recordId: "pay-2026-09",
-    details: "Disbursed 32 salary transactions for month September 2026.",
+    recordId: "pay-2026-10",
+    details: "Disbursed 32 salary transactions for month October 2026.",
     ipAddress: "192.168.2.45",
     status: "SUCCESS",
   },
   {
     id: "aud-04",
-    timestamp: "2026-10-04T11:20:00Z",
+    timestamp: "2026-11-18T11:20:00Z",
     userId: "EMP-1001",
     userName: "Ajay Pawar",
     userRole: "SUPER_ADMIN",

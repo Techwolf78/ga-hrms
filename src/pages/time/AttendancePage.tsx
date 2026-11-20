@@ -48,7 +48,7 @@ export function AttendancePage() {
   const [activeNavTab, setActiveNavTab] = useState<string>(() => {
     return role === "SUPER_ADMIN" ? "ADMIN_MANAGEMENT" : "MY_ATTENDANCE";
   });
-  const [currentDate, setCurrentDate] = useState("2026-10-06");
+  const [currentDate, setCurrentDate] = useState("2026-11-20");
 
   // Sensor punch timeline detail modal
   const [detailRecord, setDetailRecord] = useState<AttendanceRecord | null>(null);
@@ -249,7 +249,11 @@ export function AttendancePage() {
             {!isPersonalView && (
               <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-input border border-surface-border shadow-card h-8">
                 <button
-                  onClick={() => setCurrentDate("2026-10-05")}
+                  onClick={() => {
+                    const d = new Date(currentDate);
+                    d.setDate(d.getDate() - 1);
+                    setCurrentDate(d.toISOString().split("T")[0]);
+                  }}
                   className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
                   title="Previous Day"
                 >
@@ -262,7 +266,11 @@ export function AttendancePage() {
                 </div>
 
                 <button
-                  onClick={() => setCurrentDate("2026-10-06")}
+                  onClick={() => {
+                    const d = new Date(currentDate);
+                    d.setDate(d.getDate() + 1);
+                    setCurrentDate(d.toISOString().split("T")[0]);
+                  }}
                   className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
                   title="Next Day"
                 >

@@ -39,7 +39,7 @@ export function AttendancePolicySettingsView() {
     setShowLockConfirm(false);
     toast.info(
       !periodLocked
-        ? "Attendance period for October 2026 locked for payroll finalization."
+        ? "Attendance period for November 2026 locked for payroll finalization."
         : "Attendance period reopened for authorized corrections."
     );
   };
@@ -53,7 +53,7 @@ export function AttendancePolicySettingsView() {
             <h2 className="text-sm font-semibold text-text-primary">
               Attendance Rules & Compliance Policies
             </h2>
-            <Badge variant="neutral" size="sm">Tenant-Wide</Badge>
+            <Badge variant="neutral" size="sm">Company-Wide</Badge>
           </div>
           <p className="text-xs text-text-secondary mt-0.5">
             Configure working hours, late arrival grace buffers, regularization limits, and period cut-offs.
@@ -92,7 +92,7 @@ export function AttendancePolicySettingsView() {
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-text-primary">
-              Attendance Period Status: October 2026
+              Attendance Period Status: November 2026
             </span>
             <Badge variant={periodLocked ? "warning" : "success"} size="sm" dot>
               {periodLocked ? "Locked for Payroll" : "Open for Operations"}
@@ -101,7 +101,7 @@ export function AttendancePolicySettingsView() {
           <p className="text-xs text-text-secondary">
             {periodLocked
               ? "All daily attendance and regularizations are frozen. Edits require administrative reopening."
-              : "Cut-off date: October 25, 2026. Settle all exception items before payroll lock."}
+              : "Cut-off date: November 25, 2026. Settle all exception items before payroll lock."}
           </p>
         </div>
 

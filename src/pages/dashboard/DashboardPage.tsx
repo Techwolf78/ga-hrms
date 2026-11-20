@@ -68,7 +68,7 @@ export function DashboardPage({ onOpenAddEmployee, onOpenApplyLeave }: Dashboard
 
   // Metrics calculation
   const totalEmployees = employees.length;
-  const todayStr = "2026-10-06";
+  const todayStr = "2026-11-20";
   const todayAttendance = attendance.filter((a) => a.date === todayStr);
 
   const presentCount = todayAttendance.filter((a) => a.status === "PRESENT" || a.status === "LATE" || a.status === "HALF_DAY").length;
@@ -83,17 +83,17 @@ export function DashboardPage({ onOpenAddEmployee, onOpenApplyLeave }: Dashboard
   const pendingRegs = regularizations.filter((r) => r.status === "PENDING");
 
   // Total payroll for latest processed month
-  const latestPayroll = payroll.filter((p) => p.month === "2026-09");
+  const latestPayroll = payroll.filter((p) => p.month === "2026-10");
   const totalDisbursed = latestPayroll.reduce((sum, p) => sum + p.netSalary, 0);
 
   // Workforce Headcount Chart Data (Past 6 months trend)
   const headcountData = [
-    { month: "May", headcount: 22, payroll: 2900000 },
     { month: "Jun", headcount: 25, payroll: 3300000 },
     { month: "Jul", headcount: 27, payroll: 3600000 },
     { month: "Aug", headcount: 29, payroll: 3950000 },
     { month: "Sep", headcount: 31, payroll: 4300000 },
-    { month: "Oct", headcount: totalEmployees, payroll: totalDisbursed || 4500000 },
+    { month: "Oct", headcount: 32, payroll: 4500000 },
+    { month: "Nov", headcount: totalEmployees, payroll: totalDisbursed || 4850000 },
   ];
 
   // Attendance Donut Data
@@ -140,7 +140,7 @@ export function DashboardPage({ onOpenAddEmployee, onOpenApplyLeave }: Dashboard
             </Badge>
           </div>
           <p className="text-xs sm:text-sm text-text-secondary mt-1">
-            Here's what's happening across your organization today, 06 Oct 2026.
+            Here's what's happening across your organization today, 20 Nov 2026.
           </p>
         </div>
 

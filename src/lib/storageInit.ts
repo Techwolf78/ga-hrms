@@ -38,10 +38,13 @@ export const DEFAULT_USER: CurrentUser = {
   department: "System Administration",
 };
 
+export const CURRENT_DATA_MONTH = "2026-11";
+
 export function initializeHrmsStorage(forceReset = false) {
   const isInitialized = storage.get<boolean>(STORAGE_KEYS.INITIALIZED, false);
+  const currentDataMonth = storage.get<string>("hrms_data_month", "");
 
-  if (!isInitialized || forceReset) {
+  if (!isInitialized || forceReset || currentDataMonth !== CURRENT_DATA_MONTH) {
     storage.set(STORAGE_KEYS.COMPANY, initialCompany);
     storage.set(STORAGE_KEYS.USER, DEFAULT_USER);
     storage.set(STORAGE_KEYS.EMPLOYEES, initialEmployees);
@@ -68,8 +71,9 @@ export function initializeHrmsStorage(forceReset = false) {
     storage.set(STORAGE_KEYS.APPRAISALS, initialAppraisals);
     storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, initialOnboardingConfig);
     storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, initialOnboardingDossiers);
+    storage.set("hrms_data_month", CURRENT_DATA_MONTH);
     storage.set(STORAGE_KEYS.INITIALIZED, true);
-    console.log("✅ GA-HRMS LocalStorage successfully initialized with enterprise demo dataset.");
+    console.log("✅ GA-HRMS LocalStorage successfully initialized with November 2026 dataset.");
   } else {
     // Migration guard: ensure new modules exist and have demo data if empty or missing
     const checkAndSeed = (key: string, seed: any[]) => {

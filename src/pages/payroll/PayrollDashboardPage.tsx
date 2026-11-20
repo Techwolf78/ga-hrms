@@ -28,7 +28,12 @@ import {
 } from "recharts";
 import { useHrms } from "../../lib/hrmsContext";
 import { Button } from "../../components/ui/Button";
-import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { KpiCard } from "../../components/ui/KpiCard";
 import { formatCompactINR, formatINR } from "../../lib/utils";
@@ -37,11 +42,14 @@ export function PayrollDashboardPage() {
   const { payroll, departments, employees } = useHrms();
   const navigate = useNavigate();
 
-  // Metrics for September (latest finalized run)
-  const sepRecords = payroll.filter((p) => p.month === "2026-09");
-  const totalGross = sepRecords.reduce((sum, p) => sum + p.grossSalary, 0);
-  const totalDeductions = sepRecords.reduce((sum, p) => sum + p.totalDeductions, 0);
-  const totalNet = sepRecords.reduce((sum, p) => sum + p.netSalary, 0);
+  // Metrics for October (latest finalized run)
+  const octRecords = payroll.filter((p) => p.month === "2026-10");
+  const totalGross = octRecords.reduce((sum, p) => sum + p.grossSalary, 0);
+  const totalDeductions = octRecords.reduce(
+    (sum, p) => sum + p.totalDeductions,
+    0,
+  );
+  const totalNet = octRecords.reduce((sum, p) => sum + p.netSalary, 0);
 
   // Department payroll breakdown
   const deptPayrollData = departments.map((d) => {
@@ -55,10 +63,10 @@ export function PayrollDashboardPage() {
   });
 
   // Deduction breakdown pie chart
-  const pfTotal = sepRecords.reduce((sum, p) => sum + p.pfDeduction, 0);
-  const esicTotal = sepRecords.reduce((sum, p) => sum + p.esicDeduction, 0);
-  const ptTotal = sepRecords.reduce((sum, p) => sum + p.ptDeduction, 0);
-  const tdsTotal = sepRecords.reduce((sum, p) => sum + p.tdsDeduction, 0);
+  const pfTotal = octRecords.reduce((sum, p) => sum + p.pfDeduction, 0);
+  const esicTotal = octRecords.reduce((sum, p) => sum + p.esicDeduction, 0);
+  const ptTotal = octRecords.reduce((sum, p) => sum + p.ptDeduction, 0);
+  const tdsTotal = octRecords.reduce((sum, p) => sum + p.tdsDeduction, 0);
 
   const deductionData = [
     { name: "EPF (12%)", value: pfTotal || 57600, color: "#6366F1" },
@@ -69,8 +77,8 @@ export function PayrollDashboardPage() {
 
   const payrollRunsList = [
     {
-      month: "October 2026",
-      period: "2026-10",
+      month: "November 2026",
+      period: "2026-11",
       employees: employees.length,
       gross: totalGross || 4850000,
       net: totalNet || 4505000,
@@ -78,12 +86,21 @@ export function PayrollDashboardPage() {
       date: "Pending Execution",
     },
     {
-      month: "September 2026",
-      period: "2026-09",
-      employees: sepRecords.length || 32,
+      month: "October 2026",
+      period: "2026-10",
+      employees: octRecords.length || 32,
       gross: totalGross || 4850000,
       net: totalNet || 4505000,
       status: "PROCESSED",
+      date: "31 Oct 2026",
+    },
+    {
+      month: "September 2026",
+      period: "2026-09",
+      employees: 32,
+      gross: 4850000,
+      net: 4505000,
+      status: "LOCKED",
       date: "30 Sep 2026",
     },
     {
@@ -106,7 +123,8 @@ export function PayrollDashboardPage() {
             Payroll & Statutory Control Center
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">
-            Automated Indian statutory payroll computation, PF/ESIC returns, and direct bank batch disbursement.
+            Automated Indian statutory payroll computation, PF/ESIC returns, and
+            direct bank batch disbursement.
           </p>
         </div>
 
@@ -189,7 +207,8 @@ export function PayrollDashboardPage() {
             <div>
               <CardTitle>Department Payroll Cost (₹ Lakhs / Month)</CardTitle>
               <p className="text-xs text-gray-500 mt-0.5">
-                Compensation cost distributed across active business departments.
+                Compensation cost distributed across active business
+                departments.
               </p>
             </div>
             <Badge variant="neutral" size="sm">
@@ -199,8 +218,15 @@ export function PayrollDashboardPage() {
           <CardContent>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={deptPayrollData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <BarChart
+                  data={deptPayrollData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#F1F5F9"
+                  />
                   <XAxis
                     dataKey="name"
                     stroke="#94A3B8"
@@ -225,13 +251,22 @@ export function PayrollDashboardPage() {
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                     }}
                     itemStyle={{ color: "#F8FAFC" }}
-                    labelStyle={{ color: "#94A3B8", fontWeight: 600, marginBottom: "4px" }}
+                    labelStyle={{
+                      color: "#94A3B8",
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                    }}
                     formatter={(val, name, item) => [
                       `₹${val} Lakhs / Month`,
                       item.payload.fullName,
                     ]}
                   />
-                  <Bar dataKey="cost" fill="#0F172A" radius={[6, 6, 0, 0]} barSize={38} />
+                  <Bar
+                    dataKey="cost"
+                    fill="#0F172A"
+                    radius={[6, 6, 0, 0]}
+                    barSize={38}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -243,7 +278,9 @@ export function PayrollDashboardPage() {
           <CardHeader>
             <div>
               <CardTitle>Statutory Deductions</CardTitle>
-              <p className="text-xs text-gray-500 mt-0.5">Statutory compliance split</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Statutory compliance split
+              </p>
             </div>
           </CardHeader>
           <CardContent>
@@ -280,12 +317,22 @@ export function PayrollDashboardPage() {
 
             <div className="space-y-2 mt-2 pt-3 border-t border-gray-100 text-xs">
               {deductionData.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between text-gray-600">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-gray-600"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                    <span className="text-gray-700 font-medium">{item.name}</span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-gray-700 font-medium">
+                      {item.name}
+                    </span>
                   </div>
-                  <span className="font-semibold text-gray-950 font-mono">{formatINR(item.value)}</span>
+                  <span className="font-semibold text-gray-950 font-mono">
+                    {formatINR(item.value)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -328,7 +375,10 @@ export function PayrollDashboardPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {payrollRunsList.map((run, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50/70 transition-colors">
+                  <tr
+                    key={idx}
+                    className="hover:bg-gray-50/70 transition-colors"
+                  >
                     <td className="py-3.5 px-4 font-semibold text-gray-950 text-xs">
                       {run.month}
                     </td>
@@ -347,8 +397,8 @@ export function PayrollDashboardPage() {
                           run.status === "PROCESSED"
                             ? "success"
                             : run.status === "LOCKED"
-                            ? "neutral"
-                            : "warning"
+                              ? "neutral"
+                              : "warning"
                         }
                         size="sm"
                         dot
@@ -371,7 +421,9 @@ export function PayrollDashboardPage() {
                         </Button>
                       ) : (
                         <button
-                          onClick={() => navigate(`/payroll/payslips?month=${run.period}`)}
+                          onClick={() =>
+                            navigate(`/payroll/payslips?month=${run.period}`)
+                          }
                           className="text-xs font-medium text-gray-900 hover:text-black hover:underline inline-flex items-center gap-1"
                         >
                           <span>View Payslips</span>

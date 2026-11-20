@@ -62,7 +62,7 @@ export function AttendanceCorrectionModal({
   const [employeeId, setEmployeeId] = useState(
     prefillEmployeeId || user?.employeeId || employees[0]?.id || "EMP-1001"
   );
-  const [date, setDate] = useState(prefillDate || "2026-10-06");
+  const [date, setDate] = useState(prefillDate || "2026-11-20");
   const [correctionType, setCorrectionType] = useState<CorrectionType>(
     prefillCorrectionType || "MISSING_OUT"
   );

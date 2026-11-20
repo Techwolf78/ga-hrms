@@ -430,7 +430,7 @@ HR Operations`;
   const [designationId, setDesignationId] = useState(designations[0]?.id || "desig-sr-sde");
   const [branchId, setBranchId] = useState(branches[0]?.id || "branch-pune");
   const [managerId, setManagerId] = useState(employees[0]?.id || "EMP-1001");
-  const [joiningDate, setJoiningDate] = useState("2026-10-06");
+  const [joiningDate, setJoiningDate] = useState("2026-11-20");
   const [employmentType, setEmploymentType] = useState<EmploymentType>("FULL_TIME");
   const [shiftId, setShiftId] = useState(shifts[0]?.id || "shift-gen");
   const [workMode, setWorkMode] = useState<"ON_SITE" | "HYBRID" | "REMOTE">("HYBRID");

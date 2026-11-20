@@ -302,8 +302,8 @@ export interface SalaryStructure {
 
 export interface PayrollRecord {
   id: string;
-  month: string; // "2026-10"
-  monthName: string; // "October 2026"
+  month: string; // "2026-11"
+  monthName: string; // "November 2026"
   employeeId: string;
   workingDaysInMonth: number;
   presentDays: number;

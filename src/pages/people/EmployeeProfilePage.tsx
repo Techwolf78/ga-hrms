@@ -257,7 +257,7 @@ export function EmployeeProfilePage() {
               <div className="space-y-6">
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
-                    Attendance This Month (October)
+                    Attendance This Month (November)
                   </h4>
                   <div className="p-4 bg-surface-subtle/50 rounded-xl border border-surface-border space-y-2.5 text-xs">
                     <div className="flex justify-between items-center">

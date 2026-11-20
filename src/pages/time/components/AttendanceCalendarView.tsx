@@ -12,7 +12,7 @@ import { formatDate, formatTime } from "../../../lib/utils";
 
 export interface AttendanceCalendarViewProps {
   records: AttendanceRecord[];
-  currentDate?: string; // e.g. "2026-10-06"
+  currentDate?: string; // e.g. "2026-11-20"
   assignedShift?: Shift;
   holidays?: Holiday[];
   regularizations?: AttendanceRegularization[];
@@ -25,7 +25,7 @@ export interface AttendanceCalendarViewProps {
 
 export function AttendanceCalendarView({
   records,
-  currentDate = "2026-10-06",
+  currentDate = "2026-11-20",
   assignedShift,
   holidays = [],
   regularizations = [],
@@ -35,9 +35,9 @@ export function AttendanceCalendarView({
   isCheckedOut = false,
   onPunch,
 }: AttendanceCalendarViewProps) {
-  // Calendar Navigation: defaulting to October 2026
+  // Calendar Navigation: defaulting to November 2026
   const [selectedYear, setSelectedYear] = useState(2026);
-  const [selectedMonth, setSelectedMonth] = useState(9); // 0-indexed: 9 = October
+  const [selectedMonth, setSelectedMonth] = useState(10); // 0-indexed: 10 = November
   const [selectedDateStr, setSelectedDateStr] = useState<string>(currentDate);
 
   // Compute records map by YYYY-MM-DD

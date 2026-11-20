@@ -8,14 +8,14 @@ Production-grade web platform | Business, functional, technical and operational 
 
 | Document Control | Details |
 | --- | --- |
-| Version | 1.2 — Multi-tenant architecture baseline, configurable business rules, policy versioning, and scope alignment added |
+| Version | 1.4 — Internal In-House HRMS Platform Baseline (Replacing Annual Vendor Software) |
 | Status | Approved Architecture Baseline & Functional Specification |
-| Prepared by | IT Department / Product Owner / Architecture Review Board |
-| Date | 15 October 2026 |
-| Primary audience | Management, HR, Finance, IT, Engineering, QA and Operations |
-| Product direction | Multi-Tenant Enterprise HRMS SaaS Platform — shared application with strict tenant isolation, configurable policy engine, and modular core |
-| Proposed stack | React + Vite; Spring Boot / Java 21; PostgreSQL; REST APIs; JWT-based authentication (subject to architecture approval) |
-| Deployment decision | AWS / Airtel Cloud / other approved hosting — pending technical and commercial evaluation |
+| Prepared by | Internal IT Department / Product Owner / Engineering Lead |
+| Date | 20 November 2026 |
+| Primary audience | Internal Management, HR, Finance, IT, Engineering, and General Staff |
+| Product direction | Proprietary Internal In-House HRMS Tool — purpose-built for company operations to replace annual 3rd-party vendor licenses |
+| Proposed stack | React 18 + Vite; Google Firebase (Authentication, Cloud Firestore, Cloud Storage, Cloud Functions); GoDaddy Web Hosting |
+| Deployment decision | GoDaddy Web Hosting (cPanel / Apache SPA delivery) + Google Firebase (BaaS). 3-Month development and validation runway prior to internal cutover |
 
 
 Confidentiality: This document contains internal product planning information. It is intended for authorized stakeholders and should be reviewed before external distribution.
@@ -64,15 +64,15 @@ The initial release should prioritize the core HR foundation and high-frequency 
 
 | Dimension | Product direction |
 | --- | --- |
-| Product | Multi-tenant cloud HRMS SaaS platform for employee and HR operations across multiple customer organizations |
-| Primary users | Employees, HR administrators, managers, payroll/Finance users, system administrators |
-| Frontend | React + Vite; responsive, accessible enterprise UI |
-| Backend | Spring Boot on Java 21; REST APIs; layered modular architecture |
-| Database | PostgreSQL with tenant scoping, versioned migrations, relational constraints, composite indexes and transactional operations |
-| Authentication | Secure login and session/token lifecycle; JWT is a proposed option subject to security design |
-| Authorization | Server-enforced tenant-isolated role-based and record-level access control with configurable permissions |
-| Deployment | Cloud-hosted production environment; provider selected after cost, region, security and operational review |
-| Product delivery | Phased releases with acceptance criteria, QA gates and documented approvals |
+| Product | Internal in-house HRMS platform built to manage internal workforce operations and eliminate recurring annual 3rd-party HRMS software costs |
+| Primary users | Company employees, HR administrators, managers, finance/payroll users, IT administrators |
+| Frontend | React 18 + Vite; responsive, accessible enterprise UI |
+| Backend | Serverless Backend-as-a-Service (BaaS) via Google Firebase (Auth, Cloud Firestore, Cloud Storage, Cloud Functions) |
+| Database | Cloud Firestore; single-company document collections, real-time sync, offline persistence, composite indexing, and role-based security rules |
+| Authentication | Firebase Authentication; company email logins, session tokens, custom claims for internal role-based access control (SUPER_ADMIN, HR_ADMIN, MANAGER, EMPLOYEE) |
+| Authorization | Database-enforced role-based access control via Firestore and Storage Security Rules |
+| Deployment | GoDaddy Web Hosting for React SPA (.htaccess rewrite rules); Google Firebase for managed cloud backend |
+| Product delivery | Phased 3-month development and internal UAT roadmap prior to live company cutover |
 
 
 
@@ -518,20 +518,17 @@ No HR or payroll rule should be hard-coded from assumption when it materially af
 - Use decimal types and explicit rounding rules for monetary values; do not use floating-point types for money.
 - Define retention, deletion, anonymization and export rules before production data is loaded.
 
-## 10.3 Multi-Tenant Architecture and Configurable Business Rules
+## 10.3 Internal Organization Scope and Configurable Business Rules
 
-Per Architecture Review, the platform baseline is formally committed as a Multi-Tenant SaaS application. The system uses a shared application and database architecture with strict logical tenant isolation enforced at every layer: REST API request interceptors, Hibernate/JPA tenant scoping filters, background scheduling jobs, analytical reports, file storage namespaces, and audit logging. Adding a tenant_id column alone is necessary but not sufficient; tenant context must be immutable and resolved from the authenticated user token for every operation.
+Per Management and Architecture Review, the platform is formally scoped as an **Internal In-House HRMS Tool** developed to replace our annual third-party vendor software. The system operates under a single-organization data scope without multi-tenant partitioning, cross-tenant isolation, or commercial SaaS licensing bloat. Security and governance are enforced cleanly through internal Role-Based Access Control (RBAC) via Firebase Authentication and Firestore Security Rules.
 
+### The Streamlined Configuration Model
 
-### The Three-Tier Configuration Model
+To keep the platform maintainable and free of commercial SaaS over-engineering, configuration is organized into two practical internal tiers:
 
-To prevent architectural conflation, the system strictly separates three distinct configuration dimensions:
+1. Policy Configuration (Company & Branch Level): Defines operational rules for how business logic executes (e.g., attendance grace periods, regularization submission windows, leave accrual schedules, overtime multipliers). Policies apply across the company with branch-level overrides where needed.
 
-1. Feature Entitlements (Platform Level): Defines which business modules and capabilities (e.g. Attendance, Leave, Payroll, Advanced Analytics) are licensed and enabled for a given customer tenant. This is managed by system administrators and determines API route and UI navigation availability.
-
-2. Policy Configuration (Tenant & Organizational Level): Defines versioned rules for how business logic executes (e.g., attendance grace periods, regularization submission windows, leave accrual schedules, overtime multipliers). Policies are assigned hierarchically to legal entities, branches, departments, shifts, or employee groups.
-
-3. Roles and Permissions (User Authorization Level): Defines what individual users can view or execute within their tenant. Permissions are granular and scoped by department, branch, and team reporting structure.
+2. Roles and Permissions (Internal Staff Level): Defines what individual company employees can view or execute based on their assigned role (`SUPER_ADMIN`, `HR_ADMIN`, `MANAGER`, `EMPLOYEE`), scoped by department, branch, and reporting hierarchy. All platform modules are 100% active for the company.
 
 
 ### Policy Versioning and Historical Immutability Guarantee
@@ -667,51 +664,45 @@ At minimum, audit employee creation/changes/status transitions, role and permiss
 # 14. Production Architecture and Technology
 
 
-## 14.1 Proposed Logical Architecture
+## 14.1 Approved Logical Architecture (Serverless BaaS & GoDaddy Hosting)
 
 
-| Layer | Proposed technology / responsibility |
+| Layer | Approved technology / responsibility |
 | --- | --- |
-| Web client | React + Vite; responsive UI, client-side routing, accessible components and API integration. |
-| API / application | Spring Boot on Java 21; REST controllers, DTO validation, application services and centralized error handling. |
-| Domain layer | Business rules for employee lifecycle, attendance, leave, approval workflows and payroll orchestration. |
-| Persistence | PostgreSQL; relational schema, constraints, transactions, indexes and controlled migrations. |
-| Data access | Spring Data JPA/Hibernate or another approved persistence approach; query patterns reviewed for performance. |
-| Authentication | JWT or another approved mechanism; token storage, expiry, refresh and revocation designed explicitly. |
-| File storage | Private object storage or secure managed file service for documents and generated payslips, subject to provider choice. |
-| Notifications | In-app notification records initially; external email/SMS provider selected only after approval. |
-| Operations | CI/CD, environment configuration, secret management, monitoring, logs, backups and recovery procedures. |
+| Web client | React 18 + Vite; responsive UI, client-side routing, accessible components and direct Firebase Client SDK integration. Hosted on GoDaddy Web Hosting. |
+| Backend / BaaS | Google Firebase Serverless Platform; eliminates separate server infrastructure; provides managed Auth, Firestore, Cloud Storage, and Cloud Functions. |
+| Domain layer | Business rules for employee lifecycle, attendance, leave, approval workflows and deterministic payroll snapshots. |
+| Persistence | Cloud Firestore; multi-tenant document collections, ACID batch writes/transactions, real-time snapshot listeners, and offline local cache. |
+| Data access | Firebase Web SDK v10+ with persistent multi-tab local cache enabled. |
+| Authentication | Firebase Authentication; secure session tokens, MFA, custom claims for role-based authorization (SUPER_ADMIN, HR_ADMIN, MANAGER, EMPLOYEE). |
+| File storage | Firebase Cloud Storage; secure encrypted object storage with declarative access rules for dossiers, resumes, and payslips. |
+| Notifications | In-app notification documents in Firestore; optional external notifications via Cloud Functions. |
+| Hosting & Operations | GoDaddy Web Hosting (cPanel / Apache) with `.htaccess` rewrite rules for SPA routing; Firebase project environments; 3-month pre-production development runway. |
 
 
 
 ## 14.2 Architectural Principles
 
-- Start with a modular monolith unless scale, team structure or integration constraints justify distributed services; avoid premature microservices.
-- Keep business logic out of controllers and UI components.
-- Separate API contracts from persistence entities.
-- Use database transactions for workflows that update multiple related records.
-- Keep payroll calculations deterministic, versioned and independently testable.
-- Use database migrations as the source of truth for schema evolution.
-- Separate development, staging/UAT and production environments.
-- Externalize configuration and secrets; never commit production credentials.
-- Use asynchronous jobs only where needed and ensure retry/idempotency behaviour is defined.
+- Leverage Serverless Backend-as-a-Service (Firebase BaaS) to eliminate separate backend server maintenance, container orchestration, and manual API boilerplate.
+- Enforce security authoritatively at the database and storage level using declarative Firestore & Storage Security Rules.
+- Keep business logic in clean domain service abstractions (`hrmsContext` and Firebase repository services).
+- Use Firestore batch writes and atomic transactions for multi-document workflows (e.g. leave deduction, attendance regularizations).
+- Keep payroll calculations deterministic, versioned and independently testable as immutable snapshot records.
+- Enable offline-first capabilities using Firestore persistent multi-tab cache.
+- Maintain a dedicated 3-month development, testing, and staging runway before deploying to live production.
 - Document architecture decisions and material trade-offs in concise Architecture Decision Records (ADRs).
 
-## 14.3 Technology Decisions Requiring Approval
+## 14.3 Approved Technology Baseline
 
-
-| Decision | Options / proposal | Evaluation criteria |
+| Dimension | Approved Selection | Details / Rationale |
 | --- | --- | --- |
-| Cloud provider | AWS, Airtel Cloud or another approved provider | India region/data residency, service availability, security, support, cost, backups, network and team capability |
-| Compute | Managed application platform, VM/container deployment or equivalent | Operational burden, scale, patching, deployment and cost |
-| Database hosting | Managed PostgreSQL preferred for reduced operational burden, or self-managed where justified | Availability, backups, restore, patching, HA, monitoring and cost |
-| Authentication | Approved JWT/session design or enterprise identity provider | Threat model, SSO needs, token lifecycle, MFA and supportability |
-| File storage | Private object storage or approved secure file service | Encryption, access control, retention, signed URL policy, malware scanning and cost |
-| Email delivery | Approved SMTP/API provider if notifications require email | Deliverability, domain setup, cost, logs and retry policy |
-| CI/CD | Approved repository pipeline and deployment mechanism | Review gates, secret handling, rollback, environment promotion and auditability |
-
-
-The PRD does not commit the organization to a cloud provider or cost before a technical/commercial comparison. A deployment decision should include an estimated monthly operating cost, one-time setup effort, backup/restore design and ownership of patching and incidents.
+| Frontend Hosting | GoDaddy Web Hosting | cPanel / Apache shared/business hosting with `.htaccess` rewrite rules, custom domain, and GoDaddy AutoSSL. |
+| Backend Platform | Google Firebase (BaaS) | Fully managed serverless backend; eliminates separate Java/Node servers and simplifies operational maintenance. |
+| Database | Cloud Firestore | Managed real-time NoSQL document database with offline persistence and sub-100ms multi-region query performance. |
+| Authentication | Firebase Authentication | Out-of-the-box identity, JWT session management, OAuth support, and custom claims RBAC. |
+| File Storage | Firebase Cloud Storage | Encrypted storage bucket for employee dossiers, resumes, and payslips with path-based security rules. |
+| Background Jobs | Firebase Cloud Functions | Serverless scheduled crons for monthly payroll calculations, annual leave resets, and automated alerts. |
+| Production Runway | 3 Months | Comprehensive development, hardening, and UAT validation phase; no production deployment during this active sprint. |
 
 
 # 15. Deployment, Environments and Operations
@@ -772,7 +763,7 @@ The team must define backup frequency, retention, encryption, access control, cr
 | Test layer | Coverage |
 | --- | --- |
 | Unit tests | Business rules, validations, date calculations, leave balance logic, payroll formulas and permission utilities. |
-| Integration tests | Spring services, repository/database interactions, transaction boundaries, migrations and API behaviour. |
+| Integration tests | Firebase client services, Firestore security rules validation, transaction boundaries, and client state behaviour. |
 | API contract tests | Request validation, response schemas, status codes, pagination, error formats and authorization. |
 | End-to-end tests | Employee onboarding, attendance regularization, leave approval, payroll preparation and payslip access. |
 | Security tests | Authentication, role/record access, direct API abuse, injection, session/token handling and sensitive export restrictions. |
@@ -867,22 +858,21 @@ Every material change to approved scope should include the business rationale, a
 
 ## 19.1 Current Planning Assumptions
 
-- The product is intended for production use and must use a backend and persistent relational database.
-- React/Vite, Spring Boot/Java 21 and PostgreSQL are the proposed baseline, subject to technical approval.
-- The first release focuses on core HRMS workflows rather than every possible HR software category.
+- The product is intended exclusively as an in-house internal tool for our company and uses a Serverless Backend-as-a-Service (Google Firebase) with GoDaddy Web Hosting.
+- React 18 + Vite, Google Firebase (Auth, Firestore, Storage, Cloud Functions), and GoDaddy Web Hosting form the approved architectural baseline.
+- The active development phase covers a 3-month hardening runway prior to internal company rollout.
 - Payroll functionality must be driven by approved company policy and validated applicable requirements.
-- Cloud hosting will be selected after security, regional availability, operations and cost review.
-- The application must support role-based and record-level access from the first production release.
-- Development and test environments should use synthetic or anonymized data.
+- The application enforces internal role-based and record-level access via Firestore Security Rules and Auth Custom Claims.
+- Development and test environments will use synthetic or anonymized data.
 
 ## 19.2 Open Decisions Register
 
 
 | ID | Decision required | Owner | Status |
 | --- | --- | --- | --- |
-| OD-01 | Single-company deployment or multi-tenant product architecture — Resolved: Multi-tenant SaaS with shared database, row-level tenant isolation, and tenant-scoped configuration. | Management / IT | Approved / Closed |
-| OD-02 | AWS vs Airtel Cloud vs other provider; region and hosting model | IT / Management | Open |
-| OD-03 | Authentication approach, SSO/MFA requirements and account recovery | IT / Security | Open |
+| OD-01 | Single-company deployment or multi-tenant product architecture — Resolved: Single-company internal deployment to replace annual 3rd-party vendor HRMS licenses. Multi-tenant SaaS complexity eliminated. | Management / IT | Approved / Closed |
+| OD-02 | Hosting & Backend Provider — Resolved: GoDaddy Web Hosting for frontend SPA delivery and Google Firebase (BaaS) for Auth, Database, Storage, and serverless compute. | Management / IT | Approved / Closed |
+| OD-03 | Authentication approach — Resolved: Firebase Authentication with Custom Claims RBAC and automated session management. | IT / Security | Approved / Closed |
 | OD-04 | Approved employee fields, mandatory documents and onboarding workflow | HR | Open |
 | OD-05 | Attendance rules, shift patterns, grace periods and import format | HR | Open |
 | OD-06 | Leave categories, accrual, carry-forward, expiry and approval matrix | HR | Open |
