@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -20,14 +20,8 @@ const firebaseConfig = {
 // Initialize Firebase App singleton
 export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firebase Auth
+// Initialize Firebase Auth (Email/Password)
 export const auth = getAuth(app);
-
-// Google Auth Provider configured for single-company HRMS
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: "select_account",
-});
 
 // Initialize Cloud Firestore with multi-tab offline persistence
 export const db = initializeFirestore(app, {
@@ -40,4 +34,3 @@ export const db = initializeFirestore(app, {
 export const storage = getStorage(app);
 
 export default app;
-

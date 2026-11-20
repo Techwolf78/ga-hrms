@@ -1,5 +1,4 @@
 import {
-  signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -7,18 +6,18 @@ import {
   User as FirebaseUser,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { auth, googleProvider, db } from "./config";
+import { auth, db } from "./config";
 import { CurrentUser, UserRole } from "../../types/hrms";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 /**
- * Sign in with Google Popup
+ * Sign in with Email and Password
  */
-export async function signInWithGoogle(): Promise<{ user: FirebaseUser; hrmsUser: CurrentUser }> {
-  const result = await signInWithPopup(auth, googleProvider);
+export async function signInWithEmail(email: string, pass: string): Promise<{ user: FirebaseUser; hrmsUser: CurrentUser }> {
+  const result = await signInWithEmailAndPassword(auth, email, pass);
   const fbUser = result.user;
 
-  // Sync / find HRMS user profile in Firestore
+  // Retrieve user profile from Firestore users/{uid}
   const userRef = doc(db, "users", fbUser.uid);
   const snap = await getDoc(userRef);
 
@@ -26,24 +25,22 @@ export async function signInWithGoogle(): Promise<{ user: FirebaseUser; hrmsUser
   if (snap.exists()) {
     hrmsUser = snap.data() as CurrentUser;
   } else {
-    // Determine default role: admin if matching admin email, otherwise EMPLOYEE
     const isAdmin =
-      fbUser.email?.toLowerCase().includes("admin") ||
-      fbUser.email === "pawarajay7878@gmail.com" ||
-      fbUser.email === "admin@ga-hrms.io";
+      email.toLowerCase().includes("admin") ||
+      email === "pawarajay7878@gmail.com" ||
+      email === "ajay.pawar@ga-hrms.io";
 
     hrmsUser = {
       id: fbUser.uid,
-      name: fbUser.displayName || fbUser.email?.split("@")[0] || "Employee",
-      email: fbUser.email || "",
+      name: fbUser.displayName || email.split("@")[0],
+      email: fbUser.email || email,
       role: (isAdmin ? "SUPER_ADMIN" : "EMPLOYEE") as UserRole,
-      avatar: fbUser.photoURL || "",
+      avatar: "",
       employeeId: isAdmin ? "EMP-ADMIN-01" : `EMP-${fbUser.uid.substring(0, 5).toUpperCase()}`,
-      designation: isAdmin ? "System Administrator" : "Team Member",
+      designation: isAdmin ? "System Administrator" : "Staff Member",
       department: isAdmin ? "System Administration" : "Operations",
     };
 
-    // Save initial user profile in Firestore
     await setDoc(userRef, {
       ...hrmsUser,
       createdAt: serverTimestamp(),
@@ -52,14 +49,6 @@ export async function signInWithGoogle(): Promise<{ user: FirebaseUser; hrmsUser
   }
 
   return { user: fbUser, hrmsUser };
-}
-
-/**
- * Sign in with Email and Password
- */
-export async function signInWithEmail(email: string, pass: string): Promise<FirebaseUser> {
-  const result = await signInWithEmailAndPassword(auth, email, pass);
-  return result.user;
 }
 
 /**
@@ -114,4 +103,3 @@ export async function sendResetPassword(email: string): Promise<void> {
 export function subscribeToAuth(callback: (user: FirebaseUser | null) => void) {
   return onAuthStateChanged(auth, callback);
 }
-

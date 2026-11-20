@@ -3,7 +3,6 @@ import { CurrentUser, UserRole } from "../types/hrms";
 import { storage, STORAGE_KEYS } from "./storage";
 import { DEFAULT_USER } from "./storageInit";
 import {
-  signInWithGoogle,
   signInWithEmail,
   firebaseSignOut,
   subscribeToAuth,
@@ -17,8 +16,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email: string, role: UserRole, customUser?: CurrentUser) => void;
-  loginWithGoogle: () => Promise<CurrentUser>;
-  loginWithEmailPassword: (email: string, pass: string) => Promise<void>;
+  loginWithEmailPassword: (email: string, pass: string) => Promise<CurrentUser>;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
   switchPersona: (personaKey: string) => void;
@@ -29,16 +27,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const DEMO_USERS: Record<UserRole, CurrentUser> = {
   SUPER_ADMIN: {
-    id: "usr-admin-01",
-    name: "System Admin",
-    email: "admin@ga-hrms.io",
+    id: "YWmP98G025VnFtifjgHUd3EpzPy1",
+    name: "Ajay Pawar",
+    email: "ajay.pawar@ga-hrms.io",
     role: "SUPER_ADMIN",
     avatar: "",
-    designation: "System Administrator",
-    department: "System Administration",
+    designation: "Head of Engineering",
+    department: "Engineering & Cloud Platforms",
   },
   HR_ADMIN: {
-    id: "EMP-1002",
+    id: "8pZyI0Yd3kMLoQypufAL32telJz1",
     name: "Priya Sharma",
     email: "priya.sharma@ga-hrms.io",
     role: "HR_ADMIN",
@@ -48,7 +46,7 @@ export const DEMO_USERS: Record<UserRole, CurrentUser> = {
     department: "Human Resources & People Ops",
   },
   MANAGER: {
-    id: "EMP-1003",
+    id: "BpVxx1XXsCcUjtCBIj1cTvMNyqv1",
     name: "Rajesh Kulkarni",
     email: "rajesh.kulkarni@ga-hrms.io",
     role: "MANAGER",
@@ -58,7 +56,7 @@ export const DEMO_USERS: Record<UserRole, CurrentUser> = {
     department: "Engineering & Cloud Platforms",
   },
   EMPLOYEE: {
-    id: "EMP-1004",
+    id: "Tk8Z2hT4wNReoURy2SM7LsemVNy2",
     name: "Ananya Iyer",
     email: "ananya.iyer@ga-hrms.io",
     role: "EMPLOYEE",
@@ -75,7 +73,7 @@ export const DEMO_PERSONAS: Record<string, CurrentUser> = {
   MANAGER: DEMO_USERS.MANAGER,
   EMPLOYEE: DEMO_USERS.EMPLOYEE,
   NEW_HIRE: {
-    id: "EMP-1033",
+    id: "E8KfCV6asYO5MrSYBI32ejQXJgq2",
     name: "Ramesh Patil",
     email: "ramesh.patil@ga-hrms.io",
     role: "EMPLOYEE",
@@ -124,50 +122,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearError = () => setError(null);
 
-  const loginWithGoogle = async (): Promise<CurrentUser> => {
+  const loginWithEmailPassword = async (emailInput: string, pass: string): Promise<CurrentUser> => {
     setIsLoading(true);
     setError(null);
     try {
-      const { hrmsUser } = await signInWithGoogle();
+      const { hrmsUser } = await signInWithEmail(emailInput, pass);
       storage.set(STORAGE_KEYS.USER, hrmsUser);
       setUser(hrmsUser);
       setIsLoading(false);
       return hrmsUser;
     } catch (err: any) {
       setIsLoading(false);
-      const msg = err.message || "Failed to sign in with Google.";
-      setError(msg);
-      throw err;
-    }
-  };
-
-  const loginWithEmailPassword = async (emailInput: string, pass: string): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const fbUser = await signInWithEmail(emailInput, pass);
-      const userDoc = await getDoc(doc(db, "users", fbUser.uid));
-      let hrmsUser: CurrentUser;
-      if (userDoc.exists()) {
-        hrmsUser = userDoc.data() as CurrentUser;
-      } else {
-        hrmsUser = {
-          id: fbUser.uid,
-          name: fbUser.displayName || emailInput.split("@")[0],
-          email: fbUser.email || emailInput,
-          role: "EMPLOYEE",
-          avatar: fbUser.photoURL || "",
-          employeeId: `EMP-${fbUser.uid.substring(0, 5).toUpperCase()}`,
-          designation: "Staff Member",
-          department: "General",
-        };
+      let msg = "Failed to sign in. Please check your email and password.";
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+        msg = "Invalid credentials. Ensure your corporate email and password are correct.";
+      } else if (err.code === "auth/too-many-requests") {
+        msg = "Access temporarily disabled due to many failed attempts. Try again later.";
       }
-      storage.set(STORAGE_KEYS.USER, hrmsUser);
-      setUser(hrmsUser);
-      setIsLoading(false);
-    } catch (err: any) {
-      setIsLoading(false);
-      const msg = err.message || "Failed to sign in. Please check your email and password.";
       setError(msg);
       throw err;
     }
@@ -222,7 +193,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         error,
         login,
-        loginWithGoogle,
         loginWithEmailPassword,
         logout,
         switchRole,
