@@ -986,7 +986,7 @@ HR Operations`;
                         <button
                           type="button"
                           onClick={() => setIsCtcCalculatorOpen(true)}
-                          className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                          className="text-[11px] font-semibold text-[#1F8476] hover:text-[#166C61] flex items-center gap-1"
                         >
                           <Calculator className="w-3 h-3" />
                           <span>Calculate Breakdown</span>
@@ -1016,7 +1016,6 @@ HR Operations`;
                     type="submit"
                     variant="primary"
                     size="md"
-                    className="bg-indigo-600 hover:bg-indigo-700 shadow-sm"
                     rightIcon={<Send className="w-4 h-4" />}
                   >
                     Create Employee & Send Onboarding Invite

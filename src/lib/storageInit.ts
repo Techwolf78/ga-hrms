@@ -26,7 +26,13 @@ import {
   initialOnboardingConfig,
   initialOnboardingDossiers,
 } from "./seedData";
-import { CurrentUser, Employee, OnboardingConfig, CandidateDossier } from "../types/hrms";
+import {
+  CurrentUser,
+  Employee,
+  OnboardingConfig,
+  CandidateDossier,
+  SalaryStructure,
+} from "../types/hrms";
 
 export const DEFAULT_USER: CurrentUser = {
   id: "usr-admin-01",
@@ -73,7 +79,9 @@ export function initializeHrmsStorage(forceReset = false) {
     storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, initialOnboardingDossiers);
     storage.set("hrms_data_month", CURRENT_DATA_MONTH);
     storage.set(STORAGE_KEYS.INITIALIZED, true);
-    console.log("✅ GA-HRMS LocalStorage successfully initialized with November 2026 dataset.");
+    console.log(
+      "✅ GA-HRMS LocalStorage successfully initialized with November 2026 dataset.",
+    );
   } else {
     // Migration guard: ensure new modules exist and have demo data if empty or missing
     const checkAndSeed = (key: string, seed: any[]) => {
@@ -87,32 +95,51 @@ export function initializeHrmsStorage(forceReset = false) {
     checkAndSeed(STORAGE_KEYS.ASSETS, initialAssets);
     checkAndSeed(STORAGE_KEYS.GOALS, initialGoals);
     checkAndSeed(STORAGE_KEYS.APPRAISALS, initialAppraisals);
-    const existingDossiers = storage.get<CandidateDossier[]>(STORAGE_KEYS.ONBOARDING_DOSSIERS, []);
+    const existingDossiers = storage.get<CandidateDossier[]>(
+      STORAGE_KEYS.ONBOARDING_DOSSIERS,
+      [],
+    );
     if (!Array.isArray(existingDossiers) || existingDossiers.length === 0) {
       storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, initialOnboardingDossiers);
     } else {
       const emp1033 = existingDossiers.find((d) => d.employeeId === "EMP-1033");
       if (emp1033) {
         const needsDocsUpdate = !emp1033.uploadedDocuments?.[0]?.url;
-        const needsOfferUpdate = !emp1033.formData?.offeredDesignation || !emp1033.formData?.offeredDepartment || !emp1033.formData?.offeredAnnualCtc;
+        const needsOfferUpdate =
+          !emp1033.formData?.offeredDesignation ||
+          !emp1033.formData?.offeredDepartment ||
+          !emp1033.formData?.offeredAnnualCtc;
         if (needsDocsUpdate || needsOfferUpdate) {
-          const merged = existingDossiers.map((d) => (d.employeeId === "EMP-1033" ? initialOnboardingDossiers[0] : d));
+          const merged = existingDossiers.map((d) =>
+            d.employeeId === "EMP-1033" ? initialOnboardingDossiers[0] : d,
+          );
           storage.set(STORAGE_KEYS.ONBOARDING_DOSSIERS, merged);
         }
       }
     }
 
-    const existingConfig = storage.get<OnboardingConfig | null>(STORAGE_KEYS.ONBOARDING_CONFIG, null);
-    if (!existingConfig || !existingConfig.sections || existingConfig.sections.length === 0) {
+    const existingConfig = storage.get<OnboardingConfig | null>(
+      STORAGE_KEYS.ONBOARDING_CONFIG,
+      null,
+    );
+    if (
+      !existingConfig ||
+      !existingConfig.sections ||
+      existingConfig.sections.length === 0
+    ) {
       storage.set(STORAGE_KEYS.ONBOARDING_CONFIG, initialOnboardingConfig);
     }
 
     // Migration guard: ensure full 31-day demo attendance is present in existing localStorage
     const currentAttendance = storage.get<any[]>(STORAGE_KEYS.ATTENDANCE, []);
     if (Array.isArray(currentAttendance)) {
-      const emp1004Count = currentAttendance.filter((a) => a.employeeId === "EMP-1004").length;
+      const emp1004Count = currentAttendance.filter(
+        (a) => a.employeeId === "EMP-1004",
+      ).length;
       if (emp1004Count < 28) {
-        const emp1004Records = initialAttendanceRecords.filter((a) => a.employeeId === "EMP-1004");
+        const emp1004Records = initialAttendanceRecords.filter(
+          (a) => a.employeeId === "EMP-1004",
+        );
         const mergedAttendance = [
           ...currentAttendance.filter((a) => a.employeeId !== "EMP-1004"),
           ...emp1004Records,
@@ -130,8 +157,107 @@ export function initializeHrmsStorage(forceReset = false) {
       }
     }
 
+    // Migration guard: ensure EMP-1004 has leave requests in existing localStorage
+    const currentLeaves = storage.get<any[]>(STORAGE_KEYS.LEAVE_REQUESTS, []);
+    if (Array.isArray(currentLeaves)) {
+      const hasEmp1004Leaves = currentLeaves.some(
+        (l) => l.employeeId === "EMP-1004",
+      );
+      if (!hasEmp1004Leaves) {
+        const extraLeaves = initialLeaveRequests.filter(
+          (l) => l.employeeId === "EMP-1004" || l.employeeId === "EMP-1003",
+        );
+        storage.set(STORAGE_KEYS.LEAVE_REQUESTS, [
+          ...currentLeaves,
+          ...extraLeaves,
+        ]);
+      }
+    }
+
+    // Migration guard: ensure EMP-1004 & team have hardware assets in existing localStorage
+    const currentAssets = storage.get<any[]>(STORAGE_KEYS.ASSETS, []);
+    if (Array.isArray(currentAssets)) {
+      const hasEmp1004Assets = currentAssets.some(
+        (a) => a.assignedToEmployeeId === "EMP-1004",
+      );
+      if (!hasEmp1004Assets) {
+        const extraAssets = initialAssets.filter((a) =>
+          ["EMP-1003", "EMP-1004", "EMP-1005", "EMP-1006"].includes(
+            a.assignedToEmployeeId || "",
+          ),
+        );
+        storage.set(STORAGE_KEYS.ASSETS, [...currentAssets, ...extraAssets]);
+      }
+    }
+
+    // Migration guard: ensure EMP-1004 & team have performance goals in existing localStorage
+    const currentGoals = storage.get<any[]>(STORAGE_KEYS.GOALS, []);
+    if (Array.isArray(currentGoals)) {
+      const hasEmp1004Goal = currentGoals.some(
+        (g) =>
+          g.ownerEmployeeId === "EMP-1004" && g.title.includes("Biometric"),
+      );
+      if (!hasEmp1004Goal) {
+        const extraGoals = initialGoals.filter(
+          (g) =>
+            g.ownerEmployeeId === "EMP-1004" ||
+            g.ownerEmployeeId === "EMP-1003" ||
+            g.ownerEmployeeId === "EMP-1005",
+        );
+        storage.set(STORAGE_KEYS.GOALS, [
+          ...currentGoals.filter((g) => g.id !== "goal-04"),
+          ...extraGoals,
+        ]);
+      }
+    }
+
+    // Migration guard: ensure EMP-1004 & team have appraisals in existing localStorage
+    const currentAppraisals = storage.get<any[]>(STORAGE_KEYS.APPRAISALS, []);
+    if (Array.isArray(currentAppraisals)) {
+      const hasEmp1004Appr = currentAppraisals.some(
+        (a) => a.employeeId === "EMP-1004",
+      );
+      if (!hasEmp1004Appr) {
+        const extraApprs = initialAppraisals.filter((a) =>
+          ["EMP-1004", "EMP-1003", "EMP-1005"].includes(a.employeeId),
+        );
+        storage.set(STORAGE_KEYS.APPRAISALS, [
+          ...currentAppraisals,
+          ...extraApprs,
+        ]);
+      }
+    }
+
+    // Migration guard: ensure new demo documents are present in existing localStorage
+    const currentDocuments = storage.get<any[]>(STORAGE_KEYS.DOCUMENTS, []);
+    if (Array.isArray(currentDocuments)) {
+      const hasDoc6 = currentDocuments.some((d) => d.id === "doc-06");
+      if (!hasDoc6) {
+        storage.set(STORAGE_KEYS.DOCUMENTS, initialDocuments);
+      }
+    }
+
+    // Migration guard: ensure salary structures reflect revised EPFO wage ceiling (up to ₹3,000 cap)
+    const currentSalaries = storage.get<SalaryStructure[]>(
+      STORAGE_KEYS.SALARY_STRUCTURES,
+      [],
+    );
+    if (Array.isArray(currentSalaries) && currentSalaries.length > 0) {
+      const highEarnersWithOldCap = currentSalaries.some(
+        (s) => s.basic > 15000 && s.pfEmployee === 1800,
+      );
+      if (highEarnersWithOldCap) {
+        storage.set(STORAGE_KEYS.SALARY_STRUCTURES, initialSalaryStructures);
+        storage.set(STORAGE_KEYS.PAYROLL, initialPayrollRecords);
+        storage.set(STORAGE_KEYS.PAYSLIPS, initialPayslips);
+      }
+    }
+
     // Sync Ajay Pawar avatar to Superman in existing localStorage
-    const currentEmployees = storage.get<Employee[]>(STORAGE_KEYS.EMPLOYEES, []);
+    const currentEmployees = storage.get<Employee[]>(
+      STORAGE_KEYS.EMPLOYEES,
+      [],
+    );
     if (Array.isArray(currentEmployees) && currentEmployees.length > 0) {
       let updated = false;
       const syncedEmployees = currentEmployees.map((emp) => {
@@ -157,10 +283,20 @@ export function initializeHrmsStorage(forceReset = false) {
       }
     }
 
-    const currentUser = storage.get<CurrentUser | null>(STORAGE_KEYS.USER, null);
-    if (currentUser && (currentUser.id === "EMP-1001" || currentUser.email === "ajay.pawar@ga-hrms.io")) {
+    const currentUser = storage.get<CurrentUser | null>(
+      STORAGE_KEYS.USER,
+      null,
+    );
+    if (
+      currentUser &&
+      (currentUser.id === "EMP-1001" ||
+        currentUser.email === "ajay.pawar@ga-hrms.io")
+    ) {
       if (currentUser.avatar !== "/avatars/superman.jpg") {
-        storage.set(STORAGE_KEYS.USER, { ...currentUser, avatar: "/avatars/superman.jpg" });
+        storage.set(STORAGE_KEYS.USER, {
+          ...currentUser,
+          avatar: "/avatars/superman.jpg",
+        });
       }
     }
   }

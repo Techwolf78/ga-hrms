@@ -29,10 +29,10 @@ export function Avatar({ src, name = "", size = "md", className, status }: Avata
   };
 
   const statusColorMap = {
-    online: "bg-emerald-500",
-    offline: "bg-gray-400",
-    busy: "bg-rose-500",
-    away: "bg-amber-500",
+    online: "bg-[#188038]",
+    offline: "bg-[#697586]",
+    busy: "bg-[#C62828]",
+    away: "bg-[#E69F00]",
   };
 
   const getInitials = (str: string) => {
@@ -47,12 +47,12 @@ export function Avatar({ src, name = "", size = "md", className, status }: Avata
   // Generate consistent pleasant background gradient based on name
   const getGradient = (str: string) => {
     const gradients = [
-      "from-slate-700 to-gray-900",
-      "from-indigo-600 to-blue-700",
-      "from-blue-600 to-slate-800",
-      "from-slate-800 to-zinc-950",
-      "from-cyan-700 to-blue-800",
-      "from-emerald-700 to-teal-800",
+      "from-[#1F8476] to-[#166C61]",
+      "from-[#4B5D6B] to-[#293E40]",
+      "from-[#032D42] to-[#1F8476]",
+      "from-[#166C61] to-[#032D42]",
+      "from-[#4B5D6B] to-[#1F8476]",
+      "from-[#80B6A1] to-[#166C61]",
     ];
     let hash = 0;
     for (let i = 0; i < str.length; i++) {

@@ -18,6 +18,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useHrms } from "../../lib/hrmsContext";
+import { useAuth } from "../../lib/authContext";
 import { Branch, Company, Employee } from "../../types/hrms";
 import { Avatar } from "../../components/ui/Avatar";
 import { Badge } from "../../components/ui/Badge";
@@ -29,6 +30,12 @@ import { Select } from "../../components/ui/Select";
 import { GaHrmsLogo } from "../../components/ui/GaHrmsLogo";
 
 export function OrganizationPage() {
+  const { user } = useAuth();
+  const role = user?.role || "EMPLOYEE";
+  const isAdmin = role === "SUPER_ADMIN" || role === "HR_ADMIN";
+  const isManager = role === "MANAGER";
+  const isEmployee = role === "EMPLOYEE";
+
   const {
     company,
     branches,
@@ -43,6 +50,18 @@ export function OrganizationPage() {
     updateEmployee,
   } = useHrms();
   const navigate = useNavigate();
+
+  const currentEmployee = employees.find(
+    (e) => e.id === user?.employeeId || e.employeeCode === user?.employeeId
+  );
+  const directReports = employees.filter(
+    (e) =>
+      e.managerId === currentEmployee?.id ||
+      e.managerId === user?.employeeId ||
+      (currentEmployee &&
+        e.departmentId === currentEmployee.departmentId &&
+        e.id !== currentEmployee.id)
+  );
 
   const [expandedBranch, setExpandedBranch] = useState<string | null>(branches[0]?.id || null);
 
@@ -227,42 +246,48 @@ export function OrganizationPage() {
     : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
-            Organization Hierarchy
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
+            Organization Hierarchy & Campuses
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Multi-branch organizational structure, functional department trees, and reporting lines.
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
+            {isAdmin
+              ? "Multi-branch corporate structure, campus governance, and departmental reporting lines."
+              : isManager
+              ? "Explore company branches, cross-functional department alignments, and team location distribution."
+              : "Explore organizational structure, leadership hierarchy, and regional operating campuses."}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            onClick={handleOpenEditCompany}
-            variant="outline"
-            size="md"
-            leftIcon={<Edit2 className="w-4 h-4 text-gray-600" />}
-          >
-            Edit Company
-          </Button>
-          <Button
-            onClick={handleOpenAddBranch}
-            variant="primary"
-            size="md"
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            Add Branch
-          </Button>
-        </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleOpenEditCompany}
+              variant="outline"
+              size="sm"
+              leftIcon={<Edit2 className="w-3.5 h-3.5 text-[#1F8476]" />}
+            >
+              Edit Company
+            </Button>
+            <Button
+              onClick={handleOpenAddBranch}
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="w-3.5 h-3.5" />}
+            >
+              Add Branch
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Root Company Card */}
-      <div className="bg-gray-950 text-white p-6 sm:p-8 rounded-card border border-gray-800 shadow-elevated relative overflow-hidden">
+      <div className="bg-[#032D42] text-white p-4 sm:p-5 rounded-2xl border border-[#032D42] shadow-[0_8px_24px_rgba(3,45,66,0.12)] relative overflow-hidden">
         {/* Subtle decorative glow */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-brand-primary/10 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-[#62D84E]/15 blur-3xl pointer-events-none" />
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-4">
@@ -350,14 +375,16 @@ export function OrganizationPage() {
               {branches.length} Locations
             </Badge>
           </div>
-          <Button
-            onClick={handleOpenAddBranch}
-            variant="ghost"
-            size="sm"
-            leftIcon={<Plus className="w-3.5 h-3.5" />}
-          >
-            Add Campus
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={handleOpenAddBranch}
+              variant="ghost"
+              size="sm"
+              leftIcon={<Plus className="w-3.5 h-3.5" />}
+            >
+              Add Campus
+            </Button>
+          )}
         </div>
 
         {branches.length === 0 ? (
@@ -412,44 +439,55 @@ export function OrganizationPage() {
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100">
+                    {currentEmployee?.branchId === b.id && (
+                      <span className="text-[10px] font-bold text-[#1F8476] bg-[#1F8476]/10 px-2 py-0.5 rounded-full border border-[#1F8476]/30">
+                        Your Campus
+                      </span>
+                    )}
+
+                    {isManager && directReports.filter((dr) => dr.branchId === b.id).length > 0 && (
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                        {directReports.filter((dr) => dr.branchId === b.id).length} Team Members
+                      </span>
+                    )}
+
                     <span className="text-xs font-semibold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200/60">
                       {branchEmployees.length} Staff
                     </span>
 
-                    {/* Interactive Action Buttons */}
-                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      {/* Shift / Transfer Staff button */}
-                      {branchEmployees.length > 0 && branches.length > 1 && (
+                    {/* Admin Actions */}
+                    {isAdmin && (
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        {branchEmployees.length > 0 && branches.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleOpenTransferBranch(b, e)}
+                            className="p-1.5 text-text-muted hover:text-brand-primary hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Shift Staff to Another Branch"
+                          >
+                            <ArrowRightLeft className="w-4 h-4" />
+                          </button>
+                        )}
+
                         <button
                           type="button"
-                          onClick={(e) => handleOpenTransferBranch(b, e)}
-                          className="p-1.5 text-text-muted hover:text-brand-primary hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Shift Staff to Another Branch"
+                          onClick={(e) => handleOpenEditBranch(b, e)}
+                          className="p-1.5 text-text-muted hover:text-gray-950 hover:bg-gray-200/60 rounded-lg transition-colors"
+                          title="Edit Branch Details"
                         >
-                          <ArrowRightLeft className="w-4 h-4" />
+                          <Edit2 className="w-4 h-4" />
                         </button>
-                      )}
 
-                      {/* Edit Branch button */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleOpenEditBranch(b, e)}
-                        className="p-1.5 text-text-muted hover:text-gray-950 hover:bg-gray-200/60 rounded-lg transition-colors"
-                        title="Edit Branch Details"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-
-                      {/* Delete Branch button */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleOpenDeleteBranch(b, e)}
-                        className="p-1.5 text-text-muted hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Delete Branch"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenDeleteBranch(b, e)}
+                          className="p-1.5 text-text-muted hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Delete Branch"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="text-gray-400 pl-1">
                       {isBranchExpanded ? (
@@ -529,9 +567,21 @@ export function OrganizationPage() {
                                         size="xs"
                                       />
                                       <div>
-                                        <p className="text-xs font-semibold text-text-primary group-hover:text-black">
-                                          {emp.firstName} {emp.lastName}
-                                        </p>
+                                        <div className="flex items-center gap-1.5">
+                                          <p className="text-xs font-semibold text-text-primary group-hover:text-black">
+                                            {emp.firstName} {emp.lastName}
+                                          </p>
+                                          {emp.id === currentEmployee?.id && (
+                                            <span className="text-[9px] font-bold text-[#1F8476] bg-[#1F8476]/10 px-1.5 py-0.2 rounded border border-[#1F8476]/30">
+                                              You
+                                            </span>
+                                          )}
+                                          {isManager && directReports.some((dr) => dr.id === emp.id) && (
+                                            <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
+                                              Direct Report
+                                            </span>
+                                          )}
+                                        </div>
                                         <p className="text-[10px] text-text-muted">
                                           {emp.employeeCode} • {designations.find((ds) => ds.id === emp.designationId)?.title || "Staff"}
                                         </p>
@@ -539,8 +589,8 @@ export function OrganizationPage() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                      {/* Individual Shift Employee Button */}
-                                      {branches.length > 1 && (
+                                      {/* Individual Shift Employee Button (Admin Only) */}
+                                      {isAdmin && branches.length > 1 && (
                                         <button
                                           type="button"
                                           onClick={(e) => handleOpenTransferEmployee(emp, e)}

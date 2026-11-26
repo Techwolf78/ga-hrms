@@ -32,6 +32,7 @@ export const DEMO_USERS: Record<UserRole, CurrentUser> = {
     email: "ajay.pawar@ga-hrms.io",
     role: "SUPER_ADMIN",
     avatar: "",
+    employeeId: "EMP-1001",
     designation: "Head of Engineering",
     department: "Engineering & Cloud Platforms",
   },

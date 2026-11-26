@@ -99,7 +99,7 @@ export function RepeatingGroupRenderer({
         <button
           type="button"
           onClick={handleAddItem}
-          className="w-full py-2.5 px-4 border border-dashed border-gray-300 hover:border-gray-900 rounded-xl text-xs font-medium text-gray-700 hover:text-gray-950 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-2.5 px-4 border border-dashed border-[#DDE3EA] hover:border-[#1F8476] rounded-xl text-xs font-medium text-[#1B2430] hover:text-[#1F8476] hover:bg-[#F7F9FB] flex items-center justify-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>Add Another {itemLabel}</span>

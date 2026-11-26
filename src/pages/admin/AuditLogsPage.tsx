@@ -45,14 +45,14 @@ export function AuditLogsPage() {
   const successCount = auditLogs.filter((l) => l.status === "SUCCESS").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
             Security & Audit Trail
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
             Tamper-evident system activity log recording all HR modifications, permissions, and administrative events.
           </p>
         </div>
@@ -60,8 +60,8 @@ export function AuditLogsPage() {
         <Button
           onClick={handleExport}
           variant="outline"
-          size="md"
-          leftIcon={<Download className="w-4 h-4 text-gray-500" />}
+          size="sm"
+          leftIcon={<Download className="w-3.5 h-3.5 text-[#1F8476]" />}
         >
           Export Audit Trail (CSV)
         </Button>
@@ -69,47 +69,47 @@ export function AuditLogsPage() {
 
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-gray-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        <div className="p-5 rounded-3xl border border-[#DDE3EA] bg-white shadow-[0_2px_16px_rgba(3,45,66,0.03)]">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#697586]">
             Total Logged Events
           </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-gray-950 font-mono">{auditLogs.length}</span>
-            <span className="text-xs text-gray-500">events</span>
+            <span className="text-2xl font-bold text-[#032D42] font-mono">{auditLogs.length}</span>
+            <span className="text-xs text-[#697586]">events</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-gray-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        <div className="p-5 rounded-3xl border border-[#DDE3EA] bg-white shadow-[0_2px_16px_rgba(3,45,66,0.03)]">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#697586]">
             Successful Operations
           </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-emerald-700 font-mono">{successCount}</span>
-            <span className="text-xs text-gray-500">verified</span>
+            <span className="text-2xl font-bold text-[#188038] font-mono">{successCount}</span>
+            <span className="text-xs text-[#697586]">verified</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-gray-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        <div className="p-5 rounded-3xl border border-[#DDE3EA] bg-white shadow-[0_2px_16px_rgba(3,45,66,0.03)]">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#697586]">
             Audit Coverage
           </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-gray-950 font-mono">100%</span>
-            <span className="text-xs text-emerald-700 font-medium">All Modules</span>
+            <span className="text-2xl font-bold text-[#032D42] font-mono">100%</span>
+            <span className="text-xs text-[#188038] font-semibold">All Modules</span>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex items-center gap-3 flex-wrap justify-between">
+      <div className="bg-white p-3.5 sm:p-4 rounded-3xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] flex items-center gap-3 flex-wrap justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-[#697586] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by action, actor, or event details..."
-            className="w-full h-9 pl-9 pr-3 text-xs bg-gray-50/70 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="w-full h-9 pl-9 pr-4 text-xs bg-[#F7F9FB] border border-[#DDE3EA] rounded-full text-[#032D42] placeholder-[#697586] focus:bg-white focus:outline-none focus:border-[#1F8476] transition-all"
           />
         </div>
 
@@ -117,7 +117,7 @@ export function AuditLogsPage() {
           <select
             value={selectedModule}
             onChange={(e) => setSelectedModule(e.target.value)}
-            className="h-9 px-3 text-xs bg-gray-50/70 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="h-9 px-3.5 text-xs bg-[#F7F9FB] border border-[#DDE3EA] rounded-full text-[#032D42] focus:bg-white focus:outline-none focus:border-[#1F8476] transition-all"
           >
             <option value="ALL">All Modules</option>
             <option value="EMPLOYEE">Employee</option>

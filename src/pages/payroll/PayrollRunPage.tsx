@@ -15,10 +15,10 @@ import { Button } from "../../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Avatar } from "../../components/ui/Avatar";
-import { formatINR, formatCompactINR } from "../../lib/utils";
+import { formatINR, formatCompactINR, calculateSalaryComponents } from "../../lib/utils";
 
 export function PayrollRunPage() {
-  const { employees, processPayrollRun } = useHrms();
+  const { employees, salaryStructures, processPayrollRun } = useHrms();
   const navigate = useNavigate();
 
   const [selectedMonth, setSelectedMonth] = useState("2026-11");
@@ -26,13 +26,35 @@ export function PayrollRunPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // Helper to compute payroll deductions based on salary structure or ₹25k statutory ceiling
+  const getEmployeePayrollComponents = (emp: (typeof employees)[0]) => {
+    const s = salaryStructures.find(
+      (str) => str.employeeId === emp.id || str.employeeId === emp.employeeCode
+    );
+    if (s) {
+      return {
+        pf: s.pfEmployee,
+        pt: s.professionalTax,
+        tds: s.tdsMonthly,
+        net: emp.monthlyCtc - (s.pfEmployee + s.professionalTax + s.tdsMonthly),
+      };
+    }
+    const comp = calculateSalaryComponents(emp.monthlyCtc);
+    return {
+      pf: comp.pfEmployee,
+      pt: comp.professionalTax,
+      tds: comp.tdsMonthly,
+      net: comp.netSalary,
+    };
+  };
+
   // Compute live calculations
   const selectedEmployees = employees.filter((e) => selectedEmpIds.includes(e.id));
   const totalGross = selectedEmployees.reduce((sum, e) => sum + e.monthlyCtc, 0);
-  const totalDeductions = selectedEmployees.reduce(
-    (sum, e) => sum + 1800 + 200 + Math.round(e.monthlyCtc * 0.08),
-    0
-  );
+  const totalDeductions = selectedEmployees.reduce((sum, e) => {
+    const c = getEmployeePayrollComponents(e);
+    return sum + c.pf + c.pt + c.tds;
+  }, 0);
   const totalNet = totalGross - totalDeductions;
 
   const toggleSelectAll = () => {
@@ -66,14 +88,14 @@ export function PayrollRunPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
             Execute Monthly Payroll Run
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
             Process salaries, calculate statutory EPF, ESIC, and Professional Tax, and generate locked salary registers.
           </p>
         </div>
@@ -148,8 +170,8 @@ export function PayrollRunPage() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-gray-950 text-white flex flex-col justify-center shadow-sm">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            <div className="p-4 rounded-xl bg-[#032D42] text-white flex flex-col justify-center shadow-sm">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#80B6A1]">
                 Net Take-Home Payable
               </span>
               <p className="text-2xl font-bold text-white mt-1 font-mono">
@@ -197,7 +219,7 @@ export function PayrollRunPage() {
                     <th className="py-3 px-4 w-10"></th>
                     <th className="py-3 px-4">Employee</th>
                     <th className="py-3 px-4">Gross CTC</th>
-                    <th className="py-3 px-4 text-rose-700">EPF 12%</th>
+                    <th className="py-3 px-4 text-rose-700">EPF 12% (₹25k Cap)</th>
                     <th className="py-3 px-4 text-rose-700">PT (MH)</th>
                     <th className="py-3 px-4 text-rose-700">TDS</th>
                     <th className="py-3 px-4 text-right font-bold text-gray-950">Net Pay</th>
@@ -206,10 +228,7 @@ export function PayrollRunPage() {
                 <tbody className="divide-y divide-gray-100">
                   {employees.map((emp) => {
                     const isSelected = selectedEmpIds.includes(emp.id);
-                    const pf = 1800;
-                    const pt = 200;
-                    const tds = Math.round(emp.monthlyCtc * 0.08);
-                    const net = emp.monthlyCtc - (pf + pt + tds);
+                    const { pf, pt, tds, net } = getEmployeePayrollComponents(emp);
 
                     return (
                       <tr

@@ -43,8 +43,8 @@ export function DynamicFieldRenderer({
           placeholder={field.placeholder}
           disabled={isReadOnly}
           rows={3}
-          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-gray-950 disabled:bg-gray-50 disabled:text-gray-500 ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#1F8476] focus:border-[#1F8476] disabled:bg-gray-50 disabled:text-gray-500 ${
+            error ? "border-[#C62828]" : "border-[#DDE3EA]"
           }`}
         />
       ) : field.type === "SELECT" ? (
@@ -52,8 +52,8 @@ export function DynamicFieldRenderer({
           value={fieldValue}
           onChange={(e) => onChange(e.target.value)}
           disabled={isReadOnly}
-          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-gray-950 disabled:bg-gray-50 disabled:text-gray-500 ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#1F8476] focus:border-[#1F8476] disabled:bg-gray-50 disabled:text-gray-500 ${
+            error ? "border-[#C62828]" : "border-[#DDE3EA]"
           }`}
         >
           <option value="">{field.placeholder || "Select option..."}</option>
@@ -82,8 +82,8 @@ export function DynamicFieldRenderer({
                 }}
                 className={`px-2.5 py-1 rounded-md text-xs border font-medium transition-colors ${
                   isChecked
-                    ? "bg-gray-900 border-gray-900 text-white"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    ? "bg-[#1F8476] border-[#1F8476] text-white"
+                    : "bg-white border-[#DDE3EA] text-[#1B2430] hover:bg-[#F7F9FB]"
                 }`}
               >
                 {opt.label}
@@ -127,8 +127,8 @@ export function DynamicFieldRenderer({
           value={fieldValue}
           onChange={(e) => onChange(e.target.value)}
           disabled={isReadOnly}
-          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-gray-950 disabled:bg-gray-50 disabled:text-gray-500 ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#1F8476] focus:border-[#1F8476] disabled:bg-gray-50 disabled:text-gray-500 ${
+            error ? "border-[#C62828]" : "border-[#DDE3EA]"
           }`}
         />
       ) : field.type === "NUMBER" ? (
@@ -140,8 +140,8 @@ export function DynamicFieldRenderer({
           disabled={isReadOnly}
           min={field.validation?.min}
           max={field.validation?.max}
-          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-gray-950 disabled:bg-gray-50 disabled:text-gray-500 ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#1F8476] focus:border-[#1F8476] disabled:bg-gray-50 disabled:text-gray-500 ${
+            error ? "border-[#C62828]" : "border-[#DDE3EA]"
           }`}
         />
       ) : (
@@ -152,8 +152,8 @@ export function DynamicFieldRenderer({
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
           disabled={isReadOnly}
-          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-gray-950 disabled:bg-gray-50 disabled:text-gray-500 ${
-            error ? "border-red-500" : "border-gray-300"
+          className={`w-full px-3 py-2 text-xs bg-white border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-[#1F8476] focus:border-[#1F8476] disabled:bg-gray-50 disabled:text-gray-500 ${
+            error ? "border-[#C62828]" : "border-[#DDE3EA]"
           }`}
         />
       )}

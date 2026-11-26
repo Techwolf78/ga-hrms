@@ -9,40 +9,42 @@ export default {
     extend: {
       colors: {
         brand: {
-          primary: "#0F172A",
-          "primary-hover": "#020617",
-          "primary-light": "#F1F5F9",
-          deep: "#030712",
-          "deep-hover": "#000000",
-          cyan: "#0284C7",
-          "cyan-vibrant": "#0284C7",
-          "cyan-dark": "#0369A1",
-          "cyan-light": "#F0F9FF",
+          primary: "#111312",         // primary action / active pill (obsidian)
+          "primary-hover": "#232725", // hover/pressed
+          secondary: "#525866",       // secondary buttons & actions
+          "secondary-hover": "#3B404B",
+          "primary-light": "#ECFCCB", // soft lime background
+          muted: "#A3E635",           // signature lime accent
+          fresh: "#B4F054",           // bright lime accent for dots & highlights
+          deep: "#0D0F0E",            // deep obsidian for dark contrast zone
+          "dark-slate": "#1A1D1B",    // dark card surface
         },
         surface: {
-          bg: "#F8F9FB",
-          card: "#FFFFFF",
-          subtle: "#F3F4F6",
-          border: "#E5E7EB",
+          bg: "#F7F8FA",              // crisp off-white page background
+          card: "#FFFFFF",            // pure white cards, panels, modals
+          subtle: "#F1F3F5",          // secondary soft surfaces
+          border: "#E6E8EC",          // ultra-subtle borders and dividers
           "border-subtle": "#F0F2F5",
+          "green-tint": "rgba(163, 230, 53, 0.14)", // soft lime tint
         },
         text: {
-          primary: "#17171A",
-          secondary: "#6B7280",
-          muted: "#9CA3AF",
+          primary: "#111312",         // headings and main body text
+          secondary: "#68707D",       // labels, captions, and helper text
+          muted: "#9AA2AF",
           inverted: "#FFFFFF",
+          brand: "#4D7C0F",           // readable lime-olive for text on light
         },
         status: {
-          success: "#10B981",
-          "success-bg": "#ECFDF5",
-          warning: "#F59E0B",
-          "warning-bg": "#FFFBEB",
-          danger: "#EF4444",
-          "danger-bg": "#FEF2F2",
-          info: "#3B82F6",
-          "info-bg": "#EFF6FF",
-          purple: "#6366F1",
-          "purple-bg": "#EEF2FF",
+          success: "#15803D",
+          "success-bg": "#ECFCCB",
+          warning: "#B45309",
+          "warning-bg": "#FEF3C7",
+          danger: "#E11D48",
+          "danger-bg": "#FFE4E6",
+          info: "#0F766E",
+          "info-bg": "#CCFBF1",
+          purple: "#6D28D9",
+          "purple-bg": "#EDE9FE",
         }
       },
       fontFamily: {
@@ -50,16 +52,18 @@ export default {
         heading: ["Montserrat", "Inter", "sans-serif"],
       },
       borderRadius: {
-        card: "14px",
+        card: "16px",
         input: "10px",
-        button: "10px",
+        button: "9999px",
       },
       boxShadow: {
-        card: "0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)",
-        "card-hover": "0 4px 12px 0 rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04)",
-        elevated: "0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
-        dropdown: "0 10px 30px 0 rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-        "brand-glow": "0 0 20px 0 rgba(15, 23, 42, 0.12)",
+        lime: "0 2px 14px rgba(98, 216, 78, 0.35)",
+        "lime-lg": "0 4px 20px rgba(98, 216, 78, 0.45)",
+        card: "0 1px 3px 0 rgba(27, 36, 48, 0.04), 0 1px 2px -1px rgba(27, 36, 48, 0.03)",
+        "card-hover": "0 4px 12px 0 rgba(27, 36, 48, 0.06), 0 2px 4px -1px rgba(27, 36, 48, 0.03)",
+        elevated: "0 10px 25px -5px rgba(27, 36, 48, 0.08), 0 8px 10px -6px rgba(27, 36, 48, 0.03)",
+        dropdown: "0 10px 30px 0 rgba(27, 36, 48, 0.10), 0 4px 6px -2px rgba(27, 36, 48, 0.04)",
+        "brand-glow": "0 0 20px 0 rgba(98, 216, 78, 0.25)",
       },
       animation: {
         "fade-in": "fadeIn 0.2s ease-in-out",

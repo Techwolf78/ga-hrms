@@ -1,48 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./lib/authContext";
 import { ToastProvider } from "./lib/toastContext";
-import { HrmsProvider } from "./lib/hrmsContext";
+import { HrmsProvider, useHrms } from "./lib/hrmsContext";
 import { AppShell } from "./components/layout/AppShell";
 import { AddEmployeeModal } from "./pages/people/AddEmployeeModal";
 import { ApplyLeaveModal } from "./pages/leave/ApplyLeaveModal";
 import { AttendanceCorrectionModal } from "./pages/time/AttendanceCorrectionModal";
-
-// Pages
-import { LandingPage } from "./pages/landing/LandingPage";
-import { LoginPage } from "./pages/auth/LoginPage";
-import { DashboardPage } from "./pages/dashboard/DashboardPage";
-import { EmployeesPage } from "./pages/people/EmployeesPage";
-import { EmployeeProfilePage } from "./pages/people/EmployeeProfilePage";
-import { DepartmentsPage } from "./pages/people/DepartmentsPage";
-import { DesignationsPage } from "./pages/people/DesignationsPage";
-import { OrganizationPage } from "./pages/people/OrganizationPage";
-import { DocumentsPage } from "./pages/people/DocumentsPage";
-import { AttendancePage } from "./pages/time/AttendancePage";
-import { RegularizationPage } from "./pages/time/RegularizationPage";
-import { ShiftsPage } from "./pages/time/ShiftsPage";
-import { HolidaysPage } from "./pages/time/HolidaysPage";
-import { LeaveOverviewPage } from "./pages/leave/LeaveOverviewPage";
-import { LeaveRequestsPage } from "./pages/leave/LeaveRequestsPage";
-import { LeavePoliciesPage } from "./pages/leave/LeavePoliciesPage";
-import { PayrollDashboardPage } from "./pages/payroll/PayrollDashboardPage";
-import { SalaryStructurePage } from "./pages/payroll/SalaryStructurePage";
-import { PayrollRunPage } from "./pages/payroll/PayrollRunPage";
-import { PayslipsPage } from "./pages/payroll/PayslipsPage";
-import { ReportsPage } from "./pages/reports/ReportsPage";
-import { UsersRolesPage } from "./pages/admin/UsersRolesPage";
-import { SettingsPage } from "./pages/admin/SettingsPage";
-import { NotificationsPage } from "./pages/admin/NotificationsPage";
-import { AuditLogsPage } from "./pages/admin/AuditLogsPage";
-import { RecruitmentPage } from "./pages/recruitment/RecruitmentPage";
-import { AssetsPage } from "./pages/assets/AssetsPage";
-import { PerformancePage } from "./pages/performance/PerformancePage";
-
-import { SelfOnboardingPage } from "./pages/people/SelfOnboardingPage";
-import { OnboardingSetupPage } from "./pages/admin/OnboardingSetupPage";
-import { useHrms } from "./lib/hrmsContext";
-
 import { UserRole } from "./types/hrms";
+
+// Route-level code-split pages
+const LandingPage = lazy(() => import("./pages/landing/LandingPage").then((m) => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import("./pages/auth/LoginPage").then((m) => ({ default: m.LoginPage })));
+const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const EmployeesPage = lazy(() => import("./pages/people/EmployeesPage").then((m) => ({ default: m.EmployeesPage })));
+const EmployeeProfilePage = lazy(() => import("./pages/people/EmployeeProfilePage").then((m) => ({ default: m.EmployeeProfilePage })));
+const DepartmentsPage = lazy(() => import("./pages/people/DepartmentsPage").then((m) => ({ default: m.DepartmentsPage })));
+const DesignationsPage = lazy(() => import("./pages/people/DesignationsPage").then((m) => ({ default: m.DesignationsPage })));
+const OrganizationPage = lazy(() => import("./pages/people/OrganizationPage").then((m) => ({ default: m.OrganizationPage })));
+const DocumentsPage = lazy(() => import("./pages/people/DocumentsPage").then((m) => ({ default: m.DocumentsPage })));
+const AttendancePage = lazy(() => import("./pages/time/AttendancePage").then((m) => ({ default: m.AttendancePage })));
+const RegularizationPage = lazy(() => import("./pages/time/RegularizationPage").then((m) => ({ default: m.RegularizationPage })));
+const ShiftsPage = lazy(() => import("./pages/time/ShiftsPage").then((m) => ({ default: m.ShiftsPage })));
+const HolidaysPage = lazy(() => import("./pages/time/HolidaysPage").then((m) => ({ default: m.HolidaysPage })));
+const LeaveOverviewPage = lazy(() => import("./pages/leave/LeaveOverviewPage").then((m) => ({ default: m.LeaveOverviewPage })));
+const LeaveRequestsPage = lazy(() => import("./pages/leave/LeaveRequestsPage").then((m) => ({ default: m.LeaveRequestsPage })));
+const LeavePoliciesPage = lazy(() => import("./pages/leave/LeavePoliciesPage").then((m) => ({ default: m.LeavePoliciesPage })));
+const PayrollDashboardPage = lazy(() => import("./pages/payroll/PayrollDashboardPage").then((m) => ({ default: m.PayrollDashboardPage })));
+const SalaryStructurePage = lazy(() => import("./pages/payroll/SalaryStructurePage").then((m) => ({ default: m.SalaryStructurePage })));
+const PayrollRunPage = lazy(() => import("./pages/payroll/PayrollRunPage").then((m) => ({ default: m.PayrollRunPage })));
+const PayslipsPage = lazy(() => import("./pages/payroll/PayslipsPage").then((m) => ({ default: m.PayslipsPage })));
+const ReportsPage = lazy(() => import("./pages/reports/ReportsPage").then((m) => ({ default: m.ReportsPage })));
+const UsersRolesPage = lazy(() => import("./pages/admin/UsersRolesPage").then((m) => ({ default: m.UsersRolesPage })));
+const SettingsPage = lazy(() => import("./pages/admin/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage").then((m) => ({ default: m.NotificationsPage })));
+const AuditLogsPage = lazy(() => import("./pages/admin/AuditLogsPage").then((m) => ({ default: m.AuditLogsPage })));
+const RecruitmentPage = lazy(() => import("./pages/recruitment/RecruitmentPage").then((m) => ({ default: m.RecruitmentPage })));
+const AssetsPage = lazy(() => import("./pages/assets/AssetsPage").then((m) => ({ default: m.AssetsPage })));
+const PerformancePage = lazy(() => import("./pages/performance/PerformancePage").then((m) => ({ default: m.PerformancePage })));
+const SelfOnboardingPage = lazy(() => import("./pages/people/SelfOnboardingPage").then((m) => ({ default: m.SelfOnboardingPage })));
+const OnboardingSetupPage = lazy(() => import("./pages/admin/OnboardingSetupPage").then((m) => ({ default: m.OnboardingSetupPage })));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[240px]">
+      <div className="w-6 h-6 rounded-full border-2 border-[#DDE3EA] border-t-[#1F8476] animate-spin" />
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -88,7 +93,8 @@ function MainAppContent() {
 
   return (
     <>
-      <Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
 
@@ -130,7 +136,7 @@ function MainAppContent() {
           <Route
             path="/people/employees"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <EmployeesPage onOpenAddEmployee={() => setIsAddEmployeeOpen(true)} />
               </RoleRoute>
             }
@@ -138,7 +144,7 @@ function MainAppContent() {
           <Route
             path="/people/employees/:id"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <EmployeeProfilePage />
               </RoleRoute>
             }
@@ -162,7 +168,7 @@ function MainAppContent() {
           <Route
             path="/people/organization"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <OrganizationPage />
               </RoleRoute>
             }
@@ -170,7 +176,7 @@ function MainAppContent() {
           <Route
             path="/people/documents"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <DocumentsPage />
               </RoleRoute>
             }
@@ -181,7 +187,7 @@ function MainAppContent() {
           <Route
             path="/time/regularization"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <RegularizationPage />
               </RoleRoute>
             }
@@ -204,7 +210,7 @@ function MainAppContent() {
           <Route
             path="/leave/requests"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <LeaveRequestsPage onOpenApplyLeave={() => setIsApplyLeaveOpen(true)} />
               </RoleRoute>
             }
@@ -294,7 +300,7 @@ function MainAppContent() {
           <Route
             path="/recruitment"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <RecruitmentPage />
               </RoleRoute>
             }
@@ -302,7 +308,7 @@ function MainAppContent() {
           <Route
             path="/assets"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <AssetsPage />
               </RoleRoute>
             }
@@ -310,16 +316,35 @@ function MainAppContent() {
           <Route
             path="/performance"
             element={
-              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN"]}>
+              <RoleRoute allowedRoles={["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"]}>
                 <PerformancePage />
               </RoleRoute>
             }
           />
 
+          {/* Backwards-compatible legacy short-URL aliases */}
+          <Route path="/employees" element={<Navigate to="/people/employees" replace />} />
+          <Route path="/departments" element={<Navigate to="/people/departments" replace />} />
+          <Route path="/designations" element={<Navigate to="/people/designations" replace />} />
+          <Route path="/organization" element={<Navigate to="/people/organization" replace />} />
+          <Route path="/documents" element={<Navigate to="/people/documents" replace />} />
+          <Route path="/attendance" element={<Navigate to="/time/attendance" replace />} />
+          <Route path="/regularization" element={<Navigate to="/time/regularization" replace />} />
+          <Route path="/shifts" element={<Navigate to="/time/shifts" replace />} />
+          <Route path="/holidays" element={<Navigate to="/time/holidays" replace />} />
+          <Route path="/leave" element={<Navigate to="/leave/overview" replace />} />
+          <Route path="/payroll" element={<Navigate to="/payroll/dashboard" replace />} />
+          <Route path="/admin/onboarding" element={<Navigate to="/admin/onboarding-setup" replace />} />
+          <Route path="/users-roles" element={<Navigate to="/admin/users-roles" replace />} />
+          <Route path="/notifications" element={<Navigate to="/admin/notifications" replace />} />
+          <Route path="/settings" element={<Navigate to="/admin/settings" replace />} />
+          <Route path="/audit-logs" element={<Navigate to="/admin/audit-logs" replace />} />
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>
+      </Suspense>
 
       {/* Global Modals */}
       <AddEmployeeModal
@@ -342,7 +367,7 @@ function MainAppContent() {
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastProvider>
         <AuthProvider>
           <HrmsProvider>

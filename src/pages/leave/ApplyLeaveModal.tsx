@@ -234,13 +234,13 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
           {/* Admin employee selector */}
           {isAdmin && employees.length > 1 && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-[#1B2430] mb-1">
                 Applying on behalf of
               </label>
               <select
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
-                className="w-full h-9 px-3 text-xs bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-gray-950"
+                className="w-full h-9 px-3 text-xs bg-white border border-[#DDE3EA] rounded-xl text-[#1B2430] focus:outline-none focus:border-[#1F8476] transition-all"
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -253,8 +253,8 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
 
           {/* Leave Type Selector (Segmented Cards) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-700">
-              Leave Type <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-[#1B2430]">
+              Leave Type <span className="text-[#C62828]">*</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {leaveTypes.map((type) => {
@@ -262,7 +262,7 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
                 const used = leaveRequests
                   .filter(
                     (l) =>
-                      l.employeeId === employeeId &&
+                      (l.employeeId === employeeId || l.employeeId === user?.employeeId) &&
                       l.leaveTypeId === type.id &&
                       l.status === "APPROVED"
                   )
@@ -275,14 +275,14 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
                     type="button"
                     onClick={() => setLeaveTypeId(type.id)}
                     className={cn(
-                      "p-2.5 rounded-lg border text-left transition-all",
+                      "p-2.5 rounded-xl border text-left transition-all",
                       isSelected
-                        ? "border-gray-950 bg-gray-950 text-white shadow-xs"
-                        : "border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50"
+                        ? "border-[#1F8476] bg-[#1F8476] text-white shadow-xs font-semibold ring-2 ring-[#1F8476]/20"
+                        : "border-[#DDE3EA] bg-white text-[#1B2430] hover:border-[#80B6A1] hover:bg-[#F7F9FB]"
                     )}
                   >
                     <div className="text-xs font-semibold truncate">{type.name}</div>
-                    <div className={cn("text-[11px] mt-0.5", isSelected ? "text-gray-300" : "text-gray-500")}>
+                    <div className={cn("text-[11px] mt-0.5", isSelected ? "text-emerald-100" : "text-[#697586]")}>
                       {remaining}d left
                     </div>
                   </button>
@@ -293,18 +293,18 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
 
           {/* Duration Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-700">
-              Duration <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-[#1B2430]">
+              Duration <span className="text-[#C62828]">*</span>
             </label>
-            <div className="grid grid-cols-3 p-1 bg-gray-100 rounded-lg gap-1 text-xs">
+            <div className="grid grid-cols-3 p-1 bg-[#F0F4F8] rounded-xl gap-1 text-xs">
               <button
                 type="button"
                 onClick={() => handleDurationChange("FULL_DAY")}
                 className={cn(
-                  "py-1.5 rounded-md font-medium transition-all text-center",
+                  "py-1.5 rounded-lg transition-all text-center",
                   duration === "FULL_DAY"
-                    ? "bg-white text-gray-950 shadow-xs font-semibold"
-                    : "text-gray-600 hover:text-gray-950"
+                    ? "bg-white text-[#1F8476] shadow-xs font-bold"
+                    : "text-[#697586] hover:text-[#1B2430]"
                 )}
               >
                 Full Day
@@ -313,10 +313,10 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
                 type="button"
                 onClick={() => handleDurationChange("FIRST_HALF")}
                 className={cn(
-                  "py-1.5 rounded-md font-medium transition-all text-center",
+                  "py-1.5 rounded-lg transition-all text-center",
                   duration === "FIRST_HALF"
-                    ? "bg-white text-gray-950 shadow-xs font-semibold"
-                    : "text-gray-600 hover:text-gray-950"
+                    ? "bg-white text-[#1F8476] shadow-xs font-bold"
+                    : "text-[#697586] hover:text-[#1B2430]"
                 )}
               >
                 First Half
@@ -325,10 +325,10 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
                 type="button"
                 onClick={() => handleDurationChange("SECOND_HALF")}
                 className={cn(
-                  "py-1.5 rounded-md font-medium transition-all text-center",
+                  "py-1.5 rounded-lg transition-all text-center",
                   duration === "SECOND_HALF"
-                    ? "bg-white text-gray-950 shadow-xs font-semibold"
-                    : "text-gray-600 hover:text-gray-950"
+                    ? "bg-white text-[#1F8476] shadow-xs font-bold"
+                    : "text-[#697586] hover:text-[#1B2430]"
                 )}
               >
                 Second Half
@@ -339,20 +339,20 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                From Date <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-[#1B2430] mb-1">
+                From Date <span className="text-[#C62828]">*</span>
               </label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => handleFromDateChange(e.target.value)}
                 required
-                className="w-full h-9 px-3 text-xs bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-gray-950"
+                className="w-full h-9 px-3 text-xs bg-white border border-[#DDE3EA] rounded-xl text-[#1B2430] focus:outline-none focus:border-[#1F8476] transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                To Date <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-[#1B2430] mb-1">
+                To Date <span className="text-[#C62828]">*</span>
               </label>
               <input
                 type="date"
@@ -361,27 +361,27 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
                 disabled={duration !== "FULL_DAY"}
                 required
                 className={cn(
-                  "w-full h-9 px-3 text-xs border rounded-lg focus:outline-none",
+                  "w-full h-9 px-3 text-xs border rounded-xl focus:outline-none transition-all",
                   duration !== "FULL_DAY"
-                    ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-white border-gray-200 text-gray-900 focus:border-gray-950"
+                    ? "bg-[#F7F9FB] border-[#DDE3EA] text-[#697586] cursor-not-allowed"
+                    : "bg-white border-[#DDE3EA] text-[#1B2430] focus:border-[#1F8476]"
                 )}
               />
             </div>
           </div>
 
           {/* Compact summary */}
-          <div className="flex items-center justify-between text-xs py-2 px-3 bg-gray-50 border border-gray-200/70 rounded-lg">
-            <span className="text-gray-600">
-              Duration: <strong className="text-gray-950 font-semibold">{requestedDays} {requestedDays === 1 ? "day" : "days"}</strong>
+          <div className="flex items-center justify-between text-xs py-2 px-3 bg-[#F7F9FB] border border-[#DDE3EA] rounded-xl">
+            <span className="text-[#697586]">
+              Duration: <strong className="text-[#1B2430] font-semibold">{requestedDays} {requestedDays === 1 ? "day" : "days"}</strong>
             </span>
-            <span className="text-gray-300">•</span>
-            <span className="text-gray-600">
-              Available: <strong className="text-gray-950 font-semibold">{availableQuota} days</strong>
+            <span className="text-[#DDE3EA]">•</span>
+            <span className="text-[#697586]">
+              Available: <strong className="text-[#1B2430] font-semibold">{availableQuota} days</strong>
             </span>
-            <span className="text-gray-300">•</span>
-            <span className={cn(projectedBalance < 0 ? "text-amber-700 font-semibold" : "text-gray-600")}>
-              Remaining: <strong className={projectedBalance < 0 ? "text-amber-700" : "text-gray-950"}>{projectedBalance} days</strong>
+            <span className="text-[#DDE3EA]">•</span>
+            <span className={cn(projectedBalance < 0 ? "text-[#C62828] font-semibold" : "text-[#697586]")}>
+              Remaining: <strong className={projectedBalance < 0 ? "text-[#C62828]" : "text-[#1B2430]"}>{projectedBalance} days</strong>
               {projectedBalance < 0 && " (Exceeded)"}
             </span>
           </div>
@@ -389,10 +389,10 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
           {/* Reason */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-gray-700">
-                Reason <span className="text-rose-500">*</span>
+              <label className="text-xs font-semibold text-[#1B2430]">
+                Reason <span className="text-[#C62828]">*</span>
               </label>
-              <span className="text-[11px] text-gray-400">{reason.length}/250</span>
+              <span className="text-[11px] text-[#697586]">{reason.length}/250</span>
             </div>
             <textarea
               value={reason}
@@ -401,7 +401,7 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
               }}
               placeholder="Brief reason for your absence..."
               rows={2}
-              className="w-full p-2.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-950 resize-none"
+              className="w-full p-2.5 text-xs bg-white border border-[#DDE3EA] rounded-xl text-[#1B2430] placeholder-[#697586] focus:outline-none focus:border-[#1F8476] resize-none transition-all"
               required
             />
           </div>
@@ -409,16 +409,16 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
           {/* Supporting Document (Optional) */}
           <div>
             {attachment ? (
-              <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs">
+              <div className="flex items-center justify-between px-3 py-1.5 bg-[#F7F9FB] border border-[#DDE3EA] rounded-xl text-xs">
                 <div className="flex items-center gap-2 truncate">
-                  <Paperclip className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                  <span className="font-medium text-gray-900 truncate">{attachment.name}</span>
-                  <span className="text-gray-500 shrink-0">({formatFileSize(attachment.size)})</span>
+                  <Paperclip className="w-3.5 h-3.5 text-[#697586] shrink-0" />
+                  <span className="font-semibold text-[#1B2430] truncate">{attachment.name}</span>
+                  <span className="text-[#697586] shrink-0">({formatFileSize(attachment.size)})</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setAttachment(null)}
-                  className="text-gray-400 hover:text-gray-900 p-1"
+                  className="text-[#697586] hover:text-[#1B2430] p-1"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -427,9 +427,9 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-950 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-[#697586] hover:text-[#1B2430] transition-colors"
               >
-                <Paperclip className="w-3.5 h-3.5 text-gray-400" />
+                <Paperclip className="w-3.5 h-3.5 text-[#697586]" />
                 <span>Attach document (optional)</span>
               </button>
             )}
@@ -443,13 +443,14 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2.5">
+          <div className="pt-3 border-t border-[#DDE3EA] flex items-center justify-end gap-2.5">
             <Button
               variant="outline"
               size="sm"
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="text-xs border-[#DDE3EA] rounded-xl"
             >
               Cancel
             </Button>
@@ -459,6 +460,7 @@ export function ApplyLeaveModal({ isOpen, onClose }: ApplyLeaveModalProps) {
               type="submit"
               isLoading={isSubmitting}
               disabled={isSubmitting || !reason.trim() || (duration === "FULL_DAY" && toDate < fromDate)}
+              className="text-xs bg-[#1F8476] hover:bg-[#166C61] text-white rounded-xl shadow-xs"
             >
               Submit Request
             </Button>

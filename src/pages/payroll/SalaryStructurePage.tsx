@@ -21,29 +21,29 @@ export function SalaryStructurePage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
             Salary Structures & Statutory Slabs
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Component decomposition: Basic 50%, HRA 25%, Special Allowance 25%, EPF 12%, and State PT.
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
+            Component decomposition: Basic 50%, HRA 25%, Special Allowance 25%, EPF 12% (revised ₹25,000 statutory ceiling), and State PT.
           </p>
         </div>
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex items-center gap-3 flex-wrap justify-between">
+      <div className="bg-white p-3.5 sm:p-4 rounded-3xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] flex items-center gap-3 flex-wrap justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-[#697586] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search employee by name or ID..."
-            className="w-full h-9 pl-9 pr-3 text-xs bg-gray-50/70 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="w-full h-9 pl-9 pr-4 text-xs bg-[#F7F9FB] border border-[#DDE3EA] rounded-full text-[#032D42] placeholder-[#697586] focus:bg-white focus:outline-none focus:border-[#1F8476] transition-all"
           />
         </div>
 
@@ -51,7 +51,7 @@ export function SalaryStructurePage() {
           <select
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
-            className="h-9 px-3 text-xs bg-gray-50/70 border border-gray-200 rounded-lg text-gray-800 focus:bg-white focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="h-9 px-3.5 text-xs bg-[#F7F9FB] border border-[#DDE3EA] rounded-full text-[#032D42] focus:bg-white focus:outline-none focus:border-[#1F8476] transition-all"
           >
             <option value="ALL">All Departments</option>
             {departments.map((d) => (
@@ -67,7 +67,7 @@ export function SalaryStructurePage() {
                 setSelectedDept("ALL");
                 setSearchQuery("");
               }}
-              className="h-9 px-2.5 text-xs text-gray-500 hover:text-gray-950 hover:bg-gray-100 rounded-lg flex items-center gap-1 transition-colors"
+              className="h-9 px-3 text-xs text-[#4B5D6B] hover:text-[#032D42] hover:bg-[#F7F9FB] rounded-full flex items-center gap-1 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset</span>
@@ -77,17 +77,17 @@ export function SalaryStructurePage() {
       </div>
 
       {/* Salary Structures Table */}
-      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
+      <div className="bg-white rounded-3xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+              <tr className="bg-[#F7F9FB] border-b border-[#EDF1F6] text-[11px] uppercase tracking-wider text-[#697586] font-semibold">
                 <th className="py-3 px-4">Employee</th>
                 <th className="py-3 px-4">Monthly CTC</th>
                 <th className="py-3 px-4">Basic (50%)</th>
                 <th className="py-3 px-4">HRA (25%)</th>
                 <th className="py-3 px-4">Special Allowance</th>
-                <th className="py-3 px-4 text-rose-700">PF (12%)</th>
+                <th className="py-3 px-4 text-rose-700">PF 12% (₹25k Cap)</th>
                 <th className="py-3 px-4 text-rose-700">PT (MH)</th>
                 <th className="py-3 px-4 text-rose-700">Est. TDS</th>
                 <th className="py-3 px-4 text-right font-bold text-gray-950">Net Salary</th>
@@ -106,7 +106,7 @@ export function SalaryStructurePage() {
                   const basic = s?.basic || Math.round(emp.monthlyCtc * 0.5);
                   const hra = s?.hra || Math.round(emp.monthlyCtc * 0.25);
                   const special = s?.specialAllowance || Math.round(emp.monthlyCtc * 0.25);
-                  const pf = s?.pfEmployee || 1800;
+                  const pf = s?.pfEmployee || Math.min(3000, Math.round(basic * 0.12));
                   const pt = s?.professionalTax || 200;
                   const tds = s?.tdsMonthly || Math.round(emp.monthlyCtc * 0.08);
                   const net = emp.monthlyCtc - (pf + pt + tds);

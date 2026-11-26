@@ -221,97 +221,79 @@ export function AttendancePage() {
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb Context & Page Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs text-text-muted">
-          <Link
-            to="/time/attendance"
-            className="hover:text-text-primary transition-colors"
-          >
-            Time & Attendance
-          </Link>
-          <span>/</span>
-          <span className="text-text-secondary font-medium">Attendance</span>
+      {/* Page Header Card */}
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
+            Attendance
+          </h1>
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
+            {pageSubtitle}
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-text-primary tracking-tight">
-              Attendance
-            </h1>
-            <p className="text-xs text-text-secondary mt-0.5">
-              {pageSubtitle}
-            </p>
-          </div>
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          {/* Date Selector for Admin and Manager Daily Registers */}
+          {!isPersonalView && (
+            <div className="flex items-center gap-1 bg-[#F7F9FB] px-2.5 py-1 rounded-full border border-[#DDE3EA] h-9">
+              <button
+                onClick={() => {
+                  const d = new Date(currentDate);
+                  d.setDate(d.getDate() - 1);
+                  setCurrentDate(d.toISOString().split("T")[0]);
+                }}
+                className="p-1 rounded-full text-[#697586] hover:text-[#032D42] hover:bg-white transition-colors"
+                title="Previous Day"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
 
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {/* Date Selector for Admin and Manager Daily Registers */}
-            {!isPersonalView && (
-              <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-input border border-surface-border shadow-card h-8">
-                <button
-                  onClick={() => {
-                    const d = new Date(currentDate);
-                    d.setDate(d.getDate() - 1);
-                    setCurrentDate(d.toISOString().split("T")[0]);
-                  }}
-                  className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
-                  title="Previous Day"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-
-                <div className="flex items-center gap-1.5 px-1.5 text-xs font-semibold text-text-primary whitespace-nowrap">
-                  <Calendar className="w-3.5 h-3.5 text-text-muted" />
-                  <span>{formatDate(currentDate)}</span>
-                </div>
-
-                <button
-                  onClick={() => {
-                    const d = new Date(currentDate);
-                    d.setDate(d.getDate() + 1);
-                    setCurrentDate(d.toISOString().split("T")[0]);
-                  }}
-                  className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
-                  title="Next Day"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+              <div className="flex items-center gap-1.5 px-2 text-xs font-semibold text-[#032D42] whitespace-nowrap">
+                <Calendar className="w-3.5 h-3.5 text-[#1F8476]" />
+                <span>{formatDate(currentDate)}</span>
               </div>
-            )}
 
-            {/* Primary Action Button */}
-            <Button
-              onClick={() => handleOpenCorrection()}
-              variant={isPersonalView ? "primary" : "outline"}
-              size="sm"
-              className="h-8 text-xs font-medium whitespace-nowrap"
-              leftIcon={<ClockAlert className="w-3.5 h-3.5" />}
-            >
-              {isPersonalView ? "Request Regularization" : "Manual Correction"}
-            </Button>
-          </div>
+              <button
+                onClick={() => {
+                  const d = new Date(currentDate);
+                  d.setDate(d.getDate() + 1);
+                  setCurrentDate(d.toISOString().split("T")[0]);
+                }}
+                className="p-1 rounded-full text-[#697586] hover:text-[#032D42] hover:bg-white transition-colors"
+                title="Next Day"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Primary Action Button */}
+          <Button
+            onClick={() => handleOpenCorrection()}
+            variant={isPersonalView ? "primary" : "outline"}
+            size="md"
+            leftIcon={<ClockAlert className="w-3.5 h-3.5" />}
+          >
+            {isPersonalView ? "Request Regularization" : "Manual Correction"}
+          </Button>
         </div>
       </div>
 
-      {/* Dual-Persona Module Navigation Tabs */}
-      <div className="flex items-center gap-1 border-b border-surface-border overflow-x-auto scrollbar-none pt-1">
+      {/* Compact Pill Module Navigation Tabs */}
+      <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#DDE3EA] shadow-[0_2px_12px_rgba(3,45,66,0.03)] gap-1 overflow-x-auto scrollbar-none max-w-full">
         {navTabs.map((tab) => {
           const isActive = activeNavTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveNavTab(tab.id)}
-              className={`flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                 isActive
-                  ? "border-brand-primary text-text-primary font-semibold"
-                  : "border-transparent text-text-secondary hover:text-text-primary hover:border-surface-border"
+                  ? "bg-[#032D42] text-white shadow-xs"
+                  : "text-[#4B5D6B] hover:text-[#032D42] hover:bg-[#F7F9FB]"
               }`}
             >
-              <span
-                className={isActive ? "text-brand-primary" : "text-text-muted"}
-              >
-                {tab.icon}
-              </span>
+              <span className={isActive ? "text-[#62D84E]" : "text-[#1F8476]"}>{tab.icon}</span>
               <span>{tab.label}</span>
               {tab.badge !== undefined && (
                 <span

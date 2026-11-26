@@ -92,7 +92,7 @@ export function AdminAttendanceView({
     { label: "Late Arrivals", value: lateCount, dotColor: "bg-amber-500" },
     { label: "Half Day", value: halfDayCount, dotColor: "bg-gray-400" },
     { label: "Absent", value: absentCount, dotColor: "bg-rose-500" },
-    { label: "On Leave", value: leaveCount, dotColor: "bg-blue-500" },
+    { label: "On Leave", value: leaveCount, dotColor: "bg-[#1F8476]" },
     {
       label: "Exceptions",
       value: exceptionsQueue.length,

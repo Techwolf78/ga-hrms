@@ -347,8 +347,8 @@ export function GlobalSearchModal({
                 onClick={() => setActiveCategory(cat.id)}
                 className={`px-2.5 py-1 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
                   isActive
-                    ? "bg-white text-gray-950 shadow-2xs font-semibold border border-gray-200/80"
-                    : "text-gray-600 hover:text-gray-950 hover:bg-white/60"
+                    ? "bg-[#1F8476] text-white shadow-2xs font-semibold"
+                    : "text-[#697586] hover:text-[#1B2430] hover:bg-white"
                 }`}
               >
                 {cat.label}
@@ -496,8 +496,8 @@ export function GlobalSearchModal({
                             aria-selected={isSelected}
                             className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors text-xs ${
                               isSelected
-                                ? "bg-gray-100 text-gray-950 font-medium"
-                                : "text-gray-700 hover:bg-gray-50"
+                                ? "bg-[#E9F5F3] text-[#1F8476] font-medium"
+                                : "text-[#1B2430] hover:bg-[#F7F9FB]"
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -508,7 +508,7 @@ export function GlobalSearchModal({
                                   className="w-5 h-5 rounded-full object-cover shrink-0"
                                 />
                               ) : item.initials ? (
-                                <div className="w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                <div className="w-5 h-5 rounded-full bg-[#F0F4F8] text-[#4B5D6B] text-[10px] font-bold flex items-center justify-center shrink-0">
                                   {item.initials}
                                 </div>
                               ) : (
@@ -521,14 +521,14 @@ export function GlobalSearchModal({
                                 <SearchHighlight
                                   text={item.title}
                                   query={query}
-                                  className="text-gray-900 font-medium"
+                                  className="text-[#1B2430] font-medium"
                                 />
                                 {item.subtitle && (
-                                  <span className="text-gray-400 font-normal ml-2 hidden sm:inline">
+                                  <span className="text-[#697586] font-normal ml-2 hidden sm:inline">
                                     <SearchHighlight
                                       text={item.subtitle}
                                       query={query}
-                                      className="text-gray-400"
+                                      className="text-[#697586]"
                                     />
                                   </span>
                                 )}
@@ -540,19 +540,19 @@ export function GlobalSearchModal({
                                 <span
                                   className={`text-[10px] px-1.5 py-0.5 rounded font-mono border ${
                                     item.badgeVariant === "success"
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                                      ? "bg-[#E6F4EA] text-[#188038] border-[#CEEAD6]"
                                       : item.badgeVariant === "warning"
-                                      ? "bg-amber-50 text-amber-700 border-amber-200/80"
+                                      ? "bg-[#FEF7E0] text-[#1B2430] border-[#FEEFC3]"
                                       : item.badgeVariant === "danger"
-                                      ? "bg-rose-50 text-rose-700 border-rose-200/80"
-                                      : "bg-gray-100 text-gray-600 border-gray-200/60"
+                                      ? "bg-[#FCE8E6] text-[#C62828] border-[#FAD2CF]"
+                                      : "bg-[#F0F4F8] text-[#4B5D6B] border-[#DDE3EA]"
                                   }`}
                                 >
                                   {item.badge}
                                 </span>
                               )}
                               {isSelected && (
-                                <CornerDownLeft className="w-3 h-3 text-gray-400 shrink-0" />
+                                <CornerDownLeft className="w-3 h-3 text-[#1F8476] shrink-0" />
                               )}
                             </div>
                           </button>

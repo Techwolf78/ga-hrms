@@ -6,6 +6,7 @@ import { GlobalSearchModal } from "./GlobalSearchModal";
 
 import { useHrms } from "../../lib/hrmsContext";
 import { cn } from "../../lib/utils";
+import { GaHrmsLogo } from "../ui/GaHrmsLogo";
 
 export interface AppShellProps {
   onOpenAddEmployee?: () => void;
@@ -23,6 +24,7 @@ export function AppShell({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const location = useLocation();
+  const isDashboard = location.pathname === "/dashboard";
 
   // Scroll to top on route change
   useEffect(() => {
@@ -52,21 +54,72 @@ export function AppShell({
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="relative flex-1 flex flex-col min-w-0 min-h-screen bg-[#F7F8FA]">
+        {/* Ambient Mesh Gradient & Technical Grid Overlay (Dashboard only) */}
+        {isDashboard && (
+          <div
+            className="absolute top-0 inset-x-0 h-[560px] pointer-events-none overflow-hidden z-0"
+            style={{ contain: "strict" }}
+            aria-hidden="true"
+          >
+            {/* Signature Lime Glow (Top-Right) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-140px",
+                right: "-60px",
+                width: "620px",
+                height: "480px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle at 50% 45%, rgba(163, 230, 53, 0.24) 0%, rgba(190, 242, 100, 0.12) 45%, rgba(163, 230, 53, 0) 72%)",
+                filter: "blur(75px)",
+                WebkitFilter: "blur(75px)",
+                transform: "translate3d(0, 0, 0)",
+              }}
+            />
+            {/* Soft Mint Glow (Top-Left) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-100px",
+                left: "10%",
+                width: "520px",
+                height: "360px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle at 50% 50%, rgba(236, 252, 203, 0.75) 0%, rgba(163, 230, 53, 0.10) 50%, transparent 72%)",
+                filter: "blur(60px)",
+                WebkitFilter: "blur(60px)",
+                transform: "translate3d(0, 0, 0)",
+              }}
+            />
+          </div>
+        )}
+
         <Topbar
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
           onOpenSearch={() => setSearchModalOpen(true)}
+          floatingPill
         />
 
         <main
           className={cn(
-            "flex-1 w-full animate-fade-in transition-all duration-200",
+            "relative z-10 flex-1 w-full flex flex-col animate-fade-in transition-all duration-200",
             settings?.compactMode
-              ? "p-3 sm:p-4 lg:p-5"
-              : "p-4 sm:p-6 lg:p-8"
+              ? "p-1.5 sm:p-2"
+              : "p-2 sm:p-3"
           )}
         >
-          <Outlet />
+          <div className="flex-1">
+            <Outlet />
+          </div>
+
+          <footer className="mt-4 pt-2.5 pb-1 border-t border-[#DDE3EA]/70 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#697586]">
+            <GaHrmsLogo size="xs" variant="light" />
+            <span>© 2026 GA-HRMS. All rights reserved.</span>
+            <span>Baner, Pune 411045</span>
+          </footer>
         </main>
       </div>
 

@@ -4,7 +4,6 @@ import {
   Users,
   Search,
   Download,
-  Upload,
   Plus,
   Eye,
   Trash2,
@@ -14,7 +13,6 @@ import {
   ChevronRight,
   Filter,
   UserCheck,
-  UserX,
   Building2,
   X,
   Calculator,
@@ -23,15 +21,21 @@ import {
   FileCheck,
   FileWarning,
   Settings,
+  ShieldCheck,
+  Briefcase,
+  User,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { useHrms } from "../../lib/hrmsContext";
+import { useAuth } from "../../lib/authContext";
 import { useToast } from "../../lib/toastContext";
 import { Employee, EmploymentStatus } from "../../types/hrms";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Avatar } from "../../components/ui/Avatar";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
-import { formatDate, exportToCsv } from "../../lib/utils";
+import { exportToCsv } from "../../lib/utils";
 import { CtcCalculatorModal } from "./CtcCalculatorModal";
 import { DossierReviewDrawer } from "../../components/onboarding/DossierReviewDrawer";
 
@@ -39,17 +43,67 @@ export interface EmployeesPageProps {
   onOpenAddEmployee?: () => void;
 }
 
-type AccountTab = "ALL" | "DOCUMENT_PENDING" | "SEND_CREDENTIALS";
+type AccountTab = "ALL" | "DOCUMENT_PENDING" | "SEND_CREDENTIALS" | "MY_TEAM" | "DEPT_PEERS";
 
 export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
-  const { employees, departments, designations, branches, deleteEmployee, updateEmployee, documents, getCandidateDossier } = useHrms();
+  const {
+    employees,
+    departments,
+    designations,
+    branches,
+    deleteEmployee,
+    updateEmployee,
+    documents,
+    getCandidateDossier,
+  } = useHrms();
+  const { user } = useAuth();
   const { success, info } = useToast();
   const navigate = useNavigate();
 
-  // Employee Account Tabs
-  const [activeTab, setActiveTab] = useState<AccountTab>("ALL");
+  const role = user?.role || "EMPLOYEE";
+  const isSuperAdmin = role === "SUPER_ADMIN";
+  const isHrAdmin = role === "HR_ADMIN";
+  const isManager = role === "MANAGER";
+  const isEmployee = role === "EMPLOYEE";
 
-  // CTC Calculator Modal
+  // Resolved current employee identity
+  const currentEmployee = useMemo(() => {
+    if (!user) return null;
+    return (
+      employees.find(
+        (e) => e.id === user.employeeId || e.employeeCode === user.employeeId
+      ) ||
+      (isManager
+        ? employees.find((e) => e.employeeCode === "EMP-1003") || employees[2]
+        : isEmployee
+        ? employees.find((e) => e.employeeCode === "EMP-1004") || employees[3]
+        : null)
+    );
+  }, [employees, user, isManager, isEmployee]);
+
+  // Direct reports & department peers for Manager scoping
+  const directReports = useMemo(() => {
+    if (!currentEmployee) return [];
+    return employees.filter(
+      (e) =>
+        e.managerId === currentEmployee.id ||
+        e.managerId === user?.employeeId ||
+        (currentEmployee && e.departmentId === currentEmployee.departmentId && e.id !== currentEmployee.id)
+    );
+  }, [employees, currentEmployee, user?.employeeId]);
+
+  const departmentPeers = useMemo(() => {
+    if (!currentEmployee) return [];
+    return employees.filter((e) => e.departmentId === currentEmployee.departmentId);
+  }, [employees, currentEmployee]);
+
+  // Tab State: Initialized based on role
+  const [activeTab, setActiveTab] = useState<AccountTab>(() => {
+    if (isManager) return "MY_TEAM";
+    return "ALL";
+  });
+
+  // CTC Calculator Modal (Admin only)
   const [isCtcCalculatorOpen, setIsCtcCalculatorOpen] = useState(false);
 
   // Review Dossier Slide-over Drawer
@@ -61,17 +115,19 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
   const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ALL");
 
-  // Pagination
+  // Pagination & View Mode
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const [viewMode, setViewMode] = useState<"TABLE" | "GRID">("TABLE");
+  const pageSize = viewMode === "GRID" ? 9 : 8;
 
-  // Delete modal state
+  // Delete modal state (Admin only)
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
   // Helper to check employee document completion status & stage
   const getEmployeeDocStatus = (emp: Employee) => {
     const empDocs = documents.filter((d) => d.employeeId === emp.id);
-    const hasOnboardingData = emp.familyDetails || emp.educationDetails?.length || emp.workExperienceDetails?.length;
+    const hasOnboardingData =
+      emp.familyDetails || emp.educationDetails?.length || emp.workExperienceDetails?.length;
 
     let stage: "INVITED" | "IN_PROGRESS" | "SUBMITTED" | "VERIFIED" = "VERIFIED";
     if (emp.onboardingCompleted === false || emp.onboardingStatus === "INVITED") {
@@ -82,7 +138,8 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
       stage = "SUBMITTED";
     }
 
-    const isPending = stage !== "VERIFIED" || (empDocs.length < 2 && !hasOnboardingData && emp.status === "PROBATION");
+    const isPending =
+      stage !== "VERIFIED" || (empDocs.length < 2 && !hasOnboardingData && emp.status === "PROBATION");
     return {
       stage,
       isPending,
@@ -100,7 +157,16 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
     success(`Onboarding approved for ${emp.firstName} ${emp.lastName}. Status updated to Active.`);
   };
 
-  // Tab Counts
+  // Base roster pool based on role
+  const baseRoster = useMemo(() => {
+    if (isManager) {
+      if (activeTab === "DEPT_PEERS") return departmentPeers;
+      return directReports;
+    }
+    return employees;
+  }, [isManager, activeTab, departmentPeers, directReports, employees]);
+
+  // Tab Counts for Admin
   const tabCounts = useMemo(() => {
     const docPending = employees.filter((e) => getEmployeeDocStatus(e).isPending).length;
     const sendCreds = employees.filter((e) => e.status === "ACTIVE" || e.status === "PROBATION").length;
@@ -108,29 +174,33 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
       all: employees.length,
       docPending,
       sendCreds,
+      myTeam: directReports.length,
+      deptPeers: departmentPeers.length,
     };
-  }, [employees, documents]);
+  }, [employees, documents, directReports.length, departmentPeers.length]);
 
   // Quick Stats
   const stats = useMemo(() => {
-    const total = employees.length;
-    const active = employees.filter((e) => e.status === "ACTIVE").length;
-    const probation = employees.filter((e) => e.status === "PROBATION").length;
-    const notice = employees.filter((e) => e.status === "NOTICE_PERIOD").length;
+    const total = baseRoster.length;
+    const active = baseRoster.filter((e) => e.status === "ACTIVE").length;
+    const probation = baseRoster.filter((e) => e.status === "PROBATION").length;
+    const notice = baseRoster.filter((e) => e.status === "NOTICE_PERIOD").length;
     const deptsCount = departments.length;
     return { total, active, probation, notice, deptsCount };
-  }, [employees, departments]);
+  }, [baseRoster, departments]);
 
   // Filtered employees
   const filteredEmployees = useMemo(() => {
-    return employees.filter((emp) => {
-      // Tab filter
-      const docStatus = getEmployeeDocStatus(emp);
-      if (activeTab === "DOCUMENT_PENDING" && !docStatus.isPending) {
-        return false;
-      }
-      if (activeTab === "SEND_CREDENTIALS" && emp.status !== "ACTIVE" && emp.status !== "PROBATION") {
-        return false;
+    return baseRoster.filter((emp) => {
+      // Tab filter for admins
+      if (isSuperAdmin || isHrAdmin) {
+        const docStatus = getEmployeeDocStatus(emp);
+        if (activeTab === "DOCUMENT_PENDING" && !docStatus.isPending) {
+          return false;
+        }
+        if (activeTab === "SEND_CREDENTIALS" && emp.status !== "ACTIVE" && emp.status !== "PROBATION") {
+          return false;
+        }
       }
 
       const matchesSearch =
@@ -145,7 +215,17 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
 
       return matchesSearch && matchesDept && matchesBranch && matchesStatus;
     });
-  }, [employees, activeTab, searchQuery, selectedDept, selectedBranch, selectedStatus, documents]);
+  }, [
+    baseRoster,
+    isSuperAdmin,
+    isHrAdmin,
+    activeTab,
+    searchQuery,
+    selectedDept,
+    selectedBranch,
+    selectedStatus,
+    documents,
+  ]);
 
   // Paginated records
   const totalPages = Math.ceil(filteredEmployees.length / pageSize) || 1;
@@ -159,10 +239,10 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
     selectedDept !== "ALL" ||
     selectedBranch !== "ALL" ||
     selectedStatus !== "ALL" ||
-    activeTab !== "ALL";
+    (isManager ? activeTab !== "MY_TEAM" : activeTab !== "ALL");
 
   const clearFilters = () => {
-    setActiveTab("ALL");
+    setActiveTab(isManager ? "MY_TEAM" : "ALL");
     setSearchQuery("");
     setSelectedDept("ALL");
     setSelectedBranch("ALL");
@@ -170,7 +250,7 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
     setCurrentPage(1);
   };
 
-  // Export Document Pending Report (from Screenshot 12)
+  // Export Document Pending Report (Admin only)
   const handleExportPendingDocReport = () => {
     const pendingList = employees.filter((e) => getEmployeeDocStatus(e).isPending);
     const headers = [
@@ -204,14 +284,18 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
     success(`Exported Document Pending report with ${rows.length} records.`);
   };
 
-  // Send Mail to All (Screenshot 12)
+  // Send Mail to All (Admin only)
   const handleSendMailToAll = () => {
-    success(`Portal onboarding credentials & welcome guide successfully dispatched to ${tabCounts.sendCreds} active employees.`);
+    success(
+      `Portal onboarding credentials & welcome guide successfully dispatched to ${tabCounts.sendCreds} active employees.`
+    );
   };
 
-  // Individual Send Credentials
+  // Individual Send Credentials (Admin only)
   const handleSendSingleCredentials = (emp: Employee) => {
-    info(`Onboarding access & login credentials emailed to ${emp.firstName} ${emp.lastName} (${emp.email}).`);
+    info(
+      `Onboarding access & login credentials emailed to ${emp.firstName} ${emp.lastName} (${emp.email}).`
+    );
   };
 
   // Export to CSV
@@ -226,7 +310,6 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
       "Branch",
       "Joining Date",
       "Status",
-      "Annual CTC (INR)",
     ];
 
     const rows = filteredEmployees.map((e) => {
@@ -244,11 +327,13 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
         branch,
         e.joiningDate,
         e.status,
-        e.annualCtc,
       ];
     });
 
-    exportToCsv("GA_HRMS_Employees_Export", headers, rows);
+    const filename = isManager
+      ? "GA_HRMS_Direct_Reports_Roster"
+      : "GA_HRMS_Employees_Export";
+    exportToCsv(filename, headers, rows);
     success(`Exported ${rows.length} employee records to CSV.`);
   };
 
@@ -266,268 +351,330 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Top Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+    <div className="space-y-3">
+      {/* ========================================================================= */}
+      {/* 1. TOP HEADER & PERSONA SCOPE                                            */}
+      {/* ========================================================================= */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 bg-white rounded-2xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] p-3.5 sm:p-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight whitespace-nowrap">
-              Employee Directory
-            </h1>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200/80">
-              {employees.length} Accounts
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-0.5 truncate hidden sm:block">
-            Manage organization members, statutory profiles, onboarding compliance, and credentials.
-          </p>
+          <h1 className="text-lg sm:text-xl font-bold text-[#111312] tracking-tight">
+            {isManager
+              ? "Team Directory"
+              : isEmployee
+              ? "Company Directory"
+              : "Corporate Employee Directory"}
+          </h1>
+          {(isManager || isEmployee) && (
+            <p className="text-xs sm:text-sm text-[#68707D] mt-0.5">
+              {isManager
+                ? "Direct reports, shift coverage, onboarding progress, and team contact profiles."
+                : "Browse verified colleagues, reporting lines, departments, and communication channels."}
+            </p>
+          )}
         </div>
 
-        {/* Action Buttons (All in the same line, clearly clickable individual buttons) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto scrollbar-none shrink-0 py-0.5">
-          <button
-            type="button"
-            onClick={handleExportPendingDocReport}
-            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
-            title="Export CSV report of employees with pending compliance documents"
-          >
-            <FileWarning className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span>Pending Docs</span>
-          </button>
+        {/* Action Buttons: Pill Capsules */}
+        <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+          {(isSuperAdmin || isHrAdmin) && (
+            <>
+              <button
+                type="button"
+                onClick={handleExportPendingDocReport}
+                className="h-9 px-3.5 text-xs font-medium text-[#111312] bg-white hover:bg-[#F7F8FA] border border-[#E6E8EC] hover:border-[#111312]/40 hover:text-[#111312] rounded-full inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+                title="Export CSV report of employees with pending compliance documents"
+              >
+                <FileWarning className="w-3.5 h-3.5 text-[#111312] shrink-0" />
+                <span>Pending Docs</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={handleSendMailToAll}
-            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
-            title="Dispatch login credentials to active roster"
-          >
-            <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-            <span>Send Creds</span>
-          </button>
+              <button
+                type="button"
+                onClick={handleSendMailToAll}
+                className="h-9 px-3.5 text-xs font-medium text-[#111312] bg-white hover:bg-[#F7F8FA] border border-[#E6E8EC] hover:border-[#111312]/40 hover:text-[#111312] rounded-full inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+                title="Dispatch login credentials to active roster"
+              >
+                <Mail className="w-3.5 h-3.5 text-[#111312] shrink-0" />
+                <span>Send Creds</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setIsCtcCalculatorOpen(true)}
-            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
-            title="Open CTC & Gross Salary Breakdown Calculator"
-          >
-            <Calculator className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>CTC Calc</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setIsCtcCalculatorOpen(true)}
+                className="h-9 px-3.5 text-xs font-medium text-[#111312] bg-white hover:bg-[#F7F8FA] border border-[#E6E8EC] hover:border-[#111312]/40 hover:text-[#111312] rounded-full inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+                title="Open CTC & Gross Salary Breakdown Calculator"
+              >
+                <Calculator className="w-3.5 h-3.5 text-[#111312] shrink-0" />
+                <span>CTC Calc</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => navigate("/admin/onboarding-setup")}
-            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
-            title="Configure Dynamic Onboarding Form, Fields & Document Requirements"
-          >
-            <Settings className="w-3.5 h-3.5 text-gray-700 shrink-0" />
-            <span>Form Config</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => navigate("/admin/onboarding-setup")}
+                className="h-9 px-3.5 text-xs font-medium text-[#111312] bg-white hover:bg-[#F7F8FA] border border-[#E6E8EC] hover:border-[#111312]/40 hover:text-[#111312] rounded-full inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+                title="Configure Dynamic Onboarding Form, Fields & Document Requirements"
+              >
+                <Settings className="w-3.5 h-3.5 text-[#111312] shrink-0" />
+                <span>Form Config</span>
+              </button>
+            </>
+          )}
 
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="h-8 px-2.5 sm:px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50/90 active:bg-gray-100 border border-gray-200/90 hover:border-gray-300 rounded-lg shadow-2xs hover:shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
-            title="Export full employee directory to CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-            <span>Export</span>
-          </button>
-
-          {onOpenAddEmployee && (
-            <Button
-              onClick={onOpenAddEmployee}
-              variant="primary"
-              size="sm"
-              className="h-8 text-xs font-semibold whitespace-nowrap px-3 sm:px-3.5 shadow-xs"
-              leftIcon={<Plus className="w-3.5 h-3.5" />}
+          {!isEmployee && (
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="h-9 px-3.5 text-xs font-medium text-[#111312] bg-white hover:bg-[#F7F8FA] border border-[#E6E8EC] hover:border-[#111312]/40 hover:text-[#111312] rounded-full inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
+              title="Export roster to CSV"
             >
-              Onboard Employee
-            </Button>
+              <Download className="w-3.5 h-3.5 text-[#111312] shrink-0" />
+              <span>{isManager ? "Export Team" : "Export Roster"}</span>
+            </button>
           )}
         </div>
       </div>
 
-      {/* Clean Navigation Tabs */}
-      <div className="flex items-center justify-between gap-3 overflow-x-auto pb-0.5">
-        <div className="inline-flex items-center p-1 bg-gray-100/80 rounded-xl border border-gray-200/70 gap-1 shrink-0">
-          <button
-            onClick={() => {
-              setActiveTab("ALL");
-              setCurrentPage(1);
-            }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === "ALL"
-                ? "bg-white text-gray-950 shadow-xs"
-                : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>All Accounts</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === "ALL" ? "bg-gray-950 text-white" : "bg-gray-200/80 text-gray-700"
+      {/* ========================================================================= */}
+      {/* 2. NAVIGATION TABS (COMPACT PILL ROW)                                     */}
+      {/* ========================================================================= */}
+      {(isSuperAdmin || isHrAdmin) && (
+        <div className="flex items-center justify-between gap-3 overflow-x-auto pb-0.5">
+          <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#E6E8EC] shadow-[0_2px_12px_rgba(17,19,18,0.03)] gap-1 shrink-0">
+            <button
+              onClick={() => {
+                setActiveTab("ALL");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeTab === "ALL"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312] hover:bg-[#F7F8FA]"
               }`}
             >
-              {tabCounts.all}
-            </span>
-          </button>
+              <Users className={`w-3.5 h-3.5 ${activeTab === "ALL" ? "text-[#A3E635]" : "text-[#111312]"}`} />
+              <span>All Accounts</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "ALL" ? "bg-white/15 text-white" : "bg-[#ECFCCB] text-[#111312]"
+                }`}
+              >
+                {tabCounts.all}
+              </span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("DOCUMENT_PENDING");
-              setCurrentPage(1);
-            }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === "DOCUMENT_PENDING"
-                ? "bg-white text-gray-950 shadow-xs"
-                : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
-            }`}
-          >
-            <FileWarning className="w-3.5 h-3.5 text-amber-500" />
-            <span>Document Pending</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === "DOCUMENT_PENDING" ? "bg-amber-500 text-white" : "bg-amber-100 text-amber-800"
+            <button
+              onClick={() => {
+                setActiveTab("DOCUMENT_PENDING");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeTab === "DOCUMENT_PENDING"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312] hover:bg-[#F7F8FA]"
               }`}
             >
-              {tabCounts.docPending}
-            </span>
-          </button>
+              <FileWarning className={`w-3.5 h-3.5 ${activeTab === "DOCUMENT_PENDING" ? "text-[#A3E635]" : "text-[#111312]"}`} />
+              <span>Document Pending</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "DOCUMENT_PENDING" ? "bg-white/15 text-white" : "bg-[#FEF7E0] text-[#E69F00]"
+                }`}
+              >
+                {tabCounts.docPending}
+              </span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("SEND_CREDENTIALS");
-              setCurrentPage(1);
-            }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === "SEND_CREDENTIALS"
-                ? "bg-white text-gray-950 shadow-xs"
-                : "text-gray-600 hover:text-gray-950 hover:bg-white/50"
-            }`}
-          >
-            <Send className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Send Credentials</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === "SEND_CREDENTIALS" ? "bg-indigo-600 text-white" : "bg-indigo-100 text-indigo-800"
+            <button
+              onClick={() => {
+                setActiveTab("SEND_CREDENTIALS");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeTab === "SEND_CREDENTIALS"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312] hover:bg-[#F7F8FA]"
               }`}
             >
-              {tabCounts.sendCreds}
-            </span>
-          </button>
-        </div>
+              <Send className={`w-3.5 h-3.5 ${activeTab === "SEND_CREDENTIALS" ? "text-[#A3E635]" : "text-[#111312]"}`} />
+              <span>Send Credentials</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "SEND_CREDENTIALS" ? "bg-white/15 text-white" : "bg-[#ECFCCB] text-[#111312]"
+                }`}
+              >
+                {tabCounts.sendCreds}
+              </span>
+            </button>
+          </div>
 
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="text-xs text-rose-600 hover:text-rose-800 font-medium inline-flex items-center gap-1 shrink-0"
-          >
-            <X className="w-3.5 h-3.5" />
-            Reset all filters
-          </button>
-        )}
-      </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-[#C62828] hover:underline font-medium inline-flex items-center gap-1 shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+                Reset all filters
+              </button>
+            )}
 
-      {/* Minimalist Executive KPI Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <button
-          onClick={() => {
-            setSelectedStatus("ALL");
-            setCurrentPage(1);
-          }}
-          className={`bg-white p-3 rounded-card border text-left transition-all group ${
-            selectedStatus === "ALL"
-              ? "border-gray-950/20 shadow-xs ring-1 ring-gray-950/5"
-              : "border-surface-border hover:border-gray-300 hover:shadow-2xs"
-          } flex items-center gap-3`}
-        >
-          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900 shrink-0 group-hover:scale-105 transition-transform">
-            <Users className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Total Roster</span>
-            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.total}</span>
-          </div>
-        </button>
-
-        <button
-          onClick={() => {
-            setSelectedStatus(selectedStatus === "ACTIVE" ? "ALL" : "ACTIVE");
-            setCurrentPage(1);
-          }}
-          className={`bg-white p-3 rounded-card border text-left transition-all group ${
-            selectedStatus === "ACTIVE"
-              ? "border-emerald-500/40 shadow-xs ring-1 ring-emerald-500/20"
-              : "border-surface-border hover:border-emerald-200 hover:shadow-2xs"
-          } flex items-center gap-3`}
-        >
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-700 shrink-0 group-hover:scale-105 transition-transform">
-            <UserCheck className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Active Staff</span>
-            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.active}</span>
-          </div>
-        </button>
-
-        <button
-          onClick={() => {
-            setSelectedStatus(selectedStatus === "PROBATION" ? "ALL" : "PROBATION");
-            setCurrentPage(1);
-          }}
-          className={`bg-white p-3 rounded-card border text-left transition-all group ${
-            selectedStatus === "PROBATION"
-              ? "border-amber-500/40 shadow-xs ring-1 ring-amber-500/20"
-              : "border-surface-border hover:border-amber-200 hover:shadow-2xs"
-          } flex items-center gap-3`}
-        >
-          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 shrink-0 group-hover:scale-105 transition-transform">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">In Probation</span>
-            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.probation}</span>
-          </div>
-        </button>
-
-        <button
-          onClick={() => {
-            setSelectedStatus(selectedStatus === "NOTICE_PERIOD" ? "ALL" : "NOTICE_PERIOD");
-            setCurrentPage(1);
-          }}
-          className={`bg-white p-3 rounded-card border text-left transition-all group ${
-            selectedStatus === "NOTICE_PERIOD"
-              ? "border-rose-500/40 shadow-xs ring-1 ring-rose-500/20"
-              : "border-surface-border hover:border-rose-200 hover:shadow-2xs"
-          } flex items-center gap-3`}
-        >
-          <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-700 shrink-0 group-hover:scale-105 transition-transform">
-            <UserX className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Notice Period</span>
-            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.notice}</span>
-          </div>
-        </button>
-
-        <div className="bg-white p-3 rounded-card border border-surface-border shadow-card flex items-center gap-3 col-span-2 sm:col-span-1">
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-700 shrink-0">
-            <Building2 className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block truncate">Departments</span>
-            <span className="text-base sm:text-lg font-bold text-gray-950 tracking-tight">{stats.deptsCount}</span>
+            {onOpenAddEmployee && (
+              <Button
+                onClick={onOpenAddEmployee}
+                variant="primary"
+                size="md"
+                className="h-9 text-xs font-bold whitespace-nowrap px-4 bg-[#A3E635] hover:bg-[#BEF264] active:bg-[#BEF264] text-[#111312] rounded-full shadow-[0_4px_16px_rgba(163,230,53,0.35)] border-0"
+                leftIcon={<Plus className="w-3.5 h-3.5 text-[#111312]" />}
+              >
+                Onboard Employee
+              </Button>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white p-3 rounded-card border border-surface-border shadow-card flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {isManager && (
+        <div className="flex items-center justify-between gap-3 overflow-x-auto pb-0.5">
+          <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#E6E8EC] shadow-[0_2px_12px_rgba(17,19,18,0.03)] gap-1 shrink-0">
+            <button
+              onClick={() => {
+                setActiveTab("MY_TEAM");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeTab === "MY_TEAM"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312] hover:bg-[#F7F8FA]"
+              }`}
+            >
+              <Users className={`w-3.5 h-3.5 ${activeTab === "MY_TEAM" ? "text-[#A3E635]" : "text-[#111312]"}`} />
+              <span>Direct Reports</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "MY_TEAM" ? "bg-white/15 text-white" : "bg-[#ECFCCB] text-[#111312]"
+                }`}
+              >
+                {tabCounts.myTeam}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("DEPT_PEERS");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeTab === "DEPT_PEERS"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312] hover:bg-[#F7F8FA]"
+              }`}
+            >
+              <Building2 className={`w-3.5 h-3.5 ${activeTab === "DEPT_PEERS" ? "text-[#A3E635]" : "text-[#111312]"}`} />
+              <span>Department Peers</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "DEPT_PEERS" ? "bg-white/15 text-white" : "bg-[#ECFCCB] text-[#111312]"
+                }`}
+              >
+                {tabCounts.deptPeers}
+              </span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-[#C62828] hover:underline font-medium inline-flex items-center gap-1 shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+                Reset all filters
+              </button>
+            )}
+
+            {onOpenAddEmployee && (
+              <Button
+                onClick={onOpenAddEmployee}
+                variant="primary"
+                size="md"
+                className="h-9 text-xs font-bold whitespace-nowrap px-4 bg-[#A3E635] hover:bg-[#BEF264] active:bg-[#BEF264] text-[#111312] rounded-full shadow-[0_4px_16px_rgba(163,230,53,0.35)] border-0"
+                leftIcon={<Plus className="w-3.5 h-3.5 text-[#111312]" />}
+              >
+                Onboard Employee
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. UNIFIED KPI STATS RIBBON (ADMIN & MANAGER ONLY)                        */}
+      {/* ========================================================================= */}
+      {!isEmployee && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="group bg-white p-4 sm:p-5 rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#111312]/30 hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] transition-all duration-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-[#68707D] group-hover:text-[#111312] uppercase tracking-wider block truncate transition-colors">
+                {isManager ? "Team Members" : "Total Roster"}
+              </span>
+              <span className="text-xl sm:text-2xl font-bold text-[#111312] tracking-tight mt-0.5 block">
+                {stats.total}
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-[#111312] group-hover:text-[#A3E635] group-hover:border-[#111312]">
+              <Users className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="group bg-white p-4 sm:p-5 rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#111312]/30 hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] transition-all duration-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-[#68707D] group-hover:text-[#111312] uppercase tracking-wider block truncate transition-colors">
+                Active Staff
+              </span>
+              <span className="text-xl sm:text-2xl font-bold text-[#111312] tracking-tight mt-0.5 block">
+                {stats.active}
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-[#111312] group-hover:text-[#A3E635] group-hover:border-[#111312]">
+              <UserCheck className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="group bg-white p-4 sm:p-5 rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#111312]/30 hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] transition-all duration-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-[#68707D] group-hover:text-[#111312] uppercase tracking-wider block truncate transition-colors">
+                In Probation
+              </span>
+              <span className="text-xl sm:text-2xl font-bold text-[#111312] tracking-tight mt-0.5 block">
+                {stats.probation}
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-[#111312] group-hover:text-[#A3E635] group-hover:border-[#111312]">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="group bg-white p-4 sm:p-5 rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#111312]/30 hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] transition-all duration-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-[#68707D] group-hover:text-[#111312] uppercase tracking-wider block truncate transition-colors">
+                Departments
+              </span>
+              <span className="text-xl sm:text-2xl font-bold text-[#111312] tracking-tight mt-0.5 block">
+                {stats.deptsCount}
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-[#111312] group-hover:text-[#A3E635] group-hover:border-[#111312]">
+              <Building2 className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. SEARCH & FILTER TOOLBAR                                                */}
+      {/* ========================================================================= */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] flex items-center gap-3 flex-wrap justify-between">
+        <div className="relative flex-1 min-w-[220px] max-w-md">
+          <Search className="w-3.5 h-3.5 text-[#68707D] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
@@ -535,54 +682,43 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search by name, employee code, or email..."
-            className="w-full h-8.5 pl-9 pr-8 text-xs bg-gray-50/80 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-gray-950/5 focus:border-gray-950 transition-all"
+            placeholder={
+              isManager
+                ? "Search direct report by name, code, or email..."
+                : isEmployee
+                ? "Search colleague name or designation..."
+                : "Search employee name, code, or email..."
+            }
+            className="w-full h-9 pl-9 pr-4 text-xs bg-[#F7F8FA] border border-[#E6E8EC] rounded-full text-[#111312] placeholder-[#68707D] focus:bg-white focus:outline-none focus:border-[#111312] transition-all"
           />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setCurrentPage(1);
-              }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
         </div>
 
-        {/* Filter Dropdowns */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-            <Filter className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Filters:</span>
-          </div>
+          {!isManager && (
+            <select
+              value={selectedDept}
+              onChange={(e) => {
+                setSelectedDept(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3.5 text-xs bg-[#F7F8FA] border border-[#E6E8EC] rounded-full text-[#111312] focus:bg-white focus:outline-none focus:border-[#111312] transition-all"
+            >
+              <option value="ALL">All Departments</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          )}
 
-          {/* Department */}
-          <select
-            value={selectedDept}
-            onChange={(e) => {
-              setSelectedDept(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="h-8.5 px-2.5 text-xs bg-gray-50/70 hover:bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
-          >
-            <option value="ALL">All Departments</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Branch */}
           <select
             value={selectedBranch}
             onChange={(e) => {
               setSelectedBranch(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-8.5 px-2.5 text-xs bg-gray-50/70 hover:bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
+            className="h-9 px-3.5 text-xs bg-[#F7F8FA] border border-[#E6E8EC] rounded-full text-[#111312] focus:bg-white focus:outline-none focus:border-[#111312] transition-all"
           >
             <option value="ALL">All Branches</option>
             {branches.map((b) => (
@@ -592,54 +728,211 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
             ))}
           </select>
 
-          {/* Status */}
-          <select
-            value={selectedStatus}
-            onChange={(e) => {
-              setSelectedStatus(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="h-8.5 px-2.5 text-xs bg-gray-50/70 hover:bg-white border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 transition-all"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PROBATION">Probation</option>
-            <option value="NOTICE_PERIOD">Notice Period</option>
-          </select>
+          {!isEmployee && (
+            <select
+              value={selectedStatus}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-9 px-3.5 text-xs bg-[#F7F8FA] border border-[#E6E8EC] rounded-full text-[#111312] focus:bg-white focus:outline-none focus:border-[#111312] transition-all"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="PROBATION">Probation</option>
+              <option value="NOTICE_PERIOD">Notice Period</option>
+            </select>
+          )}
 
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="h-8.5 px-2 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center gap-1 transition-colors"
-              title="Reset all filters"
+              className="h-9 px-3 text-xs text-[#68707D] hover:text-[#111312] hover:bg-[#F7F8FA] rounded-full inline-flex items-center gap-1 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               <span>Clear</span>
             </button>
           )}
+
+          {/* Table / Grid View Toggle */}
+          <div className="inline-flex items-center p-0.5 bg-[#F7F8FA] border border-[#E6E8EC] rounded-full">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("TABLE");
+                setCurrentPage(1);
+              }}
+              className={`h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-xs font-medium transition-all ${
+                viewMode === "TABLE"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312]"
+              }`}
+              title="Table View"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("GRID");
+                setCurrentPage(1);
+              }}
+              className={`h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-xs font-medium transition-all ${
+                viewMode === "GRID"
+                  ? "bg-[#111312] text-white shadow-xs"
+                  : "text-[#68707D] hover:text-[#111312]"
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Employees Table Card */}
-      <div className="bg-white rounded-card border border-surface-border shadow-card overflow-hidden">
+      {/* ========================================================================= */}
+      {/* 5. DIRECTORY DATA TABLE OR BENTO CARD GRID                                */}
+      {/* ========================================================================= */}
+      {viewMode === "GRID" ? (
+        <div className="space-y-4">
+          {paginatedEmployees.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-[#E6E8EC] py-14 text-center text-[#68707D] text-xs">
+              No employees matching the search and filter criteria.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedEmployees.map((emp) => {
+                const dept = departments.find((d) => d.id === emp.departmentId);
+                const desig = designations.find((d) => d.id === emp.designationId);
+                const branch = branches.find((b) => b.id === emp.branchId);
+                return (
+                  <div
+                    key={emp.id}
+                    onClick={() => navigate(`/people/employees/${emp.id}`)}
+                    className="group bg-white rounded-3xl border border-[#E6E8EC] p-5 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#A3E635]/70 hover:shadow-[0_8px_24px_rgba(17,19,18,0.06)] transition-all cursor-pointer flex flex-col justify-between gap-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar
+                          src={emp.avatar}
+                          name={`${emp.firstName} ${emp.lastName}`}
+                          size="md"
+                        />
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold text-[#111312] truncate">
+                            {emp.firstName} {emp.lastName}
+                          </h3>
+                          <p className="text-xs text-[#68707D] truncate">
+                            {desig?.title || "Staff Member"}
+                          </p>
+                        </div>
+                      </div>
+                      {getStatusBadge(emp.status)}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#F0F2F5] text-xs">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-[#9AA2AF] block">
+                          Department
+                        </span>
+                        <span className="font-medium text-[#111312] truncate block">
+                          {dept?.name || "General"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-[#9AA2AF] block">
+                          Branch
+                        </span>
+                        <span className="font-medium text-[#111312] truncate block">
+                          {branch?.name || "Pune HQ"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className="flex items-center justify-between pt-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="font-mono text-[11px] font-semibold text-[#111312] bg-[#F7F8FA] border border-[#E6E8EC] px-2.5 py-0.5 rounded-full">
+                        {emp.employeeCode}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => navigate(`/people/employees/${emp.id}`)}
+                          className="px-3 py-1 rounded-full bg-[#111312] text-[#A3E635] text-[11px] font-semibold hover:bg-[#232725] transition-colors"
+                        >
+                          Profile
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Grid Pagination Bar */}
+          <div className="bg-white rounded-3xl border border-[#E6E8EC] px-5 py-3.5 flex items-center justify-between text-xs text-[#68707D]">
+            <div>
+              Showing{" "}
+              <span className="font-semibold text-[#111312]">
+                {filteredEmployees.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold text-[#111312]">
+                {Math.min(currentPage * pageSize, filteredEmployees.length)}
+              </span>{" "}
+              of <span className="font-semibold text-[#111312]">{filteredEmployees.length}</span> employees
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
+                className="rounded-full border-[#E6E8EC] text-[#111312] text-xs h-7 px-3"
+              >
+                Prev
+              </Button>
+              <span className="px-2 font-semibold text-[#111312]">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
+                className="rounded-full border-[#E6E8EC] text-[#111312] text-xs h-7 px-3"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+      <div className="bg-white rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-                <th className="py-3.5 px-4">Employee</th>
-                <th className="py-3.5 px-4">ID</th>
-                <th className="py-3.5 px-4">Department</th>
-                <th className="py-3.5 px-4">Designation</th>
-                <th className="py-3.5 px-4">Onboarding Docs</th>
-                <th className="py-3.5 px-4">Joining Date</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+              <tr className="bg-[#F7F8FA] border-b border-[#F0F2F5] text-[11px] uppercase tracking-wider text-[#68707D] font-semibold">
+                <th className="py-3 px-4">Employee</th>
+                <th className="py-3 px-4">ID</th>
+                <th className="py-3 px-4">Department</th>
+                <th className="py-3 px-4">Designation</th>
+                {!isEmployee && <th className="py-3 px-4">Onboarding Docs</th>}
+                <th className="py-3 px-4">Branch</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#F0F2F5]">
               {paginatedEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-14 text-center text-gray-400 text-sm">
+                  <td colSpan={8} className="py-14 text-center text-[#68707D] text-xs">
                     No employees matching the search and filter criteria.
                   </td>
                 </tr>
@@ -647,176 +940,184 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
                 paginatedEmployees.map((emp) => {
                   const dept = departments.find((d) => d.id === emp.departmentId);
                   const desig = designations.find((d) => d.id === emp.designationId);
+                  const branch = branches.find((b) => b.id === emp.branchId);
                   const docStat = getEmployeeDocStatus(emp);
 
                   return (
                     <tr
                       key={emp.id}
-                      className="hover:bg-gray-50/70 transition-colors group cursor-pointer"
+                      className="hover:bg-[#F7F8FA] transition-colors group cursor-pointer"
                       onClick={() => navigate(`/people/employees/${emp.id}`)}
                     >
                       {/* Name & Avatar */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5">
                           <Avatar
                             src={emp.avatar}
                             name={`${emp.firstName} ${emp.lastName}`}
                             size="sm"
                           />
                           <div>
-                            <div className="font-semibold text-gray-950 group-hover:text-black transition-colors flex items-center gap-1.5">
+                            <div className="font-semibold text-[#111312] group-hover:text-[#111312] transition-colors flex items-center gap-1.5">
                               <span>{emp.firstName} {emp.lastName}</span>
                               {emp.familyDetails && (
-                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Full Onboarding Profile Completed" />
+                                <span
+                                  className="inline-block w-2 h-2 rounded-full bg-[#188038]"
+                                  title="Full Profile Completed"
+                                />
                               )}
                             </div>
-                            <div className="text-xs text-gray-500">{emp.email}</div>
+                            <div className="text-[11px] text-[#68707D]">{emp.email}</div>
                           </div>
                         </div>
                       </td>
 
                       {/* Code */}
                       <td className="py-3 px-4">
-                        <span className="font-mono text-xs font-semibold text-gray-800 bg-gray-100/90 border border-gray-200/80 px-2 py-0.5 rounded-md inline-block">
+                        <span className="font-mono text-xs font-semibold text-[#111312] bg-[#F7F8FA] border border-[#E6E8EC] px-2.5 py-0.5 rounded-full inline-block">
                           {emp.employeeCode}
                         </span>
                       </td>
 
                       {/* Department */}
-                      <td className="py-3 px-4 font-medium text-gray-900">
+                      <td className="py-3 px-4 font-medium text-[#111312]">
                         {dept?.name || "General"}
                       </td>
 
                       {/* Designation */}
-                      <td className="py-3 px-4 text-gray-600 text-xs">
+                      <td className="py-3 px-4 text-[#68707D]">
                         {desig?.title || "Staff Member"}
                       </td>
 
-                      {/* Onboarding Documents Status */}
-                      <td className="py-3 px-4">
-                        {(() => {
-                          const dossier = getCandidateDossier(emp.id);
-                          if (dossier?.status === "SUBMITTED" || dossier?.status === "RESUBMITTED") {
+                      {/* Onboarding Documents Status (Admin & Manager) */}
+                      {!isEmployee && (
+                        <td className="py-3 px-4">
+                          {(() => {
+                            const dossier = getCandidateDossier(emp.id);
+                            if (dossier?.status === "SUBMITTED" || dossier?.status === "RESUBMITTED") {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReviewingEmployee(emp);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/40 hover:bg-[#111312] hover:text-[#A3E635] transition-colors cursor-pointer"
+                                  title="Candidate submitted onboarding dossier. Click to review."
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#111312] animate-pulse" />
+                                  <span>Review Dossier</span>
+                                </button>
+                              );
+                            }
+                            if (dossier?.status === "APPROVED" || emp.onboardingCompleted) {
+                              return (
+                                <Badge variant="success" size="sm" dot>
+                                  Verified
+                                </Badge>
+                              );
+                            }
                             return (
-                              <button
-                                type="button"
-                                onClick={() => setReviewingEmployee(emp)}
-                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors cursor-pointer"
-                                title="Candidate submitted onboarding dossier. Click to review."
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                                <span>Review Dossier</span>
-                              </button>
-                            );
-                          }
-                          if (dossier?.status === "CHANGES_REQUESTED") {
-                            return (
-                              <button
-                                type="button"
-                                onClick={() => setReviewingEmployee(emp)}
-                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
-                                title="Changes requested from candidate. Click to inspect."
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                <span>Changes Requested</span>
-                              </button>
-                            );
-                          }
-                          if (dossier?.status === "APPROVED" || emp.onboardingCompleted) {
-                            return (
-                              <Badge variant="success" size="sm" dot>
-                                Verified
+                              <Badge variant="warning" size="sm" dot>
+                                Docs Pending
                               </Badge>
                             );
-                          }
-                          if (dossier?.status === "IN_PROGRESS") {
-                            return (
-                              <button
-                                type="button"
-                                onClick={() => setReviewingEmployee(emp)}
-                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors cursor-pointer"
-                              >
-                                In Progress
-                              </button>
-                            );
-                          }
-                          return (
-                            <Badge variant="warning" size="sm" dot>
-                              Docs Pending
-                            </Badge>
-                          );
-                        })()}
-                      </td>
+                          })()}
+                        </td>
+                      )}
 
-                      {/* Joining Date */}
-                      <td className="py-3 px-4 text-xs text-gray-500">
-                        {formatDate(emp.joiningDate)}
+                      {/* Branch */}
+                      <td className="py-3 px-4 text-[#68707D] text-[11px]">
+                        {branch?.name || "Pune HQ"}
                       </td>
 
                       {/* Status */}
                       <td className="py-3 px-4">{getStatusBadge(emp.status)}</td>
 
-                      {/* Actions */}
+                      {/* Actions: Strictly Scoped per Role */}
                       <td
                         className="py-3 px-4 text-right"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => setReviewingEmployee(emp)}
-                            className="p-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors"
-                            title="Inspect Candidate Onboarding Dossier"
-                          >
-                            <FileCheck className="w-4 h-4" />
-                          </button>
-
-                          {docStat.isPending && (
-                            <button
-                              onClick={() => handleApproveOnboarding(emp)}
-                              className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors"
-                              title="Approve Onboarding & Activate Employee"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                            </button>
-                          )}
-
+                          {/* 1. View Profile (All Roles) */}
                           <button
                             onClick={() => navigate(`/people/employees/${emp.id}`)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-950 hover:bg-gray-100 transition-colors"
-                            title="View Profile & Onboarding Data"
+                            className="p-1.5 rounded-lg text-[#68707D] hover:text-[#1B2430] hover:bg-[#F0F4F8] transition-colors"
+                            title="View Employee Profile"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          
-                          <button
-                            onClick={() => handleSendSingleCredentials(emp)}
-                            className="p-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors"
-                            title="Send Portal Credentials"
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
 
-                          <button
-                            onClick={() => navigate(`/time/attendance?emp=${emp.id}`)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-                            title="View Attendance"
-                          >
-                            <Clock className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => navigate(`/leave/requests?emp=${emp.id}`)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
-                            title="View Leaves"
-                          >
-                            <CalendarCheck2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setEmployeeToDelete(emp)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
-                            title="Delete Employee"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {/* 2. Employee Role: Mail action */}
+                          {isEmployee && (
+                            <a
+                              href={`mailto:${emp.email}`}
+                              className="p-1.5 rounded-lg text-[#111312] hover:text-[#3F6212] hover:bg-[#ECFCCB] transition-colors"
+                              title={`Email ${emp.firstName}`}
+                            >
+                              <Mail className="w-4 h-4" />
+                            </a>
+                          )}
+
+                          {/* 3. Manager & Admin Actions: Jump to attendance & leaves */}
+                          {!isEmployee && (
+                            <>
+                              <button
+                                onClick={() => navigate(`/time/attendance?emp=${emp.id}`)}
+                                className="p-1.5 rounded-lg text-[#68707D] hover:text-[#188038] hover:bg-[#E6F4EA] transition-colors"
+                                title="View Attendance"
+                              >
+                                <Clock className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => navigate(`/leave/requests?emp=${emp.id}`)}
+                                className="p-1.5 rounded-lg text-[#68707D] hover:text-[#111312] hover:bg-[#ECFCCB] transition-colors"
+                                title="View Leaves"
+                              >
+                                <CalendarCheck2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+
+                          {/* 4. Super Admin & HR Admin Exclusive Controls */}
+                          {(isSuperAdmin || isHrAdmin) && (
+                            <>
+                              <button
+                                onClick={() => setReviewingEmployee(emp)}
+                                className="p-1.5 rounded-lg text-[#111312] hover:text-[#3F6212] hover:bg-[#ECFCCB] transition-colors"
+                                title="Inspect Candidate Onboarding Dossier"
+                              >
+                                <FileCheck className="w-4 h-4" />
+                              </button>
+
+                              {docStat.isPending && (
+                                <button
+                                  onClick={() => handleApproveOnboarding(emp)}
+                                  className="p-1.5 rounded-lg text-[#188038] hover:text-[#136c30] hover:bg-[#E6F4EA] transition-colors"
+                                  title="Approve Onboarding & Activate Employee"
+                                >
+                                  <UserCheck className="w-4 h-4" />
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleSendSingleCredentials(emp)}
+                                className="p-1.5 rounded-lg text-[#111312] hover:text-[#3F6212] hover:bg-[#ECFCCB] transition-colors"
+                                title="Send Portal Credentials"
+                              >
+                                <Send className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                onClick={() => setEmployeeToDelete(emp)}
+                                className="p-1.5 rounded-lg text-[#68707D] hover:text-[#C62828] hover:bg-[#FCE8E6] transition-colors"
+                                title="Delete Employee"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -828,18 +1129,18 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
         </div>
 
         {/* Pagination Bar */}
-        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/60 flex items-center justify-between text-xs text-gray-500">
+        <div className="px-5 py-3.5 border-t border-[#F0F2F5] bg-[#F7F8FA] flex items-center justify-between text-xs text-[#68707D]">
           <div>
             Showing{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-[#111312]">
               {filteredEmployees.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
             </span>{" "}
             to{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-[#111312]">
               {Math.min(currentPage * pageSize, filteredEmployees.length)}
             </span>{" "}
             of{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-[#111312]">
               {filteredEmployees.length}
             </span>{" "}
             employees
@@ -852,11 +1153,12 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
+              className="rounded-full border-[#E6E8EC] text-[#111312] text-xs h-7 px-3"
             >
               Prev
             </Button>
 
-            <span className="px-2 font-semibold text-gray-900">
+            <span className="px-2 font-semibold text-[#111312]">
               {currentPage} / {totalPages}
             </span>
 
@@ -866,35 +1168,41 @@ export function EmployeesPage({ onOpenAddEmployee }: EmployeesPageProps) {
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
+              className="rounded-full border-[#E6E8EC] text-[#111312] text-xs h-7 px-3"
             >
               Next
             </Button>
           </div>
         </div>
       </div>
+      )}
 
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={!!employeeToDelete}
-        onClose={() => setEmployeeToDelete(null)}
-        onConfirm={() => {
-          if (employeeToDelete) {
-            deleteEmployee(employeeToDelete.id);
-            setEmployeeToDelete(null);
-          }
-        }}
-        title={`Delete Employee ${employeeToDelete?.firstName} ${employeeToDelete?.lastName}?`}
-        description="Deleting this employee will remove them from active HR rosters, attendance, and payroll processing. This action cannot be undone."
-        confirmText="Delete Employee"
-        variant="danger"
-      />
+      {/* Delete Confirmation Dialog (Admin only) */}
+      {(isSuperAdmin || isHrAdmin) && (
+        <ConfirmDialog
+          isOpen={!!employeeToDelete}
+          onClose={() => setEmployeeToDelete(null)}
+          onConfirm={() => {
+            if (employeeToDelete) {
+              deleteEmployee(employeeToDelete.id);
+              setEmployeeToDelete(null);
+            }
+          }}
+          title={`Delete Employee ${employeeToDelete?.firstName} ${employeeToDelete?.lastName}?`}
+          description="Deleting this employee will remove them from active HR rosters, attendance, and payroll processing. This action cannot be undone."
+          confirmText="Delete Employee"
+          variant="danger"
+        />
+      )}
 
-      {/* Standalone CTC Calculator Modal */}
-      <CtcCalculatorModal
-        isOpen={isCtcCalculatorOpen}
-        onClose={() => setIsCtcCalculatorOpen(false)}
-        initialGross={25000}
-      />
+      {/* Standalone CTC Calculator Modal (Admin only) */}
+      {(isSuperAdmin || isHrAdmin) && (
+        <CtcCalculatorModal
+          isOpen={isCtcCalculatorOpen}
+          onClose={() => setIsCtcCalculatorOpen(false)}
+          initialGross={25000}
+        />
+      )}
 
       {/* HR Candidate Onboarding Dossier Slide-over Drawer */}
       <DossierReviewDrawer

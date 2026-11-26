@@ -239,7 +239,7 @@ export function ApprovalDetailsModal({
                   ? "State the reason for rejecting this regularization (visible to employee)..."
                   : "Add administrative notes, biometric verification references, or remarks..."
               }
-              className="w-full text-xs p-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-900 transition-all resize-none"
+              className="w-full text-xs p-2.5 rounded-lg border border-[#DDE3EA] focus:outline-none focus:ring-2 focus:ring-[#1F8476]/20 focus:border-[#1F8476] transition-all resize-none"
             />
           </div>
         )}

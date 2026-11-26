@@ -53,40 +53,40 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             key={toast.id}
             className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-card shadow-elevated border animate-slide-right transition-all duration-300 ${
               toast.type === "success"
-                ? "bg-white border-emerald-200 text-emerald-950"
+                ? "bg-white border-[#188038]/30 text-[#1B2430]"
                 : toast.type === "error"
-                ? "bg-white border-rose-200 text-rose-950"
+                ? "bg-white border-[#C62828]/30 text-[#1B2430]"
                 : toast.type === "warning"
-                ? "bg-white border-amber-200 text-amber-950"
-                : "bg-white border-gray-300 text-gray-950"
+                ? "bg-white border-[#E69F00]/30 text-[#1B2430]"
+                : "bg-white border-[#1F8476]/30 text-[#1B2430]"
             }`}
           >
             <div className="flex items-center gap-3">
               {toast.type === "success" && (
-                <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <div className="w-7 h-7 rounded-full bg-[#E6F4EA] flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-[#188038]" />
                 </div>
               )}
               {toast.type === "error" && (
-                <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                  <AlertCircle className="w-4 h-4 text-rose-600" />
+                <div className="w-7 h-7 rounded-full bg-[#FCE8E6] flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-4 h-4 text-[#C62828]" />
                 </div>
               )}
               {toast.type === "warning" && (
-                <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <div className="w-7 h-7 rounded-full bg-[#FEF7E0] flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-[#E69F00]" />
                 </div>
               )}
               {toast.type === "info" && (
-                <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                  <Info className="w-4 h-4 text-gray-900" />
+                <div className="w-7 h-7 rounded-full bg-[#E0F2F1] flex items-center justify-center shrink-0">
+                  <Info className="w-4 h-4 text-[#1F8476]" />
                 </div>
               )}
               <span className="text-sm font-medium leading-snug">{toast.message}</span>
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-gray-400 hover:text-gray-700 transition-colors p-1"
+              className="text-[#697586] hover:text-[#1B2430] transition-colors p-1"
             >
               <X className="w-4 h-4" />
             </button>

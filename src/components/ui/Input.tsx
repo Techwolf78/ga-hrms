@@ -18,15 +18,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-xs font-semibold text-text-primary uppercase tracking-wider mb-1.5"
+            className="block text-xs font-semibold text-[#1B2430] uppercase tracking-wider mb-1.5"
           >
             {label}
-            {props.required && <span className="text-rose-500 ml-1">*</span>}
+            {props.required && <span className="text-[#C62828] ml-1">*</span>}
           </label>
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3 text-text-muted pointer-events-none flex items-center">
+            <div className="absolute left-3 text-[#697586] pointer-events-none flex items-center">
               {leftIcon}
             </div>
           )}
@@ -34,22 +34,22 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              "w-full h-10 px-3 py-2 bg-white border border-surface-border rounded-input text-sm text-text-primary placeholder:text-text-muted transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary disabled:bg-gray-50 disabled:cursor-not-allowed",
+              "w-full h-10 px-3 py-2 bg-white border border-[#DDE3EA] rounded-input text-sm text-[#1B2430] placeholder:text-[#697586] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#1F8476]/20 focus:border-[#1F8476] disabled:bg-[#F7F9FB] disabled:cursor-not-allowed",
               leftIcon && "pl-9",
               rightIcon && "pr-9",
-              error && "border-rose-400 focus:ring-rose-200 focus:border-rose-500",
+              error && "border-[#C62828] focus:ring-[#C62828]/20 focus:border-[#C62828]",
               className
             )}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 text-text-muted flex items-center">
+            <div className="absolute right-3 text-[#697586] flex items-center">
               {rightIcon}
             </div>
           )}
         </div>
-        {error && <p className="text-xs text-rose-600 mt-1">{error}</p>}
-        {helperText && !error && <p className="text-xs text-text-secondary mt-1">{helperText}</p>}
+        {error && <p className="text-xs text-[#C62828] mt-1">{error}</p>}
+        {helperText && !error && <p className="text-xs text-[#697586] mt-1">{helperText}</p>}
       </div>
     );
   }

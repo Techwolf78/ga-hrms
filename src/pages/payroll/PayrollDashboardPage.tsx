@@ -115,26 +115,25 @@ export function PayrollDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight whitespace-nowrap">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight whitespace-nowrap">
             Payroll & Statutory Control Center
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">
+          <p className="text-xs text-[#4B5D6B] mt-0.5 truncate hidden sm:block">
             Automated Indian statutory payroll computation, PF/ESIC returns, and
             direct bank batch disbursement.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto scrollbar-none shrink-0 py-0.5">
+        <div className="flex items-center gap-2 flex-nowrap overflow-x-auto scrollbar-none shrink-0 py-0.5">
           <Button
             onClick={() => navigate("/payroll/salary-structures")}
             variant="outline"
-            size="sm"
-            className="h-8 text-xs whitespace-nowrap px-2.5 sm:px-3 shrink-0"
-            leftIcon={<Coins className="w-3.5 h-3.5 text-gray-500" />}
+            size="md"
+            leftIcon={<Coins className="w-3.5 h-3.5 text-[#1F8476]" />}
           >
             Salary Slabs
           </Button>
@@ -192,7 +191,7 @@ export function PayrollDashboardPage() {
         <KpiCard
           label="Processed Staff Count"
           value={octRecords.length || 32}
-          icon={<Receipt className="w-6 h-6 text-indigo-600" />}
+          icon={<Receipt className="w-6 h-6 text-[#1F8476]" />}
           trend={{ value: "32/32 Active", isPositive: true }}
           subtitle="Zero failed transfers"
           accentColor="indigo"

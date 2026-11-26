@@ -87,24 +87,45 @@ export function ReportsPage() {
     exportToCsv("GA_HRMS_Leave_Report", headers, rows);
   };
 
-  // Payroll export
+  // Payroll & EPFO ECR export
   const exportPayrollReport = () => {
-    const headers = ["Month", "Employee Code", "Name", "Gross", "EPF 12%", "ESIC", "PT", "TDS", "Net Pay"];
+    const headers = [
+      "Month",
+      "Employee Code",
+      "Name",
+      "Gross Salary",
+      "EPF Wages (Max ₹25k)",
+      "Employee EPF 12%",
+      "Employer EPS (8.33% Capped)",
+      "Employer EPF (3.67%)",
+      "ESIC",
+      "PT (MH)",
+      "TDS",
+      "Net Pay",
+    ];
     const rows = payroll.map((p) => {
       const emp = employees.find((e) => e.id === p.employeeId);
+      const basic = Math.round(p.grossSalary * 0.5);
+      const epfWages = Math.min(basic, 25000);
+      const epsEmployer = Math.min(2083, Math.round(epfWages * 0.0833));
+      const epfEmployer = Math.max(0, p.pfDeduction - epsEmployer);
+
       return [
         p.monthName,
         emp?.employeeCode || "",
         `${emp?.firstName || ""} ${emp?.lastName || ""}`,
         p.grossSalary,
+        epfWages,
         p.pfDeduction,
+        epsEmployer,
+        epfEmployer,
         p.esicDeduction,
         p.ptDeduction,
         p.tdsDeduction,
         p.netSalary,
       ];
     });
-    exportToCsv("GA_HRMS_Payroll_Statutory_Report", headers, rows);
+    exportToCsv("GA_HRMS_EPFO_ECR_Statutory_Report", headers, rows);
   };
 
   const branchData = branches.map((b) => ({
@@ -118,21 +139,21 @@ export function ReportsPage() {
   const totalPayrollDisbursed = payroll.reduce((sum, p) => sum + p.netSalary, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
             Enterprise Reporting Center
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
             Real-time compliance extracts, biometric journals, EPFO/ESIC salary registers, and audit exports.
           </p>
         </div>
       </div>
 
-      {/* Report Category Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-gray-200">
+      {/* Report Category Pill Tabs */}
+      <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#DDE3EA] shadow-[0_2px_12px_rgba(3,45,66,0.03)] gap-1 overflow-x-auto max-w-full">
         {[
           { key: "PEOPLE" as const, label: "Workforce & Headcount", count: employees.length, icon: Users },
           { key: "ATTENDANCE" as const, label: "Time & Attendance", count: attendance.length, icon: Clock },
@@ -145,17 +166,17 @@ export function ReportsPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                 isActive
-                  ? "bg-gray-950 text-white shadow-xs"
-                  : "bg-white text-gray-600 hover:text-gray-950 hover:bg-gray-100 border border-gray-200/80"
+                  ? "bg-[#032D42] text-white shadow-xs"
+                  : "text-[#4B5D6B] hover:text-[#032D42] hover:bg-[#F7F9FB]"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#62D84E]" : "text-[#1F8476]"}`} />
               <span>{tab.label}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  isActive ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-600"
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                  isActive ? "bg-white/15 text-white" : "bg-[#E9F5F3] text-[#1F8476]"
                 }`}
               >
                 {tab.count}
@@ -478,8 +499,10 @@ export function ReportsPage() {
                       <th className="py-2.5 px-3">Period</th>
                       <th className="py-2.5 px-3">Employee</th>
                       <th className="py-2.5 px-3">Gross Salary</th>
-                      <th className="py-2.5 px-3 text-rose-700">PF 12%</th>
-                      <th className="py-2.5 px-3 text-rose-700">PT (MH)</th>
+                      <th className="py-2.5 px-3">EPF Wages</th>
+                      <th className="py-2.5 px-3 text-rose-700">EE PF (12%)</th>
+                      <th className="py-2.5 px-3 text-blue-700">ER EPS (8.33%)</th>
+                      <th className="py-2.5 px-3 text-rose-700">PT</th>
                       <th className="py-2.5 px-3 text-rose-700">TDS</th>
                       <th className="py-2.5 px-3 text-right font-bold text-gray-950">Net Take-Home</th>
                     </tr>
@@ -487,6 +510,10 @@ export function ReportsPage() {
                   <tbody className="divide-y divide-gray-100">
                     {payroll.slice(0, 5).map((p) => {
                       const emp = employees.find((e) => e.id === p.employeeId);
+                      const basic = Math.round(p.grossSalary * 0.5);
+                      const epfWages = Math.min(basic, 25000);
+                      const epsEmployer = Math.min(2083, Math.round(epfWages * 0.0833));
+
                       return (
                         <tr key={p.id} className="hover:bg-gray-50/60">
                           <td className="py-2.5 px-3 font-mono">{p.monthName}</td>
@@ -494,7 +521,9 @@ export function ReportsPage() {
                             {emp?.firstName} {emp?.lastName}
                           </td>
                           <td className="py-2.5 px-3 font-mono font-medium">{formatINR(p.grossSalary)}</td>
+                          <td className="py-2.5 px-3 font-mono text-gray-700">{formatINR(epfWages)}</td>
                           <td className="py-2.5 px-3 font-mono text-rose-600">-{formatINR(p.pfDeduction)}</td>
+                          <td className="py-2.5 px-3 font-mono text-blue-700">+{formatINR(epsEmployer)}</td>
                           <td className="py-2.5 px-3 font-mono text-rose-600">-{formatINR(p.ptDeduction)}</td>
                           <td className="py-2.5 px-3 font-mono text-rose-600">-{formatINR(p.tdsDeduction)}</td>
                           <td className="py-2.5 px-3 text-right font-bold font-mono text-gray-950">

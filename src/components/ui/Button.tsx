@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "../../lib/utils";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "deep" | "outline" | "ghost" | "danger" | "success" | "secondary";
+  variant?: "primary" | "secondary" | "deep" | "outline" | "ghost" | "danger" | "success";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -25,29 +25,29 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-button transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
+      "inline-flex items-center justify-center font-medium rounded-full transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#1F8476]/30 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
 
     const sizeStyles = {
-      sm: "text-xs px-2.5 py-1.5 gap-1.5 h-8",
+      sm: "text-xs px-3 py-1.5 gap-1.5 h-8",
       md: "text-sm px-4 py-2 gap-2 h-10",
       lg: "text-base px-6 py-2.5 gap-2.5 h-12 font-semibold",
     };
 
     const variantStyles = {
       primary:
-        "bg-gray-950 text-white hover:bg-black shadow-xs",
-      deep:
-        "bg-gray-900 text-white hover:bg-black shadow-xs",
-      outline:
-        "border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300",
-      ghost:
-        "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
-      danger:
-        "bg-rose-600 text-white hover:bg-rose-700 shadow-xs",
-      success:
-        "bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs",
+        "bg-[#A3E635] text-[#111312] font-bold hover:bg-[#BEF264] active:bg-[#BEF264] shadow-[0_4px_16px_rgba(163,230,53,0.35)]",
       secondary:
-        "bg-gray-100 text-gray-900 hover:bg-gray-200",
+        "bg-[#111312] text-white hover:bg-[#232725] active:bg-[#232725] shadow-xs",
+      deep:
+        "bg-[#0D0F0E] text-white hover:bg-[#1A1D1B] shadow-xs",
+      outline:
+        "border border-[#E6E8EC] bg-white text-[#111312] hover:bg-[#F7F8FA] hover:border-[#A3E635]/60 hover:text-[#111312]",
+      ghost:
+        "text-[#111312] hover:bg-[#ECFCCB]/60 hover:text-[#111312]",
+      danger:
+        "bg-[#E11D48] text-white hover:bg-[#BE123C] shadow-xs",
+      success:
+        "bg-[#15803D] text-white hover:bg-[#166534] shadow-xs",
     };
 
     return (

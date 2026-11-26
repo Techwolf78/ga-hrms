@@ -89,8 +89,9 @@ export function calculateHours(inTime: string | null, outTime: string | null): n
 
 /**
  * Calculate statutory Indian payroll components based on monthly CTC
+ * Aligned with the revised EPFO wage ceiling of ₹25,000 / month (max employee PF ₹3,000 / month)
  */
-export function calculateSalaryComponents(monthlyCtc: number) {
+export function calculateSalaryComponents(monthlyCtc: number, options?: { uncappedPf?: boolean }) {
   // Typical enterprise structure: Basic 50%, HRA 25%, Special Allowance 25%
   const basic = Math.round(monthlyCtc * 0.50);
   const hra = Math.round(monthlyCtc * 0.25);
@@ -99,15 +100,30 @@ export function calculateSalaryComponents(monthlyCtc: number) {
   const specialAllowance = Math.max(0, monthlyCtc - (basic + hra + conveyance + medicalAllowance));
   const grossEarnings = basic + hra + specialAllowance + conveyance + medicalAllowance;
 
-  // EPF: 12% of basic (capped at ₹15,000 ceiling standard = ₹1,800, or uncapped for high earners)
-  const pfEmployee = Math.min(1800, Math.round(basic * 0.12));
-  
+  // Revised EPFO Wage Ceiling: ₹25,000 / month (12% = ₹3,000 statutory cap)
+  const pfWageCeiling = 25000;
+  const pfWages = Math.min(basic, pfWageCeiling);
+  const pfEmployee = options?.uncappedPf
+    ? Math.round(basic * 0.12)
+    : Math.min(3000, Math.round(basic * 0.12));
+
+  // Employer Statutory Share Breakdown:
+  // EPS (Pension): 8.33% capped at ₹2,083/month (on ₹25,000 ceiling)
+  const epsEmployer = Math.min(2083, Math.round(pfWages * 0.0833));
+  // EPF (Provident Fund): Remainder of 12% = ~3.67%
+  const epfEmployer = Math.max(0, pfEmployee - epsEmployer);
+  // EDLI: 0.50% capped at ₹125/month
+  const edliEmployer = Math.min(125, Math.round(pfWages * 0.005));
+  // EPF Admin charges: 0.50%
+  const epfAdminCharges = Math.min(125, Math.round(pfWages * 0.005));
+
   // ESIC: 0.75% of gross if gross <= 21,000; 0 otherwise
   const esicEmployee = grossEarnings <= 21000 ? Math.round(grossEarnings * 0.0075) : 0;
-  
+  const esicEmployer = grossEarnings <= 21000 ? Math.round(grossEarnings * 0.0325) : 0;
+
   // Professional Tax: standard Maharashtra slab (₹200 / month, ₹300 in Feb)
   const professionalTax = 200;
-  
+
   // Estimated monthly TDS (approximate tax slab estimation)
   const annualGross = grossEarnings * 12;
   let estimatedAnnualTax = 0;
@@ -132,11 +148,18 @@ export function calculateSalaryComponents(monthlyCtc: number) {
     bonus: 0,
     grossEarnings,
     pfEmployee,
+    epsEmployer,
+    epfEmployer,
+    edliEmployer,
+    epfAdminCharges,
+    totalEmployerPf: epfEmployer + epsEmployer + edliEmployer + epfAdminCharges,
     esicEmployee,
+    esicEmployer,
     professionalTax,
     tdsMonthly,
     totalDeductions,
     netSalary,
+    pfWageCeiling,
   };
 }
 

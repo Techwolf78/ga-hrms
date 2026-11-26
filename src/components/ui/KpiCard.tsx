@@ -23,54 +23,42 @@ export function KpiCard({
   icon,
   trend,
   subtitle,
-  accentColor = "purple",
   onClick,
   className,
 }: KpiCardProps) {
-  const iconBgStyles = {
-    purple: "bg-gray-100 text-gray-900",
-    neutral: "bg-gray-100 text-gray-900",
-    indigo: "bg-indigo-50 text-indigo-700",
-    cyan: "bg-cyan-50 text-cyan-700",
-    emerald: "bg-emerald-50 text-emerald-700",
-    amber: "bg-amber-50 text-amber-700",
-    rose: "bg-rose-50 text-rose-700",
-    blue: "bg-blue-50 text-blue-700",
-  };
-
   return (
     <div
       onClick={onClick}
       className={cn(
-        "bg-white rounded-xl border border-gray-200/90 p-4 sm:p-4.5 shadow-xs transition-all duration-200",
-        onClick && "cursor-pointer hover:shadow-sm hover:border-gray-400/80 active:scale-[0.99]",
+        "group bg-white rounded-3xl border border-[#E6E8EC] p-3.5 sm:p-4 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#A3E635]/60 hover:shadow-[0_8px_24px_rgba(17,19,18,0.06)] transition-[border-color,box-shadow] duration-150",
+        onClick && "cursor-pointer active:scale-[0.99]",
         className
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <div className="space-y-1 min-w-0">
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[#68707D] group-hover:text-[#111312] transition-colors">
             {label}
           </p>
-          <div className="text-2xl sm:text-[26px] font-bold text-gray-950 tracking-tight">
+          <div className="text-2xl sm:text-[26px] font-bold text-[#111312] tracking-tight leading-tight">
             {value}
           </div>
         </div>
-        <div className={cn("p-2.5 rounded-xl flex items-center justify-center shrink-0", iconBgStyles[accentColor])}>
+        <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#3F6212] border border-[#D9F99D] flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-[#111312] group-hover:text-[#A3E635] group-hover:border-[#111312]">
           {icon}
         </div>
       </div>
 
       {(trend || subtitle) && (
-        <div className="mt-3 pt-2.5 border-t border-surface-border-subtle flex items-center justify-between gap-2 text-xs text-text-secondary">
+        <div className="mt-4 pt-3 border-t border-[#EDF1F6] flex items-center justify-between gap-2 text-xs text-[#4B5D6B]">
           {trend && (
-            <div className="flex items-center gap-1 font-medium shrink-0">
+            <div className="flex items-center gap-1.5 font-medium shrink-0">
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold",
+                  "inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold",
                   trend.isPositive
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-rose-50 text-rose-700"
+                    ? "bg-[#E6F4EA] text-[#188038]"
+                    : "bg-[#FCE8E6] text-[#C62828]"
                 )}
               >
                 {trend.isPositive ? (
@@ -80,12 +68,12 @@ export function KpiCard({
                 )}
                 {trend.value}
               </span>
-              {trend.label && <span className="text-text-muted text-[11px] hidden sm:inline">{trend.label}</span>}
+              {trend.label && <span className="text-[#697586] text-[11px] hidden sm:inline">{trend.label}</span>}
             </div>
           )}
           {subtitle && (
             <span
-              className="text-text-muted truncate text-[11px] sm:text-xs text-right"
+              className="text-[#697586] truncate text-[11px] sm:text-xs text-right ml-auto"
               title={subtitle}
             >
               {subtitle}

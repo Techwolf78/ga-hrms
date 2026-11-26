@@ -104,7 +104,7 @@ export function ManagerAttendanceView({
     { label: "Present", value: teamPresent, dotColor: "bg-emerald-500" },
     { label: "Late Arrivals", value: teamLate, dotColor: "bg-amber-500" },
     { label: "Absent", value: teamAbsent, dotColor: "bg-rose-500" },
-    { label: "On Leave", value: teamLeave, dotColor: "bg-blue-500" },
+    { label: "On Leave", value: teamLeave, dotColor: "bg-[#1F8476]" },
     {
       label: "Pending Approvals",
       value: teamPendingRegularizations.length,

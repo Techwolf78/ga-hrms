@@ -98,10 +98,10 @@ export function DocumentUploadSection({
               key={req.id}
               className={`p-4 border rounded-xl transition-all ${
                 uploaded
-                  ? "bg-white border-emerald-200"
+                  ? "bg-white border-[#188038]/30"
                   : isDragging
-                  ? "bg-gray-50 border-gray-950 ring-2 ring-gray-950/10"
-                  : "bg-white border-gray-200 hover:border-gray-300"
+                  ? "bg-[#E9F5F3] border-[#1F8476] ring-2 ring-[#1F8476]/20"
+                  : "bg-white border-[#DDE3EA] hover:border-[#80B6A1]"
               }`}
               onDragEnter={(e) => handleDrag(e, req.id)}
               onDragLeave={(e) => handleDrag(e, req.id)}
@@ -200,7 +200,7 @@ export function DocumentUploadSection({
                     disabled
                       ? "opacity-50 cursor-not-allowed border-gray-200"
                       : isDragging
-                      ? "border-gray-900 bg-gray-50"
+                      ? "border-[#1F8476] bg-[#E9F5F3]"
                       : "border-gray-200 hover:border-gray-400 bg-gray-50/50 hover:bg-gray-50"
                   }`}
                 >

@@ -18,19 +18,19 @@ export function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight flex items-center gap-3">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight flex items-center gap-2.5">
             <span>Notifications Center</span>
             {unreadCount > 0 && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FEF7E0] text-[#E69F00]">
                 {unreadCount} unread
               </span>
             )}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-[#4B5D6B] mt-1">
             System announcements, approval requests, and statutory compliance reminders.
           </p>
         </div>
@@ -40,15 +40,15 @@ export function NotificationsPage() {
             onClick={markAllNotificationsRead}
             variant="outline"
             size="md"
-            leftIcon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+            leftIcon={<CheckCircle2 className="w-4 h-4 text-[#188038]" />}
           >
             Mark All as Read
           </Button>
         )}
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {/* Filter Pill Tabs */}
+      <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#DDE3EA] shadow-[0_2px_12px_rgba(3,45,66,0.03)] gap-1 overflow-x-auto max-w-full">
         {["ALL", "LEAVE", "ATTENDANCE", "PAYROLL", "SYSTEM"].map((type) => {
           const count =
             type === "ALL"
@@ -60,16 +60,16 @@ export function NotificationsPage() {
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                 isActive
-                  ? "bg-gray-950 text-white shadow-xs"
-                  : "bg-white text-gray-600 hover:text-gray-950 hover:bg-gray-100 border border-gray-200/80"
+                  ? "bg-[#032D42] text-white shadow-xs"
+                  : "text-[#4B5D6B] hover:text-[#032D42] hover:bg-[#F7F9FB]"
               }`}
             >
               <span>{type}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  isActive ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-600"
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                  isActive ? "bg-white/15 text-white" : "bg-[#E9F5F3] text-[#1F8476]"
                 }`}
               >
                 {count}
@@ -80,8 +80,8 @@ export function NotificationsPage() {
       </div>
 
       {/* Notifications List */}
-      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
-        <div className="divide-y divide-gray-100">
+      <div className="bg-white rounded-3xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] overflow-hidden">
+        <div className="divide-y divide-[#EDF1F6]">
           {filtered.length === 0 ? (
             <div className="p-14 text-center">
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2 text-gray-400">
@@ -130,7 +130,7 @@ export function NotificationsPage() {
                         {item.type}
                       </Badge>
                       {!item.isRead && (
-                        <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-[#1F8476] animate-pulse" />
                       )}
                     </div>
                     <p className="text-xs text-gray-500 leading-relaxed max-w-xl">

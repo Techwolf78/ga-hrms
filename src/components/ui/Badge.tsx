@@ -10,7 +10,9 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
     | "purple"
     | "cyan"
     | "neutral"
-    | "outline";
+    | "outline"
+    | "lime"
+    | "remediated";
   size?: "sm" | "md";
   dot?: boolean;
 }
@@ -29,25 +31,29 @@ export function Badge({
   };
 
   const variantStyles = {
-    default: "bg-gray-100 text-gray-700 border border-gray-200",
-    success: "bg-gray-50 text-gray-900 border border-gray-300 font-medium",
-    warning: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
-    danger: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
-    purple: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
-    cyan: "bg-gray-50 text-gray-800 border border-gray-300 font-medium",
-    neutral: "bg-gray-100 text-gray-600 border border-gray-200",
-    outline: "bg-transparent text-gray-700 border border-gray-300",
+    default: "bg-[#F0F4F8] text-[#4B5D6B] border border-[#DDE3EA]",
+    success: "bg-[#E6F4EA] text-[#188038] border border-[#CEEAD6] font-semibold",
+    remediated: "bg-[#E6F4EA] text-[#188038] border border-[#CEEAD6] font-bold tracking-wider uppercase text-[10px]",
+    lime: "bg-[#ECFCCB] text-[#3F6212] border border-[#D9F99D] font-bold",
+    warning: "bg-[#FEF7E0] text-[#1B2430] border border-[#FEEFC3] font-medium", // Dark text on warning
+    danger: "bg-[#FCE8E6] text-[#C62828] border border-[#FAD2CF] font-medium",
+    purple: "bg-[#EDE7F6] text-[#5E35B1] border border-[#D1C4E9] font-medium",
+    cyan: "bg-[#E0F2F1] text-[#1F8476] border border-[#B2DFDB] font-medium",
+    neutral: "bg-[#F7F9FB] text-[#697586] border border-[#DDE3EA]",
+    outline: "bg-transparent text-[#1B2430] border border-[#DDE3EA]",
   };
 
   const dotColors = {
-    default: "bg-gray-400",
-    success: "bg-gray-950",
-    warning: "bg-gray-600",
-    danger: "bg-gray-700",
-    purple: "bg-gray-600",
-    cyan: "bg-gray-600",
-    neutral: "bg-gray-400",
-    outline: "bg-gray-400",
+    default: "bg-[#80B6A1]",
+    success: "bg-[#188038]",
+    remediated: "bg-[#188038]",
+    lime: "bg-[#62D84E]",
+    warning: "bg-[#E69F00]",
+    danger: "bg-[#C62828]",
+    purple: "bg-[#5E35B1]",
+    cyan: "bg-[#1F8476]",
+    neutral: "bg-[#697586]",
+    outline: "bg-[#80B6A1]",
   };
 
   return (

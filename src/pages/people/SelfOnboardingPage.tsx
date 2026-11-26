@@ -443,32 +443,68 @@ export function SelfOnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/70 text-gray-900 pb-16">
-      {/* Top Application Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="relative min-h-screen bg-[#F7F9FB] text-[#032D42] pb-16 overflow-x-hidden">
+      {/* Focused Ambient Mesh Gradient */}
+      <div
+        className="absolute inset-0 pointer-events-none overflow-hidden z-0"
+        aria-hidden="true"
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "-100px",
+            right: "-60px",
+            width: "580px",
+            height: "480px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(98, 216, 78, 0.22) 0%, transparent 70%)",
+            filter: "blur(75px)",
+            WebkitFilter: "blur(75px)",
+            transform: "translate3d(0, 0, 0)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-100px",
+            left: "-60px",
+            width: "600px",
+            height: "500px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(31, 132, 118, 0.22) 0%, transparent 70%)",
+            filter: "blur(75px)",
+            WebkitFilter: "blur(75px)",
+            transform: "translate3d(0, 0, 0)",
+          }}
+        />
+      </div>
+
+      {/* Top Application Floating Pill Header */}
+      <div className="sticky top-4 z-40 max-w-5xl mx-auto px-4 sm:px-6 pt-4">
+        <header className="relative rounded-full bg-white/85 backdrop-blur-md border border-white/80 shadow-[0_10px_35px_-5px_rgba(3,45,66,0.06)] px-5 sm:px-6 h-14 flex items-center justify-between">
+          <div className="absolute inset-x-10 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
           <div className="flex items-center gap-3">
             <GaHrmsLogo iconOnly size="md" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm tracking-tight text-gray-950">
+                <span className="font-bold text-sm tracking-tight text-[#032D42]">
                   GA-HRMS
                 </span>
-                <span className="text-gray-300">/</span>
-                <span className="text-xs font-semibold text-gray-700">
+                <span className="text-[#DDE3EA]">/</span>
+                <span className="text-xs font-semibold text-[#1F8476]">
                   Candidate Onboarding
                 </span>
               </div>
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[11px] text-[#4B5D6B]">
                 {currentEmployee?.firstName} {currentEmployee?.lastName} • {designation?.title || "Candidate"} ({employeeId})
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {lastSaved && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-gray-500">
-                <Clock className="w-3.5 h-3.5 text-gray-400" />
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-[#697586]">
+                <Clock className="w-3.5 h-3.5 text-[#1F8476]" />
                 Draft saved at {lastSaved}
               </span>
             )}
@@ -477,7 +513,7 @@ export function SelfOnboardingPage() {
               <button
                 type="button"
                 onClick={handleManualSaveDraft}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-[#DDE3EA] bg-white rounded-full text-xs font-medium text-[#032D42] hover:border-[#1F8476]/40 hover:text-[#1F8476] transition-colors"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Save Draft</span>
@@ -489,23 +525,23 @@ export function SelfOnboardingPage() {
               onClick={() => {
                 if (isDirty) {
                   if (confirm("You have unsaved changes. Do you wish to leave?")) {
-                    navigate("/employees");
+                    navigate("/people/employees");
                   }
                 } else {
-                  navigate("/employees");
+                  navigate("/people/employees");
                 }
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 border border-transparent rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-[#4B5D6B] hover:text-[#032D42] hover:bg-[#F7F9FB] transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Exit</span>
             </button>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         {/* Lifecycle Status Banner */}
         {status === "SUBMITTED" || status === "RESUBMITTED" ? (
           <div className="p-4 bg-sky-50 border border-sky-200 rounded-xl flex items-start gap-3">

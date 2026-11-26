@@ -81,7 +81,7 @@ export class ClientSearchService implements ISearchService {
             callbacks.navigate("/people/employees");
           }
         },
-        icon: React.createElement(UserPlus, { className: "w-3.5 h-3.5 text-blue-600" }),
+        icon: React.createElement(UserPlus, { className: "w-3.5 h-3.5 text-[#1F8476]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN"],
       },
       {
@@ -96,7 +96,7 @@ export class ClientSearchService implements ISearchService {
             callbacks.navigate("/leave/overview");
           }
         },
-        icon: React.createElement(CalendarPlus, { className: "w-3.5 h-3.5 text-emerald-600" }),
+        icon: React.createElement(CalendarPlus, { className: "w-3.5 h-3.5 text-[#188038]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
       },
       {
@@ -108,7 +108,7 @@ export class ClientSearchService implements ISearchService {
           callbacks.navigate("/time/attendance");
         },
         path: "/time/attendance",
-        icon: React.createElement(Clock, { className: "w-3.5 h-3.5 text-sky-600" }),
+        icon: React.createElement(Clock, { className: "w-3.5 h-3.5 text-[#1F8476]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
       },
       {
@@ -123,7 +123,7 @@ export class ClientSearchService implements ISearchService {
             callbacks.navigate("/time/regularization");
           }
         },
-        icon: React.createElement(ClockAlert, { className: "w-3.5 h-3.5 text-amber-600" }),
+        icon: React.createElement(ClockAlert, { className: "w-3.5 h-3.5 text-[#E69F00]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
       },
       {
@@ -135,7 +135,7 @@ export class ClientSearchService implements ISearchService {
           callbacks.navigate("/leave/requests");
         },
         path: "/leave/requests",
-        icon: React.createElement(FileCheck, { className: "w-3.5 h-3.5 text-indigo-600" }),
+        icon: React.createElement(FileCheck, { className: "w-3.5 h-3.5 text-[#1F8476]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"],
       },
       {
@@ -147,7 +147,7 @@ export class ClientSearchService implements ISearchService {
           callbacks.navigate("/payroll/payslips");
         },
         path: "/payroll/payslips",
-        icon: React.createElement(WalletCards, { className: "w-3.5 h-3.5 text-teal-600" }),
+        icon: React.createElement(WalletCards, { className: "w-3.5 h-3.5 text-[#1F8476]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "EMPLOYEE"],
       },
       {
@@ -159,7 +159,7 @@ export class ClientSearchService implements ISearchService {
           callbacks.navigate("/payroll/runs");
         },
         path: "/payroll/runs",
-        icon: React.createElement(Receipt, { className: "w-3.5 h-3.5 text-emerald-600" }),
+        icon: React.createElement(Receipt, { className: "w-3.5 h-3.5 text-[#188038]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN"],
       },
       {
@@ -171,7 +171,7 @@ export class ClientSearchService implements ISearchService {
           callbacks.navigate("/admin/settings");
         },
         path: "/admin/settings",
-        icon: React.createElement(Settings, { className: "w-3.5 h-3.5 text-gray-600" }),
+        icon: React.createElement(Settings, { className: "w-3.5 h-3.5 text-[#4B5D6B]" }),
         allowedRoles: ["SUPER_ADMIN", "HR_ADMIN"],
       },
     ];
@@ -290,7 +290,7 @@ export class ClientSearchService implements ISearchService {
               ? "danger"
               : "warning") as "success" | "danger" | "warning",
             path: "/time/regularization",
-            icon: React.createElement(ClockAlert, { className: "w-3.5 h-3.5 text-amber-600" }),
+            icon: React.createElement(ClockAlert, { className: "w-3.5 h-3.5 text-[#E69F00]" }),
           };
         });
 
@@ -323,7 +323,7 @@ export class ClientSearchService implements ISearchService {
               ? "danger"
               : "neutral") as "success" | "warning" | "danger" | "neutral",
             path: "/time/attendance",
-            icon: React.createElement(Clock, { className: "w-3.5 h-3.5 text-sky-600" }),
+            icon: React.createElement(Clock, { className: "w-3.5 h-3.5 text-[#1F8476]" }),
           };
         });
 
@@ -367,7 +367,7 @@ export class ClientSearchService implements ISearchService {
               ? "danger"
               : "warning") as "success" | "danger" | "warning",
             path: isEmployee ? "/leave/overview" : "/leave/requests",
-            icon: React.createElement(CalendarPlus, { className: "w-3.5 h-3.5 text-emerald-600" }),
+            icon: React.createElement(CalendarPlus, { className: "w-3.5 h-3.5 text-[#188038]" }),
           };
         });
 
@@ -388,7 +388,7 @@ export class ClientSearchService implements ISearchService {
           subtitle: `Annual Quota: ${t.annualQuota} days • Max Carry Forward: ${t.carryForwardMax} days`,
           badge: `${t.annualQuota}d Quota`,
           path: "/leave/policies",
-          icon: React.createElement(ShieldCheck, { className: "w-3.5 h-3.5 text-emerald-600" }),
+          icon: React.createElement(ShieldCheck, { className: "w-3.5 h-3.5 text-[#188038]" }),
         }));
 
       leaveResults.push(...matchedLeaves.slice(0, 6), ...matchedPolicies.slice(0, 2));
@@ -412,7 +412,7 @@ export class ClientSearchService implements ISearchService {
           subtitle: `Department • Cost Center • GA-HRMS Org Unit`,
           badge: d.code,
           path: "/people/departments",
-          icon: React.createElement(Building2, { className: "w-3.5 h-3.5 text-purple-600" }),
+          icon: React.createElement(Building2, { className: "w-3.5 h-3.5 text-[#4B5D6B]" }),
         }));
 
       const matchedBranches = this.data.branches
@@ -432,7 +432,7 @@ export class ClientSearchService implements ISearchService {
           subtitle: `Location: ${b.city}, ${b.state} • Operational Office`,
           badge: b.city,
           path: "/people/departments",
-          icon: React.createElement(Compass, { className: "w-3.5 h-3.5 text-indigo-600" }),
+          icon: React.createElement(Compass, { className: "w-3.5 h-3.5 text-[#1F8476]" }),
         }));
 
       orgResults.push(...matchedDepts.slice(0, 4), ...matchedBranches.slice(0, 3));

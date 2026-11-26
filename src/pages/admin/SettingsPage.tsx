@@ -66,21 +66,21 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
             Company & System Settings
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
             Configure enterprise parameters, statutory compliance rules, and operational policies.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {isSaved && (
-            <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 animate-fade-in">
+            <span className="text-xs font-semibold text-[#188038] bg-[#E6F4EA] border border-[#CEEAD6] px-3 py-1.5 rounded-full flex items-center gap-1.5 animate-fade-in">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Settings Saved
             </span>

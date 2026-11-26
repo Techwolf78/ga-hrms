@@ -423,33 +423,25 @@ export function OnboardingSetupPage() {
   return (
     <div className="space-y-4 w-full">
       {/* Top Header Row with Integrated Breadcrumb & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-gray-200">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2 text-[11px] text-[#697586]">
             <button
               type="button"
               onClick={() => navigate("/people/employees")}
-              className="inline-flex items-center gap-1 font-semibold text-gray-500 hover:text-gray-950 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 font-semibold text-[#697586] hover:text-[#1F8476] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Employees</span>
             </button>
-            <ChevronRight className="w-3 h-3 text-gray-300" />
-            <span className="text-gray-900 font-medium">Onboarding Configuration</span>
+            <ChevronRight className="w-3 h-3 text-[#DDE3EA]" />
+            <span className="text-[#032D42] font-medium">Onboarding Configuration</span>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight">
-              Onboarding Configuration
-            </h1>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-              v{onboardingConfig.version || 1}.0 {onboardingConfig.isPublished ? "Published" : "Draft"}
-            </span>
-            <span className="text-xs text-gray-400 font-medium hidden sm:inline">
-              • {sortedSections.length} Sections Configured
-            </span>
-          </div>
-          <p className="text-xs text-gray-500">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
+            Onboarding Configuration
+          </h1>
+          <p className="text-xs text-[#4B5D6B]">
             Build and manage candidate onboarding sections, fields, document requirements, and repeating groups.
           </p>
         </div>
@@ -459,9 +451,9 @@ export function OnboardingSetupPage() {
           <button
             type="button"
             onClick={() => setShowPreviewModal(true)}
-            className="h-8 px-3 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg shadow-2xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
+            className="h-9 px-3.5 text-xs font-medium text-[#032D42] bg-white hover:bg-[#F7F9FB] border border-[#DDE3EA] hover:border-[#1F8476]/40 hover:text-[#1F8476] rounded-full inline-flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <Eye className="w-3.5 h-3.5 text-gray-500" />
+            <Eye className="w-3.5 h-3.5 text-[#1F8476]" />
             <span>Live Preview</span>
           </button>
 
@@ -605,7 +597,7 @@ export function OnboardingSetupPage() {
             <button
               type="button"
               onClick={openAddSection}
-              className="w-full py-2.5 px-3 border border-dashed border-gray-300 hover:border-gray-900 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-950 bg-white/60 hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="w-full py-2.5 px-3 border border-dashed border-[#DDE3EA] hover:border-[#1F8476] rounded-xl text-xs font-semibold text-[#697586] hover:text-[#1F8476] bg-white/60 hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create Another Section</span>

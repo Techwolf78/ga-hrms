@@ -72,14 +72,14 @@ export function DepartmentsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#DDE3EA] shadow-[0_2px_16px_rgba(3,45,66,0.03)] p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-[#032D42] tracking-tight">
             Departments
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs text-[#4B5D6B] mt-0.5">
             Organize functional units, department heads, headcount budgets, and staffing.
           </p>
         </div>
@@ -91,8 +91,8 @@ export function DepartmentsPage() {
             setIsAddOpen(true);
           }}
           variant="primary"
-          size="md"
-          leftIcon={<Plus className="w-4 h-4" />}
+          size="sm"
+          leftIcon={<Plus className="w-3.5 h-3.5" />}
         >
           Add Department
         </Button>
@@ -107,19 +107,17 @@ export function DepartmentsPage() {
           return (
             <Card
               key={dept.id}
-              className="hover:border-gray-300 hover:shadow-card-hover transition-all duration-200 cursor-pointer"
+              className="cursor-pointer"
               onClick={() => setViewingDept(dept)}
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-900 font-bold">
-                    <Building2 className="w-5 h-5 text-gray-700" />
+                  <div className="w-11 h-11 rounded-2xl bg-[#E9F5F3] text-[#1F8476] border border-[#80B6A1]/30 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover:bg-[#032D42] group-hover:text-[#62D84E] group-hover:border-[#032D42]">
+                    <Building2 className="w-5 h-5" />
                   </div>
                   <div>
                     <CardTitle>{dept.name}</CardTitle>
-                    <Badge variant="neutral" size="sm" className="mt-0.5">
-                      {dept.code}
-                    </Badge>
+                    <p className="text-xs font-mono text-[#697586] mt-0.5">{dept.code}</p>
                   </div>
                 </div>
 

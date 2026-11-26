@@ -115,7 +115,7 @@ export function EmployeeAttendanceView({
     { label: "Days Present", value: presentDays, dotColor: "bg-emerald-500" },
     { label: "Late Marks", value: lateDays, dotColor: "bg-amber-500", highlight: lateDays > 0 },
     { label: "Half Days", value: halfDays, dotColor: "bg-gray-400" },
-    { label: "On Leave", value: leaveDays, dotColor: "bg-blue-500" },
+    { label: "On Leave", value: leaveDays, dotColor: "bg-[#1F8476]" },
     { label: "Absent Days", value: absentDays, dotColor: "bg-rose-500", highlight: absentDays > 0 },
     { label: "Weekly Off / Hol", value: `${weeklyOffDays + holidayDays}d`, dotColor: "bg-purple-400" },
     { label: "Total Logged", value: `${totalLoggedHours}h`, dotColor: "bg-brand-cyan" },

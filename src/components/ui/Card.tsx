@@ -9,7 +9,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "bg-surface-card rounded-card border border-surface-border shadow-card transition-all duration-200",
+        "group bg-white rounded-3xl border border-[#E6E8EC] shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:border-[#A3E635]/60 hover:shadow-[0_8px_24px_rgba(17,19,18,0.06)] transition-[border-color,box-shadow] duration-150",
         className
       )}
       {...props}
@@ -26,7 +26,7 @@ export function CardHeader({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("px-6 py-4 border-b border-surface-border flex items-center justify-between", className)}
+      className={cn("px-4 py-3 border-b border-[#EDF1F6] flex items-center justify-between", className)}
       {...props}
     >
       {children}
@@ -41,7 +41,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("text-base font-semibold text-text-primary tracking-tight", className)}
+      className={cn("text-base font-semibold text-[#032D42] tracking-tight group-hover:text-[#1F8476] transition-colors", className)}
       {...props}
     >
       {children}
@@ -55,7 +55,7 @@ export function CardDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn("text-xs text-text-secondary mt-0.5", className)} {...props}>
+    <p className={cn("text-xs text-[#4B5D6B] mt-0.5", className)} {...props}>
       {children}
     </p>
   );
@@ -67,7 +67,7 @@ export function CardContent({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("p-6", className)} {...props}>
+    <div className={cn("p-4", className)} {...props}>
       {children}
     </div>
   );
@@ -80,7 +80,7 @@ export function CardFooter({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("px-6 py-3.5 border-t border-surface-border bg-gray-50/50 rounded-b-card flex items-center justify-between", className)}
+      className={cn("px-4 py-2.5 border-t border-[#EDF1F6] flex items-center justify-between", className)}
       {...props}
     >
       {children}

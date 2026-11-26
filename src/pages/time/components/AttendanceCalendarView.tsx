@@ -280,7 +280,7 @@ export function AttendanceCalendarView({
                 Absent
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="w-2 h-2 rounded-full bg-[#1F8476]" />
                 Holiday
               </span>
               <span className="flex items-center gap-1">
@@ -350,14 +350,14 @@ export function AttendanceCalendarView({
                     !cell.isCurrentMonth ? "opacity-30 bg-surface-subtle/20" : ""
                   } ${
                     isSelected
-                      ? "ring-2 ring-brand-navy z-10 shadow-sm bg-white"
+                      ? "ring-2 ring-[#1F8476] z-10 shadow-sm bg-white"
                       : "hover:bg-surface-subtle/60"
                   }`}
                 >
                   {/* Top Row: Date Number and Today Indicator */}
                   <div className="flex items-center justify-between">
                     {cell.isToday ? (
-                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-brand-navy text-white">
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-[#1F8476] text-white">
                         Today
                       </span>
                     ) : <span />}
@@ -365,7 +365,7 @@ export function AttendanceCalendarView({
                     <span
                       className={`text-xs font-semibold tabular-nums ${
                         cell.isToday
-                          ? "text-brand-navy font-bold"
+                          ? "text-[#1F8476] font-bold"
                           : cell.isCurrentMonth
                           ? "text-text-primary"
                           : "text-text-muted"

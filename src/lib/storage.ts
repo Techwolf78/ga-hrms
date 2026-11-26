@@ -39,11 +39,46 @@ export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 // Custom event name for instant state sync across components
 const HRMS_STORAGE_EVENT = 'hrms_storage_change';
 
+// In-memory cache to avoid repeated synchronous JSON.parse/stringify on hot paths
+const memoryCache = new Map<string, unknown>();
+const pendingWrites = new Map<string, unknown>();
+let writeScheduled = false;
+
+function flushPendingWrites(): void {
+  writeScheduled = false;
+  pendingWrites.forEach((value, key) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error(`[storage.set] Error writing key "${key}":`, error);
+    }
+  });
+  pendingWrites.clear();
+}
+
+function scheduleFlush(): void {
+  if (writeScheduled) return;
+  writeScheduled = true;
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
+      flushPendingWrites,
+      { timeout: 300 }
+    );
+  } else {
+    setTimeout(flushPendingWrites, 0);
+  }
+}
+
 function get<T>(key: string, defaultValue: T): T {
+  if (memoryCache.has(key)) {
+    return memoryCache.get(key) as T;
+  }
   try {
     const item = localStorage.getItem(key);
     if (item === null) return defaultValue;
-    return JSON.parse(item) as T;
+    const parsed = JSON.parse(item) as T;
+    memoryCache.set(key, parsed);
+    return parsed;
   } catch (error) {
     console.warn(`[storage.get] Error reading key "${key}":`, error);
     return defaultValue;
@@ -51,8 +86,10 @@ function get<T>(key: string, defaultValue: T): T {
 }
 
 function set<T>(key: string, value: T): void {
+  memoryCache.set(key, value);
+  pendingWrites.set(key, value);
+  scheduleFlush();
   try {
-    localStorage.setItem(key, JSON.stringify(value));
     // Dispatch custom window event so all reactive hooks update
     window.dispatchEvent(
       new CustomEvent(HRMS_STORAGE_EVENT, {
@@ -60,7 +97,7 @@ function set<T>(key: string, value: T): void {
       })
     );
   } catch (error) {
-    console.error(`[storage.set] Error writing key "${key}":`, error);
+    console.error(`[storage.set] Error dispatching event for key "${key}":`, error);
   }
 }
 
@@ -72,6 +109,8 @@ function update<T>(key: string, updater: (prev: T) => T, defaultValue: T): T {
 }
 
 function remove(key: string): void {
+  memoryCache.delete(key);
+  pendingWrites.delete(key);
   try {
     localStorage.removeItem(key);
     window.dispatchEvent(
@@ -85,6 +124,8 @@ function remove(key: string): void {
 }
 
 function clear(): void {
+  memoryCache.clear();
+  pendingWrites.clear();
   try {
     localStorage.clear();
     window.dispatchEvent(

@@ -33,21 +33,21 @@ export function PageHeader({
     <div className={cn("mb-6 space-y-2", className)}>
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-xs text-text-muted mb-2">
+        <nav className="flex items-center gap-1.5 text-xs text-[#697586] mb-2">
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
               {crumb.href ? (
                 <Link
                   to={crumb.href}
-                  className="hover:text-gray-900 transition-colors font-medium"
+                  className="hover:text-[#1F8476] transition-colors font-medium"
                 >
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-text-secondary font-medium">{crumb.label}</span>
+                <span className="text-[#697586] font-medium">{crumb.label}</span>
               )}
               {idx < breadcrumbs.length - 1 && (
-                <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-[#697586]" />
               )}
             </React.Fragment>
           ))}
@@ -60,17 +60,17 @@ export function PageHeader({
           {showBack && (
             <button
               onClick={onBack || (() => navigate(-1))}
-              className="p-2 -ml-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-gray-200/50 transition-colors"
+              className="p-2 -ml-2 rounded-lg text-[#697586] hover:text-[#1B2430] hover:bg-[#DDE3EA]/40 transition-colors"
               title="Go Back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-950 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#1B2430] tracking-tight">
               {title}
             </h1>
-            {subtitle && <p className="text-sm text-text-secondary mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-sm text-[#697586] mt-0.5">{subtitle}</p>}
           </div>
         </div>
 

@@ -58,20 +58,16 @@ export const GaHrmsLogo: React.FC<GaHrmsLogoProps> = ({
     },
   }[size];
 
-  // Pure Monochrome Color Mapping (strictly black / white / silver)
+  // ServiceNow Color Mapping (#032D42 for deep brand, #1F8476 for calm green)
   const gaColor =
     variant === "dark"
       ? "text-white"
-      : variant === "light"
-        ? "text-black"
-        : "text-black dark:text-white";
+      : "text-[#032D42]";
 
   const hrmsColor =
     variant === "dark"
-      ? "text-gray-200"
-      : variant === "light"
-        ? "text-gray-900"
-        : "text-gray-900 dark:text-gray-200";
+      ? "text-[#80B6A1]"
+      : "text-[#1F8476]";
 
   // Determine Emblem Asset
   const renderEmblem = () => {

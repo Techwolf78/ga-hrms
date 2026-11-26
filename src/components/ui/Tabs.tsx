@@ -71,8 +71,8 @@ export function TabTrigger({
       className={cn(
         "inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all duration-150 border-b-2 whitespace-nowrap -mb-px select-none",
         isActive
-          ? "border-gray-950 text-gray-950 font-semibold"
-          : "border-transparent text-text-secondary hover:text-text-primary hover:border-gray-300",
+          ? "border-[#1F8476] text-[#1F8476] font-semibold"
+          : "border-transparent text-text-secondary hover:text-text-primary hover:border-[#DDE3EA]",
         className
       )}
     >
@@ -82,8 +82,8 @@ export function TabTrigger({
           className={cn(
             "text-[11px] px-2 py-0.5 rounded-full font-semibold",
             isActive
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-600"
+              ? "bg-[#1F8476] text-white"
+              : "bg-[#F0F4F8] text-[#4B5D6B]"
           )}
         >
           {badge}
