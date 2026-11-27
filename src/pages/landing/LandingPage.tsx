@@ -11,6 +11,8 @@ import {
   ArrowRight,
   Lock,
   ShieldCheck,
+  Sun,
+  CloudRain,
 } from "lucide-react";
 import { useAuth, DEMO_USERS } from "../../lib/authContext";
 import { UserRole } from "../../types/hrms";
@@ -23,6 +25,7 @@ export function LandingPage() {
 
   // Dynamic Scroll State for Glassmorphism Transparency
   const [scrolled, setScrolled] = useState(false);
+  const [weather, setWeather] = useState<"SUNNY" | "RAINY">("SUNNY");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -167,8 +170,9 @@ export function LandingPage() {
         <section className="relative rounded-3xl overflow-hidden min-h-[520px] sm:min-h-[580px] flex flex-col justify-between p-6 sm:p-10 border border-white/70 ring-1 ring-[#111312]/10 shadow-[0_24px_64px_rgba(17,19,18,0.14)]">
           {/* Interactive WebGL Canvas (ripples strictly masked to the reflecting pool) */}
           <WaterRippleHero
-            src="/brand/hero-bg.jpg"
+            src={weather === "RAINY" ? "/brand/hero-bg-rainy.jpg" : "/brand/hero-bg.jpg"}
             alt="Gryphon Academy Campus"
+            weatherMode={weather}
             className="absolute inset-0 w-full h-full"
           />
           <div
@@ -176,8 +180,37 @@ export function LandingPage() {
             className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/65 pointer-events-none"
           />
 
-          {/* Top Spacer */}
-          <div className="relative z-10 pointer-events-none" />
+          {/* Top-Right Weather Toggle (Sunny / Rainy) */}
+          <div className="relative z-10 flex justify-end pointer-events-none">
+            <div className="pointer-events-auto inline-flex items-center p-1 rounded-full bg-black/35 backdrop-blur-md border border-white/20 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setWeather("SUNNY")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${
+                  weather === "SUNNY"
+                    ? "bg-[#A3E635] text-[#111312] shadow-xs"
+                    : "text-white/80 hover:text-white"
+                }`}
+                title="Sunny Sky"
+              >
+                <Sun className="w-3.5 h-3.5" />
+                <span>Sunny</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setWeather("RAINY")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${
+                  weather === "RAINY"
+                    ? "bg-[#111312] text-[#A3E635] border border-white/15 shadow-xs"
+                    : "text-white/80 hover:text-white"
+                }`}
+                title="Rainy Clouds & Raindrops"
+              >
+                <CloudRain className="w-3.5 h-3.5" />
+                <span>Rainy</span>
+              </button>
+            </div>
+          </div>
 
           {/* Center: Oversized Editorial Typography */}
           <div className="relative z-10 my-auto py-8 pointer-events-none">

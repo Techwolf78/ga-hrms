@@ -4,6 +4,7 @@ interface WaterRippleHeroProps {
   src: string;
   alt: string;
   className?: string;
+  weatherMode?: "SUNNY" | "RAINY";
 }
 
 // Normalized (0..1, top-down) polygon tracing the reflecting pool in /brand/hero-bg.jpg
@@ -166,9 +167,12 @@ void main() {
 }
 `;
 
-export function WaterRippleHero({ src, alt, className }: WaterRippleHeroProps) {
+export function WaterRippleHero({ src, alt, className, weatherMode = "SUNNY" }: WaterRippleHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rainCanvasRef = useRef<HTMLCanvasElement>(null);
+  const weatherModeRef = useRef(weatherMode);
+  weatherModeRef.current = weatherMode;
   const [webglReady, setWebglReady] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(min-width: 768px)").matches : false
@@ -295,6 +299,12 @@ export function WaterRippleHero({ src, alt, className }: WaterRippleHeroProps) {
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
       gl.viewport(0, 0, canvas.width, canvas.height);
 
+      const rainCanvas = rainCanvasRef.current;
+      if (rainCanvas) {
+        rainCanvas.width = Math.max(1, Math.floor(rect.width));
+        rainCanvas.height = Math.max(1, Math.floor(rect.height));
+      }
+
       const cover = getCoverTransform(
         rect.width,
         rect.height,
@@ -306,6 +316,17 @@ export function WaterRippleHero({ src, alt, className }: WaterRippleHeroProps) {
       gl.uniform4f(uCover, cover.offsetX, cover.offsetY, cover.scaleX, cover.scaleY);
       gl.uniform2f(uAspectInfo, aspect, 1 / Math.max(0.5, aspect));
     };
+
+    // Lightweight falling raindrops that spawn subtle ripples when hitting their target depth in the pool
+    const drops = Array.from({ length: 42 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      targetY: 0.67 + Math.random() * 0.31,
+      speed: 0.45 + Math.random() * 0.45,
+      len: 14 + Math.random() * 14,
+      opacity: 0.14 + Math.random() * 0.18,
+    }));
+    let lastFrameSec = performance.now() / 1000;
 
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -321,7 +342,63 @@ export function WaterRippleHero({ src, alt, className }: WaterRippleHeroProps) {
 
       const render = () => {
         if (isDisposed) return;
-        const now = performance.now() / 1000 - startTimeRef.current;
+        const nowAbs = performance.now() / 1000;
+        const dt = Math.min(0.05, Math.max(0.001, nowAbs - lastFrameSec));
+        lastFrameSec = nowAbs;
+        const now = nowAbs - startTimeRef.current;
+
+        // Update falling raindrops (RAINY) or snowflakes (SNOWY)
+        const rainCanvas = rainCanvasRef.current;
+        const rainCtx = rainCanvas?.getContext("2d");
+        if (rainCanvas && rainCtx) {
+          const rw = rainCanvas.width;
+          const rh = rainCanvas.height;
+          rainCtx.clearRect(0, 0, rw, rh);
+          const mode = weatherModeRef.current;
+
+          if (mode === "RAINY") {
+            rainCtx.lineWidth = 1;
+            const { scaleX, scaleY, offsetX, offsetY } = coverRef.current;
+
+            for (let i = 0; i < drops.length; i++) {
+              const d = drops[i];
+              d.y += d.speed * dt;
+              d.x -= d.speed * 0.08 * dt;
+
+              const imgX = offsetX + d.x * scaleX;
+              const imgY = offsetY + d.y * scaleY;
+
+              if (d.y >= d.targetY && isPointInPolygon(imgX, imgY, WATER_POLYGON)) {
+                const idx = rippleIndexRef.current % MAX_RIPPLES;
+                rippleIndexRef.current += 1;
+                const base = idx * 4;
+                rawRipplesRef.current[base] = imgX;
+                rawRipplesRef.current[base + 1] = imgY;
+                rawRipplesRef.current[base + 2] = now;
+                rawRipplesRef.current[base + 3] = 0.38;
+
+                d.y = -0.05 - Math.random() * 0.15;
+                d.x = Math.random();
+                d.targetY = 0.67 + Math.random() * 0.31;
+                continue;
+              }
+
+              if (d.y > 1.05 || d.x < -0.05) {
+                d.y = -0.05 - Math.random() * 0.15;
+                d.x = Math.random();
+                d.targetY = 0.67 + Math.random() * 0.31;
+              }
+
+              const px = d.x * rw;
+              const py = d.y * rh;
+              rainCtx.strokeStyle = `rgba(225, 240, 255, ${d.opacity})`;
+              rainCtx.beginPath();
+              rainCtx.moveTo(px, py);
+              rainCtx.lineTo(px - d.len * 0.08, py + d.len);
+              rainCtx.stroke();
+            }
+          }
+        }
 
         // Precompute ripple radius & exponential decay once per ripple on CPU
         const raw = rawRipplesRef.current;
@@ -411,12 +488,20 @@ export function WaterRippleHero({ src, alt, className }: WaterRippleHeroProps) {
         }`}
       />
       {isDesktop && (
-        <canvas
-          ref={canvasRef}
-          className={`hidden md:block absolute inset-0 w-full h-full transition-opacity duration-300 ${
-            webglReady ? "opacity-100" : "opacity-0"
-          }`}
-        />
+        <>
+          <canvas
+            ref={canvasRef}
+            className={`hidden md:block absolute inset-0 w-full h-full transition-opacity duration-300 ${
+              webglReady ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <canvas
+            ref={rainCanvasRef}
+            className={`hidden md:block absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-300 ${
+              webglReady ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        </>
       )}
     </div>
   );
