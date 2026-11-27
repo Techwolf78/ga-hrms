@@ -218,22 +218,6 @@ export function LandingPage() {
                 </button>
               </div>
             </div>
-
-            {/* Glassmorphic Stats Bar */}
-            <div className="pointer-events-auto bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl px-6 py-4 grid grid-cols-3 gap-6 sm:gap-10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold tracking-tight">100%</div>
-                <div className="text-[11px] text-white/80 mt-0.5">Payroll accuracy</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold tracking-tight">24/7</div>
-                <div className="text-[11px] text-white/80 mt-0.5">Self-service portal</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold tracking-tight">99.9%</div>
-                <div className="text-[11px] text-white/80 mt-0.5">Attendance uptime</div>
-              </div>
-            </div>
           </div>
         </section>
 
