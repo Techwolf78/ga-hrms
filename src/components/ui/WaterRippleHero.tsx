@@ -72,7 +72,7 @@ function createWaterMaskCanvas(width = 512, height = 288): HTMLCanvasElement {
   ctx.fillRect(0, 0, width, height);
 
   ctx.save();
-  ctx.filter = "blur(2px)";
+  ctx.filter = "blur(0.75px)";
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
   WATER_POLYGON.forEach(([px, py], idx) => {
@@ -83,6 +83,10 @@ function createWaterMaskCanvas(width = 512, height = 288): HTMLCanvasElement {
   });
   ctx.closePath();
   ctx.fill();
+  // Stroke inward/on-edge in black so feathering never bleeds onto stone or grass
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
   ctx.restore();
 
   return maskCanvas;
