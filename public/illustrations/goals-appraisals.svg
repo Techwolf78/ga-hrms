@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 88" fill="none">
+  <!-- Subtle background accent blob -->
+  <ellipse cx="64" cy="48" rx="46" ry="30" fill="#ECFCCB" opacity="0.7" />
+
+  <!-- Rising OKR chart card -->
+  <rect x="64" y="14" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <!-- Bar chart -->
+  <rect x="72" y="38" width="7" height="13" rx="2" fill="#E9F5F3" stroke="#111312" stroke-width="1.25" />
+  <rect x="83" y="31" width="7" height="20" rx="2" fill="#14B8A6" stroke="#111312" stroke-width="1.25" />
+  <rect x="94" y="23" width="7" height="28" rx="2" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+
+  <!-- Star / Goal badge -->
+  <circle cx="106" cy="18" r="8" fill="#111312" />
+  <path d="M106 13 L107.4 16 L110.7 16.4 L108.3 18.7 L108.9 22 L106 20.4 L103.1 22 L103.7 18.7 L101.3 16.4 L104.6 16 Z" fill="#A3E635" />
+
+  <!-- Colleague 1 (left) -->
+  <path d="M20 78 C20 65 25 58 33 58 C41 58 46 65 46 78 Z" fill="#A3E635" stroke="#111312" stroke-width="1.75" stroke-linejoin="round" />
+  <circle cx="33" cy="47" r="7.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M26 46 C26 41 29.5 38.5 33.5 38.5 C37.5 38.5 40.5 41.5 40.5 46 C37 43.5 30 43.5 26 46 Z" fill="#111312" />
+
+  <!-- Colleague 2 (center) -->
+  <path d="M44 78 C44 65 49 58 57 58 C65 58 70 65 70 78 Z" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" stroke-linejoin="round" />
+  <circle cx="57" cy="47" r="7.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M50 45.5 C50 40.5 53.5 38.5 57.5 38.5 C61.5 38.5 64 41.5 64 45.5 C61 43 53.5 43 50 45.5 Z" fill="#111312" />
+
+  <!-- Arm pointing to OKR chart -->
+  <path d="M66 64 L76 56" stroke="#111312" stroke-width="1.75" stroke-linecap="round" />
+
+  <!-- Ground line -->
+  <line x1="16" y1="78" x2="114" y2="78" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+</svg>
+

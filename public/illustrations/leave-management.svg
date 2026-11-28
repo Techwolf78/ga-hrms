@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 88" fill="none">
+  <!-- Subtle background accent blob -->
+  <ellipse cx="64" cy="48" rx="46" ry="30" fill="#ECFCCB" opacity="0.7" />
+
+  <!-- Calendar card -->
+  <rect x="58" y="14" width="52" height="44" rx="6" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M58 20 C58 16.686 60.686 14 64 14 H104 C107.314 14 110 16.686 110 20 V26 H58 V20 Z" fill="#A3E635" stroke="#111312" stroke-width="1.75" />
+  <!-- Calendar rings -->
+  <line x1="72" y1="10" x2="72" y2="17" stroke="#111312" stroke-width="1.75" stroke-linecap="round" />
+  <line x1="96" y1="10" x2="96" y2="17" stroke="#111312" stroke-width="1.75" stroke-linecap="round" />
+
+  <!-- Calendar date grid -->
+  <rect x="65" y="32" width="8" height="7" rx="1.5" fill="#F7F8FA" stroke="#111312" stroke-width="1" />
+  <rect x="76" y="32" width="8" height="7" rx="1.5" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+  <rect x="87" y="32" width="8" height="7" rx="1.5" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+  <rect x="98" y="32" width="7" height="7" rx="1.5" fill="#F7F8FA" stroke="#111312" stroke-width="1" />
+
+  <rect x="65" y="43" width="8" height="7" rx="1.5" fill="#F7F8FA" stroke="#111312" stroke-width="1" />
+  <rect x="76" y="43" width="8" height="7" rx="1.5" fill="#14B8A6" stroke="#111312" stroke-width="1.25" />
+  <rect x="87" y="43" width="8" height="7" rx="1.5" fill="#F7F8FA" stroke="#111312" stroke-width="1" />
+  <rect x="98" y="43" width="7" height="7" rx="1.5" fill="#F7F8FA" stroke="#111312" stroke-width="1" />
+
+  <!-- Person requesting leave -->
+  <path d="M24 78 C24 64 30 56 40 56 C50 56 56 64 56 78 Z" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" stroke-linejoin="round" />
+  <path d="M35 56 L40 62 L45 56" fill="#A3E635" stroke="#111312" stroke-width="1.5" stroke-linejoin="round" />
+  <circle cx="40" cy="44" r="8.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M32 43 C32 37.5 36 34.5 41 34.5 C46 34.5 49 38 48.5 42.5 C45.5 39.5 39 39.5 32 43 Z" fill="#111312" />
+
+  <!-- Arm pointing to calendar -->
+  <path d="M51 62 L63 54" stroke="#111312" stroke-width="1.75" stroke-linecap="round" />
+
+  <!-- Approved badge -->
+  <circle cx="104" cy="62" r="9.5" fill="#111312" />
+  <path d="M100 62 L102.8 64.8 L108.5 59" stroke="#A3E635" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Ground line -->
+  <line x1="18" y1="78" x2="112" y2="78" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+</svg>
+

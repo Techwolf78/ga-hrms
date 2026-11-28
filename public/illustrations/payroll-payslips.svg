@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 88" fill="none">
+  <!-- Subtle background accent blob -->
+  <ellipse cx="64" cy="48" rx="46" ry="30" fill="#ECFCCB" opacity="0.7" />
+
+  <!-- Payslip document -->
+  <rect x="64" y="12" width="44" height="54" rx="6" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <!-- Rupee badge on payslip -->
+  <circle cx="77" cy="24" r="7" fill="#A3E635" stroke="#111312" stroke-width="1.5" />
+  <path d="M74.5 21 H79.5 M74.5 23.5 H79.5 M75.5 21 C77.5 21 78.2 22.2 77 23.5 L74.5 23.5 L78.5 27.5" stroke="#111312" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Salary lines -->
+  <line x1="88" y1="22" x2="101" y2="22" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="88" y1="27" x2="98" y2="27" stroke="#111312" stroke-width="1.25" stroke-linecap="round" opacity="0.5" />
+
+  <!-- Breakdown bars -->
+  <rect x="71" y="37" width="30" height="5" rx="2.5" fill="#E9F5F3" stroke="#111312" stroke-width="1.25" />
+  <rect x="71" y="37" width="21" height="5" rx="2.5" fill="#14B8A6" stroke="#111312" stroke-width="1.25" />
+  <rect x="71" y="46" width="30" height="5" rx="2.5" fill="#F7F8FA" stroke="#111312" stroke-width="1.25" />
+  <rect x="71" y="46" width="14" height="5" rx="2.5" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+  <line x1="71" y1="57" x2="92" y2="57" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Person reviewing payslip -->
+  <path d="M24 78 C24 64 30 56 40 56 C50 56 56 64 56 78 Z" fill="#14B8A6" stroke="#111312" stroke-width="1.75" stroke-linejoin="round" />
+  <path d="M35 56 L40 62 L45 56" fill="#FFFFFF" stroke="#111312" stroke-width="1.5" stroke-linejoin="round" />
+  <circle cx="40" cy="44" r="8.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M32 43 C32 37.5 35.5 34.5 40.5 34.5 C45.5 34.5 48.5 38 48.5 42.5 C45 40.5 37 40 32 43 Z" fill="#111312" />
+
+  <!-- Arm holding mini card -->
+  <path d="M51 62 L62 56" stroke="#111312" stroke-width="1.75" stroke-linecap="round" />
+
+  <!-- Download PDF badge -->
+  <circle cx="104" cy="62" r="9.5" fill="#111312" />
+  <path d="M104 57.5 V65 M101 62.5 L104 65.5 L107 62.5" stroke="#A3E635" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Ground line -->
+  <line x1="18" y1="78" x2="112" y2="78" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+</svg>
+

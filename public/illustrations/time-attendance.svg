@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 88" fill="none">
+  <!-- Subtle background accent blob -->
+  <ellipse cx="64" cy="48" rx="46" ry="30" fill="#ECFCCB" opacity="0.7" />
+
+  <!-- Floating shift schedule card (top right) -->
+  <rect x="64" y="12" width="50" height="32" rx="6" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <rect x="70" y="19" width="22" height="5" rx="2.5" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+  <rect x="70" y="28" width="32" height="5" rx="2.5" fill="#E9F5F3" stroke="#111312" stroke-width="1.25" />
+  <circle cx="104" cy="21.5" r="3" fill="#14B8A6" stroke="#111312" stroke-width="1.25" />
+
+  <!-- Wall / Digital Clock (top left) -->
+  <circle cx="34" cy="24" r="14" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M34 14 A10 10 0 0 1 43.5 27.5 L34 24 Z" fill="#A3E635" />
+  <circle cx="34" cy="24" r="10" stroke="#111312" stroke-width="1" stroke-dasharray="2 2.5" opacity="0.45" />
+  <path d="M34 18V24L39 26.5" stroke="#111312" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="34" cy="24" r="1.5" fill="#111312" />
+
+  <!-- Person checking in -->
+  <!-- Torso / Shirt -->
+  <path d="M33 78 C33 64 39 56 49 56 C59 56 65 64 65 78 Z" fill="#A3E635" stroke="#111312" stroke-width="1.75" stroke-linejoin="round" />
+  <!-- Collar detail -->
+  <path d="M44 56 L49 62 L54 56" fill="#FFFFFF" stroke="#111312" stroke-width="1.5" stroke-linejoin="round" />
+
+  <!-- Head & Hair -->
+  <circle cx="49" cy="45" r="8.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M41 44 C41 38 45 35 50 35 C55 35 58 38.5 57.5 43 C55 40.5 51 40 46 41.5 C43.5 42.2 42 43.2 41 44 Z" fill="#111312" />
+
+  <!-- Arm holding phone / badge -->
+  <path d="M60 63 L74 58" stroke="#111312" stroke-width="1.75" stroke-linecap="round" />
+  <!-- Smartphone / Punch-in card -->
+  <rect x="72" y="48" width="13" height="20" rx="3" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <line x1="75" y1="53" x2="82" y2="53" stroke="#111312" stroke-width="1.25" stroke-linecap="round" />
+  <rect x="75" y="56" width="7" height="6" rx="1.5" fill="#A3E635" />
+
+  <!-- Verified Check-in Badge (bottom right) -->
+  <circle cx="98" cy="64" r="9.5" fill="#111312" />
+  <path d="M94 64 L96.8 66.8 L102.5 61" stroke="#A3E635" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Ground line -->
+  <line x1="20" y1="78" x2="112" y2="78" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+</svg>
+

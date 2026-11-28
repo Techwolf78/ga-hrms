@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 88" fill="none">
+  <!-- Subtle background accent blob -->
+  <ellipse cx="64" cy="48" rx="46" ry="30" fill="#ECFCCB" opacity="0.7" />
+
+  <!-- Org-chart connector lines -->
+  <path d="M88 30 V38 M72 38 H104 M72 38 V44 M104 38 V44" stroke="#111312" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Top org node -->
+  <rect x="74" y="13" width="28" height="17" rx="4.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.5" />
+  <circle cx="81.5" cy="21.5" r="3.5" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+  <line x1="88" y1="20" x2="97" y2="20" stroke="#111312" stroke-width="1.25" stroke-linecap="round" />
+  <line x1="88" y1="23.5" x2="95" y2="23.5" stroke="#111312" stroke-width="1" stroke-linecap="round" opacity="0.5" />
+
+  <!-- Bottom left org node -->
+  <rect x="58" y="44" width="26" height="17" rx="4.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.5" />
+  <circle cx="65" cy="52.5" r="3.5" fill="#14B8A6" stroke="#111312" stroke-width="1.25" />
+  <line x1="71" y1="51" x2="79" y2="51" stroke="#111312" stroke-width="1.25" stroke-linecap="round" />
+  <line x1="71" y1="54.5" x2="77" y2="54.5" stroke="#111312" stroke-width="1" stroke-linecap="round" opacity="0.5" />
+
+  <!-- Bottom right org node -->
+  <rect x="90" y="44" width="26" height="17" rx="4.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.5" />
+  <circle cx="97" cy="52.5" r="3.5" fill="#A3E635" stroke="#111312" stroke-width="1.25" />
+  <line x1="103" y1="51" x2="111" y2="51" stroke="#111312" stroke-width="1.25" stroke-linecap="round" />
+  <line x1="103" y1="54.5" x2="109" y2="54.5" stroke="#111312" stroke-width="1" stroke-linecap="round" opacity="0.5" />
+
+  <!-- Person onboarding / exploring directory -->
+  <path d="M22 78 C22 64 28 56 37 56 C46 56 52 64 52 78 Z" fill="#A3E635" stroke="#111312" stroke-width="1.75" stroke-linejoin="round" />
+  <circle cx="37" cy="44" r="8.5" fill="#FFFFFF" stroke="#111312" stroke-width="1.75" />
+  <path d="M29 43 C29 37.5 33 34.5 37.5 34.5 C42 34.5 45.5 37.5 45.5 43 C42 40 34 40 29 43 Z" fill="#111312" />
+
+  <!-- Magnifying glass -->
+  <circle cx="57" cy="36" r="8.5" fill="#FFFFFF" fill-opacity="0.85" stroke="#111312" stroke-width="1.75" />
+  <circle cx="57" cy="36" r="4" fill="#A3E635" opacity="0.7" />
+  <line x1="48" y1="56" x2="52" y2="43" stroke="#111312" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Ground line -->
+  <line x1="18" y1="78" x2="112" y2="78" stroke="#111312" stroke-width="1.5" stroke-linecap="round" />
+</svg>
+

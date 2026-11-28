@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Clock,
-  Calendar,
-  CalendarCheck2,
-  Receipt,
-  Laptop,
-  Users,
-  Award,
   ArrowRight,
   Lock,
-  ShieldCheck,
   Sun,
   CloudRain,
 } from "lucide-react";
@@ -263,19 +255,22 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {/* Card 1: Attendance */}
+            {/* Card 1: Time & Attendance */}
             <div className="bg-white border border-[#E6E8EC] rounded-3xl p-6 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] hover:border-[#111312]/30 transition-all duration-300 flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center transition-all duration-300 group-hover:bg-[#111312] group-hover:text-[#A3E635] shadow-2xs">
-                  <Clock className="w-5 h-5" />
+                <div className="h-20 w-28 flex items-center justify-start transition-transform duration-300 group-hover:scale-105 origin-left">
+                  <img
+                    src="/illustrations/time-attendance.svg"
+                    alt="Time & Attendance illustration"
+                    className="h-full w-full object-contain object-left"
+                  />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#111312] tracking-tight group-hover:text-[#111312] transition-colors">
                     Time &amp; Attendance
                   </h3>
                   <p className="text-xs sm:text-sm text-[#68707D] leading-relaxed">
-                    Daily clock-in/out tracking, shift hours, and missed punch
-                    regularization with supervisor endorsement.
+                    Clock-ins, shift schedules &amp; regularization.
                   </p>
                 </div>
               </div>
@@ -284,24 +279,27 @@ export function LandingPage() {
                 onClick={() => handleLaunchRole("EMPLOYEE")}
                 className="text-xs font-semibold text-[#111312] hover:text-[#3F6212] flex items-center gap-1.5 pt-2 group-hover:translate-x-0.5 transition-transform"
               >
-                <span>Attendance Log</span>
+                <span>Open Attendance</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Card 2: Leaves */}
+            {/* Card 2: Leave Management */}
             <div className="bg-white border border-[#E6E8EC] rounded-3xl p-6 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] hover:border-[#111312]/30 transition-all duration-300 flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center transition-all duration-300 group-hover:bg-[#111312] group-hover:text-[#A3E635] shadow-2xs">
-                  <Calendar className="w-5 h-5" />
+                <div className="h-20 w-28 flex items-center justify-start transition-transform duration-300 group-hover:scale-105 origin-left">
+                  <img
+                    src="/illustrations/leave-management.svg"
+                    alt="Leave Management illustration"
+                    className="h-full w-full object-contain object-left"
+                  />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#111312] tracking-tight group-hover:text-[#111312] transition-colors">
                     Leave Management
                   </h3>
                   <p className="text-xs sm:text-sm text-[#68707D] leading-relaxed">
-                    Live balances for Paid, Casual, and Sick leaves. Submit
-                    time-off requests and track manager sanction.
+                    Live leave balances &amp; one-click approvals.
                   </p>
                 </div>
               </div>
@@ -310,24 +308,27 @@ export function LandingPage() {
                 onClick={() => handleLaunchRole("EMPLOYEE")}
                 className="text-xs font-semibold text-[#111312] hover:text-[#3F6212] flex items-center gap-1.5 pt-2 group-hover:translate-x-0.5 transition-transform"
               >
-                <span>Apply for Leave</span>
+                <span>Manage Leaves</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Card 3: Payslips */}
+            {/* Card 3: Payroll & Payslips */}
             <div className="bg-white border border-[#E6E8EC] rounded-3xl p-6 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] hover:border-[#111312]/30 transition-all duration-300 flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center transition-all duration-300 group-hover:bg-[#111312] group-hover:text-[#A3E635] shadow-2xs">
-                  <Receipt className="w-5 h-5" />
+                <div className="h-20 w-28 flex items-center justify-start transition-transform duration-300 group-hover:scale-105 origin-left">
+                  <img
+                    src="/illustrations/payroll-payslips.svg"
+                    alt="Payroll & Payslips illustration"
+                    className="h-full w-full object-contain object-left"
+                  />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#111312] tracking-tight group-hover:text-[#111312] transition-colors">
-                    Payslips &amp; Tax Documents
+                    Payroll &amp; Payslips
                   </h3>
                   <p className="text-xs sm:text-sm text-[#68707D] leading-relaxed">
-                    Download monthly PDF salary statements, review UAN statutory
-                    deductions, and access annual tax summaries.
+                    Automated salary runs, tax &amp; PDF payslips.
                   </p>
                 </div>
               </div>
@@ -336,24 +337,27 @@ export function LandingPage() {
                 onClick={() => handleLaunchRole("EMPLOYEE")}
                 className="text-xs font-semibold text-[#111312] hover:text-[#3F6212] flex items-center gap-1.5 pt-2 group-hover:translate-x-0.5 transition-transform"
               >
-                <span>Download Payslips</span>
+                <span>View Payroll</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Card 4: Assets */}
+            {/* Card 4: People & Onboarding */}
             <div className="bg-white border border-[#E6E8EC] rounded-3xl p-6 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] hover:border-[#111312]/30 transition-all duration-300 flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center transition-all duration-300 group-hover:bg-[#111312] group-hover:text-[#A3E635] shadow-2xs">
-                  <Laptop className="w-5 h-5" />
+                <div className="h-20 w-28 flex items-center justify-start transition-transform duration-300 group-hover:scale-105 origin-left">
+                  <img
+                    src="/illustrations/people-onboarding.svg"
+                    alt="People & Onboarding illustration"
+                    className="h-full w-full object-contain object-left"
+                  />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#111312] tracking-tight group-hover:text-[#111312] transition-colors">
-                    Hardware &amp; Workstations
+                    People &amp; Onboarding
                   </h3>
                   <p className="text-xs sm:text-sm text-[#68707D] leading-relaxed">
-                    Review assigned laptop models, serial numbers, warranty
-                    terms, and submit IT equipment repair requests.
+                    Org directory, documents &amp; self-onboarding.
                   </p>
                 </div>
               </div>
@@ -362,24 +366,27 @@ export function LandingPage() {
                 onClick={() => handleLaunchRole("EMPLOYEE")}
                 className="text-xs font-semibold text-[#111312] hover:text-[#3F6212] flex items-center gap-1.5 pt-2 group-hover:translate-x-0.5 transition-transform"
               >
-                <span>View Assigned Assets</span>
+                <span>Explore Directory</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Card 5: Directory */}
+            {/* Card 5: Recruitment */}
             <div className="bg-white border border-[#E6E8EC] rounded-3xl p-6 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] hover:border-[#111312]/30 transition-all duration-300 flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center transition-all duration-300 group-hover:bg-[#111312] group-hover:text-[#A3E635] shadow-2xs">
-                  <Users className="w-5 h-5" />
+                <div className="h-20 w-28 flex items-center justify-start transition-transform duration-300 group-hover:scale-105 origin-left">
+                  <img
+                    src="/illustrations/recruitment.svg"
+                    alt="Recruitment illustration"
+                    className="h-full w-full object-contain object-left"
+                  />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#111312] tracking-tight group-hover:text-[#111312] transition-colors">
-                    Colleague Directory
+                    Recruitment
                   </h3>
                   <p className="text-xs sm:text-sm text-[#68707D] leading-relaxed">
-                    Look up teammates, designations, reporting leads, and branch
-                    locations while personal data remains protected.
+                    Hiring pipelines, candidates &amp; offer tracking.
                   </p>
                 </div>
               </div>
@@ -388,24 +395,27 @@ export function LandingPage() {
                 onClick={() => handleLaunchRole("EMPLOYEE")}
                 className="text-xs font-semibold text-[#111312] hover:text-[#3F6212] flex items-center gap-1.5 pt-2 group-hover:translate-x-0.5 transition-transform"
               >
-                <span>Search Directory</span>
+                <span>View Openings</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Card 6: Performance */}
+            {/* Card 6: Goals & Appraisals */}
             <div className="bg-white border border-[#E6E8EC] rounded-3xl p-6 shadow-[0_2px_16px_rgba(17,19,18,0.03)] hover:shadow-[0_8px_24px_rgba(17,19,18,0.08)] hover:border-[#111312]/30 transition-all duration-300 flex flex-col justify-between space-y-4 group">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#ECFCCB] text-[#111312] border border-[#A3E635]/30 flex items-center justify-center transition-all duration-300 group-hover:bg-[#111312] group-hover:text-[#A3E635] shadow-2xs">
-                  <Award className="w-5 h-5" />
+                <div className="h-20 w-28 flex items-center justify-start transition-transform duration-300 group-hover:scale-105 origin-left">
+                  <img
+                    src="/illustrations/goals-appraisals.svg"
+                    alt="Goals & Appraisals illustration"
+                    className="h-full w-full object-contain object-left"
+                  />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#111312] tracking-tight group-hover:text-[#111312] transition-colors">
                     Goals &amp; Appraisals
                   </h3>
                   <p className="text-xs sm:text-sm text-[#68707D] leading-relaxed">
-                    Track quarterly OKRs, log key results progress, and submit
-                    self-reviews during performance appraisal cycles.
+                    Quarterly OKRs, reviews &amp; performance cycles.
                   </p>
                 </div>
               </div>
@@ -414,7 +424,7 @@ export function LandingPage() {
                 onClick={() => handleLaunchRole("EMPLOYEE")}
                 className="text-xs font-semibold text-[#111312] hover:text-[#3F6212] flex items-center gap-1.5 pt-2 group-hover:translate-x-0.5 transition-transform"
               >
-                <span>Open Goals Portal</span>
+                <span>Open Performance</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
